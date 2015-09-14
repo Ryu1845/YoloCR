@@ -137,11 +137,14 @@ if $bAlt; then sed $inplace 's/   //g' OCR_Alt.srt; fi
 
 ## Conversion des tags "ItAlIk" en balises italiques SubRip
 for SRT in $(printf OCR%s.srt\\n "" $Alt); do {
-    sed 's/ItAlIk2 ItAlIk1/ /g' $SRT |
-    perl -0777 -pe 's/ItAlIk2\nItAlIk1/\n/igs' |
-    sed 's/ItAlIk1\(.\)ItAlIk2/\1/g' |
-    sed -e 's/ItAlIk1/<i>/g' -e 's/ItAlIk2/<\/i>/g' > $SRT.tmp
-    mv $SRT.tmp $SRT
+    if grep -q 'ItAlIk' $SRT; then
+        sed $inplace 's/\//l/g' $SRT # Autre correction éventuelle
+        sed 's/ItAlIk2 ItAlIk1/ /g' $SRT |
+        perl -0777 -pe 's/ItAlIk2\nItAlIk1/\n/igs' |
+        sed 's/ItAlIk1\(.\)ItAlIk2/\1/g' |
+        sed -e 's/ItAlIk1/<i>/g' -e 's/ItAlIk2/<\/i>/g' > $SRT.tmp
+        mv $SRT.tmp $SRT
+    fi
 } & done; wait
 
 ## Corrections OCR et normalisation
@@ -149,8 +152,10 @@ for SRT in $(printf OCR%s.srt\\n "" $Alt); do {
     sed $inplace 's/|/l/g' $SRT
     if [[ $lang = fra ]]; then
         sed "s/I'/l'/g" $SRT |
+        sed 's/[®©]/O/g' |
         sed 's/\([cs]\)oeur/\1œur/g' |
         sed "s/ *'/’/g" |
+        sed 's/\(.\)—\(.\)/\1-\2/g' |
         sed 's/- /— /g' |
         sed 's/\.\.\./…/g' |
         sed 's/\([:;?\!]\)/ \1/g' | sed 's/  \([:;?\!]\)/ \1/g' |
