@@ -51,7 +51,7 @@ if ModeU=='nnedi3' and Ss!=1:
 
 def Resizing(clip,largeur,hauteur,hauteur2):
 	clip=core.std.CropAbs(clip=clip,width=largeur,height=hauteur,left=int((clip.width-largeur)/2),top=clip.height-hauteur2)
-	if ModeR=='4K' or Ss!=1:
+	if Ss!=1:
 		if ModeU=='nnedi3':
 			clip=core.nnedi3.nnedi3_rpow2(clip=clip,rfactor=Ss)
 			if Ssbis!=1:
