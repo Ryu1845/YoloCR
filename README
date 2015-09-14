@@ -1,0 +1,38 @@
+Avec le fichier "Vidéo_Source.mkv".
+Prérequis :
+- Un accès à un environnement Unix (par VM ou non)
+- Tesseract (version 3.03+ recommandée) et son dictionnaire français (Unix) : https://github.com/tesseract-ocr/tesseract
+- Links (Unix) : http://links.twibright.com/
+- Simple X Image Viewer (Unix) : https://github.com/muennich/sxiv
+- xdotool (Linux) : http://www.semicomplete.com/projects/xdotool/
+- GNU Parallel (version 20131122+ recommandée) (Unix) : http://www.gnu.org/software/parallel/
+- Perl (Unix) : https://www.perl.org/
+- FFmpeg (Unix, et éventuellement Windows) : https://www.ffmpeg.org/
+- Vapoursynth R27+ (Unix ou Windows) : http://www.vapoursynth.com/
+- le plugin FFMS2 pour Vapoursynth (Unix ou Windows) : https://github.com/FFMS/ffms2/releases
+- le plugin GenericFilters pour Vapoursynth (Unix ou Windows) : https://github.com/myrsloik/GenericFilters
+- le plugin HAvsFunc pour Vapoursynth (Unix ou Windows) : http://forum.doom9.org/showthread.php?t=166582
+- le plugin SceneChange pour Vapoursynth (Unix ou Windows) : http://forum.doom9.org/showthread.php?t=166769
+- le plugin fmtconv pour Vapoursynth (Unix ou Windows) : http://forum.doom9.org/showthread.php?t=166504
+- (Optionnel) le plugin nnedi3v5 pour Vapoursynth (Unix ou Windows) : http://forum.doom9.org/showthread.php?p=1718794#post1718794
+
+Script d'installation des prérequis pour Debian Jessie et LMDE Betsy :
+sh YoloDebInstallation.sh
+
+PPA Vapoursynth pour Ubuntu et Linux Mint (non testé) : https://launchpad.net/~djcj/+archive/ubuntu/vapoursynth
+
+Astuce : Si vous n'utilisez pas un environnement Unix, vous pouvez installer Vapoursynth et ses plugins sur Windows. Le traitement sera bien plus rapide que sur une VM.
+ 
+/!\ Si vous compilez Vapoursynth sur Ubuntu 14.04 ou Linux Mint 17, il est conseillé d'utiliser la version ffmpeg du dépôt Kyrill : https://launchpad.net/~kirillshkrogalev/+archive/ubuntu/ffmpeg-next
+Installer alors libavcodec-ffmpeg-dev, à la place de libavcodec-dev etc...
+ 
+1) Sur l'environnement de votre choix, filtrer la vidéo à l'aide du script YoloCR.vpy.
+N'oubliez pas d'éditer les premières lignes de YoloCR.vpy en fonction de votre fichier source.
+vspipe -y YoloCR.vpy - | ffmpeg -i - -c:v mpeg4 -qscale:v 3 -y Vidéo_Filtrée.mp4
+Vous disposez maintenant d'une vidéo OCR-isable et des informations de changement de scène.
+ 
+2) Sur l'environnement Unix, script d'OCR en lui-même : YoloCR.sh.
+La vidéo OCR-isable et les informations de changement de scène doivent être dans le même dossier.
+./YoloCR.sh Vidéo_Filtrée.mp4
+ 
+3) C'est l'heure du Check :D
