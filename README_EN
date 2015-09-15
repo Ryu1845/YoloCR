@@ -33,3 +33,5 @@ You now have an OCR-isable video and scenechange informations.
 Then you can OCR the video on the Unix environment.
 ./YoloCR.sh Filtered_Video.mp4
 Now it's Checking time :D
+
+Contact : #Seigi-fr on Rizon
