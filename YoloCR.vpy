@@ -53,9 +53,12 @@ def Resizing(clip,largeur,hauteur,hauteur2):
 	clip=core.std.CropAbs(clip=clip,width=largeur,height=hauteur,left=int((clip.width-largeur)/2),top=clip.height-hauteur2)
 	if Ss!=1:
 		if ModeU=='nnedi3':
+			clip=core.std.Transpose(clip)
 			for i in range(0,Ss):
-				clip=core.std.Transpose(clip)
 				clip=core.nnedi3.nnedi3(clip=clip,field=1,dh=1,nsize=0,nns=3)
+			clip=core.std.Transpose(clip)
+			for i in range(0,Ss):
+                                clip=core.nnedi3.nnedi3(clip=clip,field=1,dh=1,nsize=0,nns=3)
 			if Ssbis!=1:
 				clip=core.fmtc.resample(clip=clip,scale=Ssbis,kernel="sinc",taps=2)
 				clip=core.fmtc.bitdepth(clip=clip,bits=8)
