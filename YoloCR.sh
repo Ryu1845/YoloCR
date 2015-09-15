@@ -154,6 +154,8 @@ for SRT in $(printf OCR%s.srt\\n "" $Alt); do {
         sed "s/I'/l'/g" $SRT |
         sed 's/[®©]/O/g' |
         sed 's/\([cs]\)oeur/\1œur/g' |
+        sed 's/oeuvre/œuvre/g' |
+        sed 's/oeuf/œuf/g' |
         sed "s/ *'/’/g" |
         sed 's/\(.\)—\(.\)/\1-\2/g' |
         sed 's/- /— /g' |
