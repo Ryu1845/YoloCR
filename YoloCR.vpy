@@ -5,7 +5,8 @@ HauteurCropBoxAlt=-1 # Hauteur de la CropBox Alternative, utile pour l'OCR des i
 Supersampling=-1 # Facteur de supersampling (multiplication de la résolution de la vidéo). Mettre à -1 pour calculer le facteur automatiquement.
 ExpandRatio=1 # EXPERIMENTAL ! Facteur Expand/Inpand. La valeur 1 est adaptée pour un Supersampling automatique (1080p). Calcul typique de la valeur : ExpandRatio="RésolutionFinale"/1080.
 ModeU='sinc' # 'sinc' (2 taps, plus rapide) ou 'nnedi3' (plus lent), contrôle la méthode d'Upscale. 
-SeuilsST=[230,80] # Seuils délimitant les sous-titres. Ces valeurs sont la luminosité maximale de leur intérieur et extérieur respectivement.
+SeuilI=230 # Seuil délimitant les sous-titres. Cette valeur correspond à la luminosité maximale de l'intérieur (Inline).
+SeuilO=80 # Seuil délimitant les sous-titres. Cette valeur correspond à la luminosité maximale de l'extérieur (Outline).
 SeuilSCD=6 # Un seuil trop bas augmente le nombre de faux positifs, un seuil trop haut ne permet pas de détecter tous les sous-titres.
 
 
@@ -21,7 +22,12 @@ def Identity(n,clip,f):
 	return clip
 
 Clip=core.ffms2.Source(source=FichierSource)
-Clip=core.std.ShufflePlanes(clips=Clip,planes=0,colorfamily=vs.GRAY)
+if type(SeuilI) is int and type(SeuilO) is int:
+	Clip=core.std.ShufflePlanes(clips=Clip,planes=0,colorfamily=vs.GRAY)
+else:
+	Clip=core.fmtc.resample(clip=Clip,css="444")
+	Clip=core.fmtc.matrix(clip=Clip,mat="709",col_fam=vs.RGB)
+	Clip=core.fmtc.bitdepth(clip=Clip,bits=8)
 
 if Supersampling<0:
 	if Clip.width/Clip.height>16/9:	
@@ -66,19 +72,40 @@ def Resizing(clip,largeur,hauteur,hauteur2):
 			clip=core.fmtc.resample(clip=clip,scale=Ss,kernel="sinc",taps=2)
 			clip=core.fmtc.bitdepth(clip=clip,bits=8)
 	return clip
+	
+def RGBBinarize(clip,blank,seuilr,seuilg,seuilb):
+	R=core.std.ShufflePlanes(clips=clip,planes=0,colorfamily=vs.GRAY)
+	R=core.std.Binarize(clip=R,threshold=seuilr)
+	G=core.std.ShufflePlanes(clips=clip,planes=1,colorfamily=vs.GRAY)
+	G=core.std.Binarize(clip=G,threshold=seuilb)
+	B=core.std.ShufflePlanes(clips=clip,planes=2,colorfamily=vs.GRAY)
+	B=core.std.Binarize(clip=B,threshold=seuilg)
+	clip=core.std.MaskedMerge(blank,R,G)
+	clip=core.std.MaskedMerge(blank,clip,B)
+	return clip
 
-def Cleaning(clip,seuili,seuilo,e):
-	White_Raw=core.std.Binarize(clip=clip,threshold=seuili)
-	Bright_Raw=core.std.Binarize(clip=clip,threshold=seuilo)
-
-	Blank=core.std.BlankClip(clip)
+def Cleaning(clip,blank,e):
+	if type(SeuilI) is int and type(SeuilO) is int:
+		White_Raw=core.std.Binarize(clip=White_Raw,threshold=SeuilI)
+		Bright_Raw=core.std.Binarize(clip=clip,threshold=SeuilO)
+	elif type(SeuilI) is int and type(SeuilO) is list:
+		White_Raw=core.std.ShufflePlanes(clips=clip,planes=0,colorfamily=vs.GRAY)
+		White_Raw=core.std.Binarize(clip=White_Raw,threshold=SeuilI)
+		Bright_Raw=RGBBinarize(clip,blank,SeuilO[0],SeuilO[1],SeuilO[2])
+	elif type(SeuilI) is list and type(SeuilO) is int:
+		White_Raw=RGBBinarize(clip,blank,SeuilI[0],SeuilI[1],SeuilI[2])
+		Bright_Raw=core.std.ShufflePlanes(clips=clip,planes=0,colorfamily=vs.GRAY)
+		Bright_Raw=core.std.Binarize(clip=clip,threshold=SeuilO)
+	else:
+		White_Raw=RGBBinarize(clip,blank,SeuilI[0],SeuilI[1],SeuilI[2])
+		Bright_Raw=RGBBinarize(clip,blank,SeuilO[0],SeuilO[1],SeuilO[2])
 
 	Bright_Out=core.std.Lut2(clipa=Bright_Raw,clipb=Rect,function=minimum)
 
 	Bright_Not=core.generic.Hysteresis(base=Bright_Out,alt=Bright_Raw)
 	Bright_Not=core.std.Invert(Bright_Not)
 
-	White_Txt=core.std.MaskedMerge(Blank,White_Raw,Bright_Not)
+	White_Txt=core.std.MaskedMerge(blank,White_Raw,Bright_Not)
 
 	White_Lb=haf.mt_inpand_multi(src=White_Txt,sw=int(e),sh=int(e),mode="ellipse")
 	White_Lb=haf.mt_expand_multi(src=White_Lb,sw=int(e),sh=int(e),mode="ellipse")
@@ -96,9 +123,13 @@ def Cleaning(clip,seuili,seuilo,e):
 	return ClipCleaning
 
 ClipResized=Resizing(Clip,DimensionCropBoxes[0],DimensionCropBoxes[1],HauteurCropBox)
+
 Blackclip=core.std.BlankClip(width=int(ClipResized.width-20),height=int(ClipResized.height-20),format=vs.GRAY8,color=0)
 Rect=core.std.AddBorders(clip=Blackclip,left=int(10),right=int(10),top=int(10),bottom=int(10),color=255)
-ClipCleaned=Cleaning(ClipResized,SeuilsST[0],SeuilsST[1],ExpandRatio)
+Blank=core.std.BlankClip(ClipResized,format=vs.GRAY8)
+
+ClipCleaned=Cleaning(ClipResized,Blank,ExpandRatio)
+
 if Supersampling==-1:
 	ClipCleanedSC=core.std.CropAbs(clip=ClipCleaned,width=500,height=56,left=int((ClipCleaned.width-500)/2),top=int(ClipCleaned.height/2))
 else:
@@ -108,7 +139,9 @@ ClipCleaned=core.std.FrameEval(ClipCleaned,functools.partial(Identity,clip=ClipC
 
 if HauteurCropBoxAlt>=0:
 	ClipResizedAlt=Resizing(Clip,DimensionCropBoxes[0],DimensionCropBoxes[1],HauteurCropBoxAlt)
-	ClipCleanedAlt=Cleaning(ClipResizedAlt,SeuilsST[0],SeuilsST[1])
+	
+	ClipCleanedAlt=Cleaning(ClipResizedAlt,Blank,ExpandRatio)
+	
 	if Supersampling==-1:
 		ClipCleanedAltSC=core.std.CropAbs(clip=ClipCleanedAlt,width=500,height=56,left=int((ClipCleanedAlt.width-500)/2),top=int(ClipCleanedAlt.height/2-56))
 	else:
