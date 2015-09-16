@@ -1,5 +1,5 @@
 FichierSource='Vidéo_Source.mkv'
-DimensionCropBoxes=[1344,150] # Taille en largeur et hauteur de la CropBox délimitant les sous-titres à OCR.
+DimensionCropBox=[1344,150] # Taille en largeur et hauteur de la CropBox délimitant les sous-titres à OCR.
 HauteurCropBox=196 # Hauteur de la CropBox délimitant les sous-titres à OCR.
 HauteurCropBoxAlt=-1 # Hauteur de la CropBox Alternative, utile pour l'OCR des indications. Double le temps de traitement. Mettre à -1 pour désactiver.
 Supersampling=-1 # Facteur de supersampling (multiplication de la résolution de la vidéo). Mettre à -1 pour calculer le facteur automatiquement.
@@ -130,7 +130,7 @@ def Cleaning(clip,blank,e):
 	
 	return ClipCleaning
 
-ClipResized=Resizing(Clip,DimensionCropBoxes[0],DimensionCropBoxes[1],HauteurCropBox)
+ClipResized=Resizing(Clip,DimensionCropBox[0],DimensionCropBox[1],HauteurCropBox)
 
 Blackclip=core.std.BlankClip(width=int(ClipResized.width-20),height=int(ClipResized.height-20),format=vs.GRAY8,color=0)
 Rect=core.std.AddBorders(clip=Blackclip,left=int(10),right=int(10),top=int(10),bottom=int(10),color=255)
@@ -146,7 +146,7 @@ ClipCleanedSC=core.scd.Detect(clip=ClipCleanedSC,thresh=SeuilSCD,log="SceneChang
 ClipCleaned=core.std.FrameEval(ClipCleaned,functools.partial(Identity,clip=ClipCleaned),prop_src=ClipCleanedSC)
 
 if HauteurCropBoxAlt>=0:
-	ClipResizedAlt=Resizing(Clip,DimensionCropBoxes[0],DimensionCropBoxes[1],HauteurCropBoxAlt)
+	ClipResizedAlt=Resizing(Clip,DimensionCropBox[0],DimensionCropBox[1],HauteurCropBoxAlt)
 	
 	ClipCleanedAlt=Cleaning(ClipResizedAlt,Blank,ExpandRatio)
 	
