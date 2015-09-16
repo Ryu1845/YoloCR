@@ -1,6 +1,6 @@
 FichierSource='Vidéo_Source.mkv'
 DimensionCropBox=[1344,150] # Taille en largeur et hauteur de la CropBox délimitant les sous-titres à OCR.
-HauteurCropBox=196 # Hauteur de la CropBox délimitant les sous-titres à OCR.
+HauteurCropBox=46 # Hauteur de la CropBox délimitant les sous-titres à OCR.
 HauteurCropBoxAlt=-1 # Hauteur de la CropBox Alternative, utile pour l'OCR des indications. Double le temps de traitement. Mettre à -1 pour désactiver.
 Supersampling=-1 # Facteur de supersampling (multiplication de la résolution de la vidéo). Mettre à -1 pour calculer le facteur automatiquement.
 ExpandRatio=1 # EXPERIMENTAL ! Facteur Expand/Inpand. La valeur 1 est adaptée pour un Supersampling automatique (1080p). Calcul typique de la valeur : ExpandRatio="RésolutionFinale"/1080.
@@ -129,6 +129,10 @@ def Cleaning(clip,blank,e):
 	ClipCleaning=core.std.Median(clip=ClipCleaning)
 	
 	return ClipCleaning
+
+HauteurCropBox=HauteurCropBox+DimensionCropBox[1]
+if HauteurCropBoxAlt>=0:
+	HauteurCropBoxAlt=HauteurCropBoxAlt+DimensionCropBox[1]
 
 ClipResized=Resizing(Clip,DimensionCropBox[0],DimensionCropBox[1],HauteurCropBox)
 

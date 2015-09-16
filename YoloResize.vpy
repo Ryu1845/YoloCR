@@ -1,7 +1,7 @@
 FichierSource='Vidéo_Source.mkv'
 DimensionCropBox=[1344,150] # Taille en largeur et hauteur de la CropBox délimitant les sous-titres à OCR.
-HauteurCropBox=196 # Hauteur de la CropBox délimitant les sous-titres à OCR.
-Supersampling=-1 # Facteur de supersampling (multiplication de la résolution de la vidéo). Mettre à -1 pour calculer le facteur automatiquement.
+HauteurCropBox=46 # Hauteur de la CropBox délimitant les sous-titres à OCR.
+Supersampling=1 # Facteur de supersampling (multiplication de la résolution de la vidéo). Mettre à -1 pour calculer le facteur automatiquement.
 ExpandRatio=1 # EXPERIMENTAL ! Facteur Expand/Inpand. La valeur 1 est adaptée pour un Supersampling automatique (1080p). Calcul typique de la valeur : ExpandRatio="RésolutionFinale"/1080.
 ModeU='sinc' # 'sinc' (2 taps, plus rapide) ou 'nnedi3' (plus lent), contrôle la méthode d'Upscale.
 
@@ -10,9 +10,9 @@ import vapoursynth as vs
 core=vs.get_core()
 
 Clip=core.ffms2.Source(source=FichierSource)
-Clip=core.std.CropAbs(clip=Clip,width=DimensionCropBox[0],height=DimensionCropBoxes[1],left=int((clip.width-DimensionCropBox[0])/2),top=clip.height-HauteurCropBox)
+Clip=core.std.CropAbs(clip=Clip,width=DimensionCropBox[0],height=DimensionCropBoxes[1],left=int((clip.width-DimensionCropBox[0])/2),top=clip.height-HauteurCropBox-DimensionCropBox[1])
 
-if modeU=='nnedi3'
+if modeU=='nnedi3':
 	Clip=core.fmtc.resample(clip=Clip,css="444")
 	Clip=core.fmtc.matrix(clip=Clip,mat="709",col_fam=vs.RGB)
 	Clip=core.fmtc.bitdepth(clip=Clip,bits=8)
