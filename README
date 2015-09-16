@@ -25,7 +25,20 @@ Astuce : Si vous n'utilisez pas un environnement Unix, vous pouvez installer Vap
  
 /!\ Si vous compilez Vapoursynth sur Ubuntu 14.04 ou Linux Mint 17, il est conseillé d'utiliser la version ffmpeg du dépôt Kyrill : https://launchpad.net/~kirillshkrogalev/+archive/ubuntu/ffmpeg-next
 Installer alors libavcodec-ffmpeg-dev, à la place de libavcodec-dev etc...
- 
+
+0) Sur l'environnement de votre choix, vous pouvez déterminer les paramètres à rentrer dans YoloCR.vpy à l'aide de YoloResize.vpy et YoloSeuil.vpy.
+Ouvrez d'abord YoloResize dans Vapoursynth Editor.
+	DimensionCropBox vous permet de limiter la zone à OCR. Cela augmentera la vitesse de traitement ET la fiabilité de l'OCR qui s'en suivra.
+	HauteurCropBox définit la hauteur du bord inférieur de la CropBox.
+Notez que ces deux paramètres se règlent avant upscale, cela permet encore une fois d'augmenter la vitesse de traitement.
+	Vous pouvez ensuite passer la valeur de Supersampling à -1 et vérifier que vos sous-titres ne sont pas en contact avec le bord blanc.
+Ouvrez maintenant YoloSeuil dans l'éditeur.
+	Paramétrez les paramètres DimensionCropBox et HauteurCropBox comme précedemment.
+	Choisissez le ModeS qui vous convient. "L" dans le cas d'un seuil blanc ou noir, successivement R, G et B dans le cas contraire.
+	Réglez le Seuil.
+		Dans le cas de l'inline (intérieur des sous-titres), ce seuil doit être au maximum et les sous-titres doivent rester pleinement visibles.
+		Dans de le cas de l'outline (bordure des sous-titres), ce seuil doit être au minimum et l'outline doit être complètement noire.
+
 1) Sur l'environnement de votre choix, filtrer la vidéo à l'aide du script YoloCR.vpy.
 N'oubliez pas d'éditer les premières lignes de YoloCR.vpy en fonction de votre fichier source.
 vspipe -y YoloCR.vpy - | ffmpeg -i - -c:v mpeg4 -qscale:v 3 -y Vidéo_Filtrée.mp4

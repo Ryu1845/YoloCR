@@ -3,8 +3,8 @@ DimensionCropBox=[1344,150] # Taille en largeur et hauteur de la CropBox délimi
 HauteurCropBox=46 # Hauteur de la CropBox délimitant les sous-titres à OCR.
 Supersampling=-1 # Facteur de supersampling (multiplication de la résolution de la vidéo). Mettre à -1 pour calculer le facteur automatiquement.
 ModeU='sinc' # 'sinc' (2 taps, plus rapide) ou 'nnedi3' (plus lent), contrôle la méthode d'Upscale.
-Seuil=230 # Seuil délimitant les sous-titres.
 ModeS='L' # 'L' pour Luma, 'R' pour Rouge, 'B' pour Bleu ou 'G' pour Vert. Seuil à analyser.
+Seuil=230 # Seuil délimitant les sous-titres.
 
 
 import vapoursynth as vs
