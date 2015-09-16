@@ -73,7 +73,7 @@ def Resizing(clip,largeur,hauteur,hauteur2):
 			clip=core.fmtc.bitdepth(clip=clip,bits=8)
 	return clip
 	
-def RGBBinarize(clip,blank,seuil):
+def RGBBinarize(clip,seuil):
 	for i in range(0,int(len(seuil)/3)):
 		i=i*3
 		R=core.std.ShufflePlanes(clips=clip,planes=0,colorfamily=vs.GRAY)
@@ -82,12 +82,13 @@ def RGBBinarize(clip,blank,seuil):
 		G=core.std.Binarize(clip=G,threshold=seuil[i+1])
 		B=core.std.ShufflePlanes(clips=clip,planes=2,colorfamily=vs.GRAY)
 		B=core.std.Binarize(clip=B,threshold=seuil[i+2])
-		cliptmp=core.std.MaskedMerge(blank,R,G)
-		cliptmp=core.std.MaskedMerge(blank,cliptmp,B)
+		RG=core.std.Merge(R,G)
+		RGB=core.std.Merge(RG,B)
+		RGB=core.std.Binarize(clip=RGB,threshold=1)
 		if i==0:
-			clipfin=cliptmp
+			clipfin=RGB
 		else:
-			clipfin=core.std.Merge(clipfin,cliptmp)
+			clipfin=core.std.Merge(clipfin,RGB)
 	clipfin=core.std.Binarize(clip=clipfin,threshold=1)
 	return clipfin
 
@@ -98,14 +99,14 @@ def Cleaning(clip,blank,e):
 	elif type(SeuilI) is int and type(SeuilO) is list:
 		White_Raw=core.std.ShufflePlanes(clips=clip,planes=0,colorfamily=vs.GRAY)
 		White_Raw=core.std.Binarize(clip=White_Raw,threshold=SeuilI)
-		Bright_Raw=RGBBinarize(clip,blank,SeuilO)
+		Bright_Raw=RGBBinarize(clip,SeuilO)
 	elif type(SeuilI) is list and type(SeuilO) is int:
-		White_Raw=RGBBinarize(clip,blank,SeuilI)
+		White_Raw=RGBBinarize(clip,SeuilI)
 		Bright_Raw=core.std.ShufflePlanes(clips=clip,planes=0,colorfamily=vs.GRAY)
 		Bright_Raw=core.std.Binarize(clip=clip,threshold=SeuilO)
 	else:
-		White_Raw=RGBBinarize(clip,blank,SeuilI)
-		Bright_Raw=RGBBinarize(clip,blank,SeuilO)
+		White_Raw=RGBBinarize(clip,SeuilI)
+		Bright_Raw=RGBBinarize(clip,SeuilO)
 
 	Bright_Out=core.std.Lut2(clipa=Bright_Raw,clipb=Rect,function=minimum)
 
