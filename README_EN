@@ -42,7 +42,7 @@ Note that theses two parameters have to be adjusted before upscale.
 	You can then change Supersampling parameter to -1 and verify that your subtitles aren't eated by the white borderline.
 Now open YoloSeuil in the editor.
 	Define DimensionCropBox and HauteurCropBox like you did previously.
-	Choose the fitting ModeS. "L" if you want to define white or black threshold, succesively R, G and B in the opposite case.
+	Choose the fitting ModeS. 'L' if you want to define a white or black threshold, succesively 'R', 'G' and 'B' otherwise.
 	Adjust the Seuil (Threshold).
 		Inline threshold have to be as high as possible, but subtitles must remain completely visible.
 		Outline threshold have to be as low as possible, but outline must remain fully black.
