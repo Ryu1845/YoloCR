@@ -77,14 +77,10 @@ def RGBBinarize(clip,seuil):
 	for i in range(0,int(len(seuil)/3)):
 		i=i*3
 		R=core.std.ShufflePlanes(clips=clip,planes=0,colorfamily=vs.GRAY)
-		R=core.std.Binarize(clip=R,threshold=seuil[i])
 		G=core.std.ShufflePlanes(clips=clip,planes=1,colorfamily=vs.GRAY)
-		G=core.std.Binarize(clip=G,threshold=seuil[i+1])
 		B=core.std.ShufflePlanes(clips=clip,planes=2,colorfamily=vs.GRAY)
-		B=core.std.Binarize(clip=B,threshold=seuil[i+2])
-		RG=core.std.Merge(R,G)
-		RGB=core.std.Merge(RG,B)
-		RGB=core.std.Binarize(clip=RGB,threshold=1)
+		ExprString="x "+str(seuil[i])+" >= y "+str(seuil[i+1])+" >= or z "+str(seuil[i+2])+" >= or 255 0 ?"
+		RGB=core.std.Expr(clips=[R,G,B],expr=[ExprString])
 		if i==0:
 			clipfin=RGB
 		else:
