@@ -12,7 +12,7 @@ import nnedi3_rpow2 as nn3
 core=vs.get_core()
 
 Clip=core.ffms2.Source(source=FichierSource)
-Clip=core.std.CropAbs(clip=Clip,width=DimensionCropBox[0],height=DimensionCropBoxes[1],left=int((clip.width-DimensionCropBox[0])/2),top=clip.height-HauteurCropBox-DimensionCropBox[1])
+Clip=core.std.CropAbs(clip=Clip,width=DimensionCropBox[0],height=DimensionCropBox[1],left=int((Clip.width-DimensionCropBox[0])/2),top=Clip.height-HauteurCropBox-DimensionCropBox[1])
 
 if ModeS=='L':
 	Clip=core.std.ShufflePlanes(clips=Clip,planes=0,colorfamily=vs.GRAY)
