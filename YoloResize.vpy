@@ -6,15 +6,11 @@ ModeU='sinc' # 'sinc' (2 taps, plus rapide) ou 'nnedi3' (plus lent), contrôle l
 
 
 import vapoursynth as vs
+import nnedi3_rpow2 as nn3
 core=vs.get_core()
 
 Clip=core.ffms2.Source(source=FichierSource)
 Clip=core.std.CropAbs(clip=Clip,width=DimensionCropBox[0],height=DimensionCropBoxes[1],left=int((clip.width-DimensionCropBox[0])/2),top=clip.height-HauteurCropBox-DimensionCropBox[1])
-
-if modeU=='nnedi3':
-	Clip=core.fmtc.resample(clip=Clip,css="444")
-	Clip=core.fmtc.matrix(clip=Clip,mat="709",col_fam=vs.RGB)
-	Clip=core.fmtc.bitdepth(clip=Clip,bits=8)
 
 if Supersampling<0:
 	if Clip.width/Clip.height>16/9:	
@@ -44,12 +40,7 @@ if ModeU=='nnedi3' and Ss!=1:
 
 if Ss!=1:
 	if ModeU=='nnedi3':
-		Clip=core.std.Transpose(Clip)
-		for i in range(0,Ss):
-			Clip=core.nnedi3.nnedi3(clip=Clip,field=1,dh=1,nsize=0,nns=3)
-		Clip=core.std.Transpose(Clip)
-		for i in range(0,Ss):
-        	Clip=core.nnedi3.nnedi3(clip=Clip,field=1,dh=1,nsize=0,nns=3)
+		clip=nn3.nnedi3_rpow2(clip=clip,rfactor=Ss)
 		if Ssbis!=1:
 			Clip=core.fmtc.resample(clip=Clip,scale=Ssbis,kernel="sinc",taps=2)
 			Clip=core.fmtc.bitdepth(clip=Clip,bits=8)

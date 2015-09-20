@@ -11,6 +11,7 @@ SeuilSCD=6 # Un seuil trop bas augmente le nombre de faux positifs, un seuil tro
 
 
 import vapoursynth as vs
+import nnedi3_rpow2 as nn3
 import havsfunc as haf
 import functools
 core=vs.get_core()
@@ -24,10 +25,6 @@ def Identity(n,clip,f):
 Clip=core.ffms2.Source(source=FichierSource)
 if type(SeuilI) is int and type(SeuilO) is int:
 	Clip=core.std.ShufflePlanes(clips=Clip,planes=0,colorfamily=vs.GRAY)
-else:
-	Clip=core.fmtc.resample(clip=Clip,css="444")
-	Clip=core.fmtc.matrix(clip=Clip,mat="709",col_fam=vs.RGB)
-	Clip=core.fmtc.bitdepth(clip=Clip,bits=8)
 
 if Supersampling<0:
 	if Clip.width/Clip.height>16/9:	
@@ -59,12 +56,7 @@ def Resizing(clip,largeur,hauteur,hauteur2):
 	clip=core.std.CropAbs(clip=clip,width=largeur,height=hauteur,left=int((clip.width-largeur)/2),top=clip.height-hauteur2)
 	if Ss!=1:
 		if ModeU=='nnedi3':
-			clip=core.std.Transpose(clip)
-			for i in range(0,Ss):
-				clip=core.nnedi3.nnedi3(clip=clip,field=1,dh=1,nsize=0,nns=3)
-			clip=core.std.Transpose(clip)
-			for i in range(0,Ss):
-                                clip=core.nnedi3.nnedi3(clip=clip,field=1,dh=1,nsize=0,nns=3)
+			clip=nn3.nnedi3_rpow2(clip=clip,rfactor=Ss)
 			if Ssbis!=1:
 				clip=core.fmtc.resample(clip=clip,scale=Ssbis,kernel="sinc",taps=2)
 				clip=core.fmtc.bitdepth(clip=clip,bits=8)
@@ -74,11 +66,11 @@ def Resizing(clip,largeur,hauteur,hauteur2):
 	return clip
 	
 def RGBBinarize(clip,seuil):
+	R=core.std.ShufflePlanes(clips=clip,planes=0,colorfamily=vs.GRAY)
+	G=core.std.ShufflePlanes(clips=clip,planes=1,colorfamily=vs.GRAY)
+	B=core.std.ShufflePlanes(clips=clip,planes=2,colorfamily=vs.GRAY)
 	for i in range(0,int(len(seuil)/3)):
 		i=i*3
-		R=core.std.ShufflePlanes(clips=clip,planes=0,colorfamily=vs.GRAY)
-		G=core.std.ShufflePlanes(clips=clip,planes=1,colorfamily=vs.GRAY)
-		B=core.std.ShufflePlanes(clips=clip,planes=2,colorfamily=vs.GRAY)
 		ExprString="x "+str(seuil[i])+" >= y "+str(seuil[i+1])+" >= or z "+str(seuil[i+2])+" >= or 255 0 ?"
 		RGB=core.std.Expr(clips=[R,G,B],expr=[ExprString])
 		if i==0:
@@ -89,20 +81,25 @@ def RGBBinarize(clip,seuil):
 	return clipfin
 
 def Cleaning(clip,blank,e):
+	if type(SeuilI) is list or type(SeuilO) is list:
+		clipRGB=core.fmtc.resample(clip=clip,css="444")
+		clipRGB=core.fmtc.matrix(clip=clip,mat="709",col_fam=vs.RGB)
+		clipRGB=core.fmtc.bitdepth(clip=clip,bits=8)
+		
 	if type(SeuilI) is int and type(SeuilO) is int:
-		White_Raw=core.std.Binarize(clip=White_Raw,threshold=SeuilI)
+		White_Raw=core.std.Binarize(clip=clip,threshold=SeuilI)
 		Bright_Raw=core.std.Binarize(clip=clip,threshold=SeuilO)
 	elif type(SeuilI) is int and type(SeuilO) is list:
 		White_Raw=core.std.ShufflePlanes(clips=clip,planes=0,colorfamily=vs.GRAY)
 		White_Raw=core.std.Binarize(clip=White_Raw,threshold=SeuilI)
-		Bright_Raw=RGBBinarize(clip,SeuilO)
+		Bright_Raw=RGBBinarize(clipRGB,SeuilO)
 	elif type(SeuilI) is list and type(SeuilO) is int:
-		White_Raw=RGBBinarize(clip,SeuilI)
+		White_Raw=RGBBinarize(clipRGB,SeuilI)
 		Bright_Raw=core.std.ShufflePlanes(clips=clip,planes=0,colorfamily=vs.GRAY)
-		Bright_Raw=core.std.Binarize(clip=clip,threshold=SeuilO)
+		Bright_Raw=core.std.Binarize(clip=Bright_Raw,threshold=SeuilO)
 	else:
-		White_Raw=RGBBinarize(clip,SeuilI)
-		Bright_Raw=RGBBinarize(clip,SeuilO)
+		White_Raw=RGBBinarize(clipRGB,SeuilI)
+		Bright_Raw=RGBBinarize(clipRGB,SeuilO)
 
 	Bright_Out=core.std.Lut2(clipa=Bright_Raw,clipb=Rect,function=minimum)
 

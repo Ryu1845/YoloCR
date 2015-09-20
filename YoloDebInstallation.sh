@@ -55,7 +55,7 @@ make install; cd ../..
 # Installation de HAvsFunc
 cd ..
 su -c "bsdtar -xf $(ls havsfunc*.7z)" $Username && rm havsfunc*.7z
-mv havsfunc.py /usr/local/lib/python3.4/site-packages/havsfunc.py
+cp havsfunc.py /usr/local/lib/python3.4/site-packages/havsfunc.py
 
 # Installation de SceneChange
 su -c "mkdir SceneChange; mv scenechange-0.2.0-2.7z SceneChange/scenechange-0.2.0-2.7z" $Username; cd SceneChange
@@ -75,6 +75,10 @@ make install; cd ../../..
 su -c "git clone https://github.com/dubhater/vapoursynth-nnedi3.git" $Username; cd vapoursynth-nnedi3
 su -c "./autogen.sh && ./configure --libdir=/usr/local/lib/vapoursynth && make" $Username
 make install; cd ..
+
+# Installation de nnedi3_rpow2
+su -c "git clone https://gist.github.com/020c497524e794779d9c.git vapoursynth-nnedi3_rpow2" $Username
+cp vapoursynth-nnedi3_rpow2/nnedi3_rpow2.py /usr/local/lib/python3.4/site-packages/nnedi3_rpow2.py
 
 # Installation de zimg
 su -c "git clone https://github.com/sekrit-twc/zimg.git" $Username; cd zimg

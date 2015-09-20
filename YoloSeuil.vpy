@@ -8,6 +8,7 @@ Seuil=230 # Seuil délimitant les sous-titres.
 
 
 import vapoursynth as vs
+import nnedi3_rpow2 as nn3
 core=vs.get_core()
 
 Clip=core.ffms2.Source(source=FichierSource)
@@ -15,16 +16,6 @@ Clip=core.std.CropAbs(clip=Clip,width=DimensionCropBox[0],height=DimensionCropBo
 
 if ModeS=='L':
 	Clip=core.std.ShufflePlanes(clips=Clip,planes=0,colorfamily=vs.GRAY)
-else:
-	Clip=core.fmtc.resample(clip=Clip,css="444")
-	Clip=core.fmtc.matrix(clip=Clip,mat="709",col_fam=vs.RGB)
-	Clip=core.fmtc.bitdepth(clip=Clip,bits=8)
-	if ModeS=='R':
-		Clip=core.std.ShufflePlanes(clips=Clip,planes=0,colorfamily=vs.GRAY)
-	elif ModeS=='G':
-		Clip=core.std.ShufflePlanes(clips=Clip,planes=1,colorfamily=vs.GRAY)
-	else:
-		Clip=core.std.ShufflePlanes(clips=Clip,planes=2,colorfamily=vs.GRAY)
 
 if Supersampling<0:
 	if Clip.width/Clip.height>16/9:	
@@ -54,18 +45,24 @@ if ModeU=='nnedi3' and Ss!=1:
 
 if Ss!=1:
 	if ModeU=='nnedi3':
-		Clip=core.std.Transpose(Clip)
-		for i in range(0,Ss):
-			Clip=core.nnedi3.nnedi3(clip=Clip,field=1,dh=1,nsize=0,nns=3)
-		Clip=core.std.Transpose(Clip)
-		for i in range(0,Ss):
-        	Clip=core.nnedi3.nnedi3(clip=Clip,field=1,dh=1,nsize=0,nns=3)
+		clip=nn3.nnedi3_rpow2(clip=clip,rfactor=Ss)
 		if Ssbis!=1:
 			Clip=core.fmtc.resample(clip=Clip,scale=Ssbis,kernel="sinc",taps=2)
 			Clip=core.fmtc.bitdepth(clip=Clip,bits=8)
 	else:
 		Clip=core.fmtc.resample(clip=Clip,scale=Ss,kernel="sinc",taps=2)
 		Clip=core.fmtc.bitdepth(clip=Clip,bits=8)
+
+if ModeS=='R' or ModeS=='G' or ModeS=='B':
+	Clip=core.fmtc.resample(clip=Clip,css="444")
+	Clip=core.fmtc.matrix(clip=Clip,mat="709",col_fam=vs.RGB)
+	Clip=core.fmtc.bitdepth(clip=Clip,bits=8)
+	if ModeS=='R':
+		Clip=core.std.ShufflePlanes(clips=Clip,planes=0,colorfamily=vs.GRAY)
+	elif ModeS=='G':
+		Clip=core.std.ShufflePlanes(clips=Clip,planes=1,colorfamily=vs.GRAY)
+	else:
+		Clip=core.std.ShufflePlanes(clips=Clip,planes=2,colorfamily=vs.GRAY)
 		
 Clip=core.std.Binarize(clip=Clip,threshold=Seuil)
 Crop=core.std.CropAbs(clip=Clip,width=Clip.width-20,height=Clip.height-20,left=10,top=10

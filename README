@@ -14,7 +14,9 @@ Prérequis :
 - le plugin HAvsFunc pour Vapoursynth (Unix ou Windows) : http://forum.doom9.org/showthread.php?t=166582
 - le plugin SceneChange pour Vapoursynth (Unix ou Windows) : http://forum.doom9.org/showthread.php?t=166769
 - le plugin fmtconv pour Vapoursynth (Unix ou Windows) : http://forum.doom9.org/showthread.php?t=166504
+- (Conseillé) Vapoursynth Editor (Unix ou Windows) : http://forum.doom9.org/showthread.php?t=170965
 - (Optionnel) le plugin nnedi3 pour Vapoursynth (Unix ou Windows) : http://forum.doom9.org/showthread.php?t=166434
+- (Optionnel) le plugin nnedi3_rpow2 pour Vapoursynth (Unix ou Windows) : https://gist.github.com/YamashitaRen/020c497524e794779d9c
 
 Script d'installation des prérequis pour Debian Jessie et LMDE Betsy :
 sh YoloDebInstallation.sh
