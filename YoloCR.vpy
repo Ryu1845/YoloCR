@@ -130,7 +130,7 @@ if HauteurCropBoxAlt>=0:
 ClipResized=Resizing(Clip,DimensionCropBox[0],DimensionCropBox[1],HauteurCropBox)
 
 Blackclip=core.std.BlankClip(width=int(ClipResized.width-20),height=int(ClipResized.height-20),format=vs.GRAY8,color=0)
-Rect=core.std.AddBorders(clip=Blackclip,left=int(10),right=int(10),top=int(10),bottom=int(10),color=255)
+Rect=core.std.AddBorders(clip=Blackclip,left=10,right=10,top=10,bottom=10,color=255)
 Blank=core.std.BlankClip(ClipResized,format=vs.GRAY8)
 
 ClipCleaned=Cleaning(ClipResized,Blank,ExpandRatio)
