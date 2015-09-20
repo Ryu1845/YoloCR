@@ -11,7 +11,8 @@ SeuilSCD=6 # Un seuil trop bas augmente le nombre de faux positifs, un seuil tro
 
 
 import vapoursynth as vs
-import nnedi3_rpow2 as nn3
+if ModeU=='nnedi3':
+	import nnedi3_rpow2 as nn3
 import havsfunc as haf
 import functools
 core=vs.get_core()

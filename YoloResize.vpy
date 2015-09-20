@@ -6,7 +6,8 @@ ModeU='sinc' # 'sinc' (2 taps, plus rapide) ou 'nnedi3' (plus lent), contrôle l
 
 
 import vapoursynth as vs
-import nnedi3_rpow2 as nn3
+if ModeU=='nnedi3':
+	import nnedi3_rpow2 as nn3
 core=vs.get_core()
 
 Clip=core.ffms2.Source(source=FichierSource)
