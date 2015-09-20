@@ -65,6 +65,6 @@ if ModeS=='R' or ModeS=='G' or ModeS=='B':
 		Clip=core.std.ShufflePlanes(clips=Clip,planes=2,colorfamily=vs.GRAY)
 		
 Clip=core.std.Binarize(clip=Clip,threshold=Seuil)
-Crop=core.std.CropAbs(clip=Clip,width=Clip.width-20,height=Clip.height-20,left=10,top=10
+Crop=core.std.CropAbs(clip=Clip,width=Clip.width-20,height=Clip.height-20,left=10,top=10)
 Rect=core.std.AddBorders(clip=Crop,left=10,right=10,top=10,bottom=10,color=255)
 Rect.set_output()
