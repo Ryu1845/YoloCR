@@ -2,7 +2,7 @@ FichierSource='Vidéo_Source.mkv'
 DimensionCropBox=[1344,150] # Taille en largeur et hauteur de la CropBox délimitant les sous-titres à OCR.
 HauteurCropBox=46 # Hauteur de la CropBox délimitant les sous-titres à OCR.
 Supersampling=-1 # Facteur de supersampling (multiplication de la résolution de la vidéo). Mettre à -1 pour calculer le facteur automatiquement.
-ModeU='sinc' # 'sinc' (2 taps, plus rapide) ou 'nnedi3' (plus lent), contrôle la méthode d'Upscale.
+ModeU='sinc' # 'sinc' (2 taps, plus rapide), 'nnedi3' (plus lent) ou 'waifu2x' (beaucoup plus lent), contrôle la méthode d'Upscale.
 ModeS='L' # 'L' pour Luma, 'R' pour Rouge, 'B' pour Bleu ou 'G' pour Vert. Seuil à analyser.
 Seuil=230 # Seuil délimitant les sous-titres.
 
@@ -45,8 +45,16 @@ if ModeU=='nnedi3' and Ss!=1:
 		Ssbis=Supersampling/Ss
 
 if Ss!=1:
-	if ModeU=='nnedi3':
-		clip=nn3.nnedi3_rpow2(clip=clip,rfactor=Ss)
+	if ModeU=='nnedi3' or ModeU=='waifu2x':
+		if ModeU=='nnedi3':
+			Clip=nn3.nnedi3_rpow2(clip=Clip,rfactor=Ss)
+		else :
+			Clip=core.fmtc.bitdepth(clip=Clip,bits=32)
+			Clip=core.w2xc.Waifu2x(clip=Clip,scale=Ss)
+			if Ssbis!=1:
+				Clip=core.fmtc.bitdepth(clip=Clip,bits=16)
+			else :
+				Clip=core.fmtc.bitdepth(clip=Clip,bits=8)
 		if Ssbis!=1:
 			Clip=core.fmtc.resample(clip=Clip,scale=Ssbis,kernel="sinc",taps=2)
 			Clip=core.fmtc.bitdepth(clip=Clip,bits=8)

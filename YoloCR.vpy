@@ -4,7 +4,7 @@ HauteurCropBox=46 # Hauteur de la CropBox délimitant les sous-titres à OCR.
 HauteurCropBoxAlt=-1 # Hauteur de la CropBox Alternative, utile pour l'OCR des indications. Double le temps de traitement. Mettre à -1 pour désactiver.
 Supersampling=-1 # Facteur de supersampling (multiplication de la résolution de la vidéo). Mettre à -1 pour calculer le facteur automatiquement.
 ExpandRatio=1 # EXPERIMENTAL ! Facteur Expand/Inpand. La valeur 1 est adaptée pour un Supersampling automatique (1080p). Calcul typique de la valeur : ExpandRatio="RésolutionFinale"/1080.
-ModeU='sinc' # 'sinc' (2 taps, plus rapide) ou 'nnedi3' (plus lent), contrôle la méthode d'Upscale. 
+ModeU='sinc' # 'sinc' (2 taps, plus rapide), 'nnedi3' (plus lent) ou 'waifu2x' (beaucoup plus lent), contrôle la méthode d'Upscale.
 SeuilI=230 # Seuil délimitant les sous-titres. Cette valeur correspond à la luminosité minimale de l'intérieur (Inline).
 SeuilO=80 # Seuil délimitant les sous-titres. Cette valeur correspond à la luminosité maximale de l'extérieur (Outline).
 SeuilSCD=6 # Un seuil trop bas augmente le nombre de faux positifs, un seuil trop haut ne permet pas de détecter tous les sous-titres.
@@ -56,8 +56,16 @@ if ModeU=='nnedi3' and Ss!=1:
 def Resizing(clip,largeur,hauteur,hauteur2):
 	clip=core.std.CropAbs(clip=clip,width=largeur,height=hauteur,left=int((clip.width-largeur)/2),top=clip.height-hauteur2)
 	if Ss!=1:
-		if ModeU=='nnedi3':
-			clip=nn3.nnedi3_rpow2(clip=clip,rfactor=Ss)
+		if ModeU=='nnedi3' or ModeU=='waifu2x':
+			if ModeU=='nnedi3':
+				clip=nn3.nnedi3_rpow2(clip=clip,rfactor=Ss)
+			else :
+				clip=core.fmtc.bitdepth(clip=clip,bits=32)
+				clip=core.w2xc.Waifu2x(clip=clip,scale=Ss)
+				if Ssbis!=1:
+					clip=core.fmtc.bitdepth(clip=clip,bits=16)
+				else :
+					clip=core.fmtc.bitdepth(clip=clip,bits=8)
 			if Ssbis!=1:
 				clip=core.fmtc.resample(clip=clip,scale=Ssbis,kernel="sinc",taps=2)
 				clip=core.fmtc.bitdepth(clip=clip,bits=8)
