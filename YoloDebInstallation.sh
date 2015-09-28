@@ -82,7 +82,7 @@ cp vapoursynth-nnedi3_rpow2/nnedi3_rpow2.py /usr/local/lib/python3.4/site-packag
 
 # Installation de zimg
 su -c "git clone https://github.com/sekrit-twc/zimg.git" $Username; cd zimg
-su -c "./autogen.sh && ./configure --libdir=/usr/local/lib/vapoursynth && make" $Username
+su -c "./autogen.sh && ./configure --libdir=/usr/local/lib/vapoursynth --enable-x86simd && make" $Username
 make install; cd ..
 
 # Installation de Vapoursynth Editor
