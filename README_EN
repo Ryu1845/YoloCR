@@ -6,7 +6,6 @@ Prerequisites :
 - Vapoursynth's SceneChange plugin : http://forum.doom9.org/showthread.php?t=166769
 - Vapoursynth's fmtconv plugin : http://forum.doom9.org/showthread.php?t=166504
 - (Recommended) Vapoursynth Editor : http://forum.doom9.org/showthread.php?t=170965
-- (Optional) Vapoursynth's nnedi3 plugin : http://forum.doom9.org/showthread.php?t=166434
 - (Optional) Vapoursynth's nnedi3_rpow2 plugin : http://forum.doom9.org/showthread.php?t=172652
 - (Very optional) Vapoursynth's Waifu2x-w2xc plugin : https://github.com/HomeOfVapourSynthEvolution/VapourSynth-Waifu2x-w2xc/
 
