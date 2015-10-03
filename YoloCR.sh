@@ -16,9 +16,9 @@ if [[ $lang = fra ]]
     else echo "Prelude."
 fi
 FilteredVideo=$1
-if [[ "$OSTYPE" = "linux-gnu" ]]
-    then Active=$(xdotool getactivewindow)
-         inplace="-i"
+if [[ "$OSTYPE" = "linux-gnu" ]]; then Active=$(xdotool getactivewindow); fi
+if [[ "$OSTYPE" = "linux-gnu" || "$OSTYPE" = "cygwin" ]]
+    then inplace="-i"
     else inplace="-i .bk"
 fi
 if [ -d ScreensFiltrés ]; then rm ScreensFiltrés/*.jpg 2> /dev/null; else mkdir ScreensFiltrés; fi
@@ -31,7 +31,8 @@ tail -n +$tailnum SceneChanges.log | awk -v fps=$FPS '{if ($3 == 0) {var=sprintf
         wait
 if parallel --minversion 20131122 1> /dev/null; then popt='--bar'; else popt='--eta'; fi
 TessVersionNum=$(tesseract -v 2>&1 | head -1 | cut -d' ' -f2)
-TessVersionNum2=$(echo $TessVersionNum | cut -d. -f2)
+if [[ "$OSTYPE" = "cygwin" ]]; then TessVersionNum=$(echo $TessVersionNum | tr -d '\015'); fi
+TessVersionNum2=$(echo $TessVersionNum | cut -d. -f2 | bc)
 
 ## Utilisation des timecodes pour générer les images à OCR
 if [[ $lang = fra ]]
@@ -67,26 +68,28 @@ if [[ $lang = fra ]]
     else echo "OCR of the ScreensFiltrés directory with Tesseract v${TessVersionNum}."
 fi
 ls *.jpg | parallel $popt 'tesseract {} ../TessResult/{/.} -l '$lang' -psm 6 hocr 2> /dev/null'; cd ../TessResult
-if (($TessVersionNum2 < 03)); then for file in *.html; do mv "$file" "${file%.html}.hocr"; done; fi
-if [[ $lang = fra ]]
+if (( $TessVersionNum2 < 3 )); then for file in *.html; do mv "$file" "${file%.html}.hocr"; done; fi
+if [[ "$OSTYPE" != "cygwin" ]]; then if [[ $lang = fra ]]
     then echo "Vérification de l'OCR italique."
     else echo "Verify the italics OCR."
-fi
-for file in *.hocr; do 
-    if grep -q '<em>' $file; then
-        if grep -q '\.\.\.' $file; then sxiv "../ScreensFiltrés/${file%.hocr}.jpg" & SXIVPID=$!
-            if [[ "$OSTYPE" = "linux-gnu" ]]; then
-                while [ $(xdotool getactivewindow) = $Active ]; do sleep 0.1; done
-                xdotool windowactivate $Active
+fi; fi
+for file in *.hocr; do
+    if [[ "$OSTYPE" != "cygwin" ]]; then
+        if grep -q '<em>' $file; then
+            if grep -q '\.\.\.' $file; then sxiv "../ScreensFiltrés/${file%.hocr}.jpg" & SXIVPID=$!
+                if [[ "$OSTYPE" = "linux-gnu" ]]; then
+                    while [ $(xdotool getactivewindow) = $Active ]; do sleep 0.1; done
+                    xdotool windowactivate $Active
+                fi
+                while true; do read -p "Est-ce de l'italique ? (o/n)" on
+                    case $on in
+                        [Oo]* ) sed -e 's/<em>/ItAlIk1/g' -e 's/<\/em>/ItAlIk2/g' $inplace $file; break;;
+                        [Nn]* ) break;;
+                        * ) echo "Répondre (o)ui ou (n)on.";;
+                    esac
+                done; kill $SXIVPID; wait $SXIVPID 2>/dev/null
+            else sed -e 's/<em>/ItAlIk1/g' -e 's/<\/em>/ItAlIk2/g' $inplace $file
             fi
-            while true; do read -p "Est-ce de l'italique ? (o/n)" on
-                case $on in
-                    [Oo]* ) sed -e 's/<em>/ItAlIk1/g' -e 's/<\/em>/ItAlIk2/g' $inplace $file; break;;
-                    [Nn]* ) break;;
-                    * ) echo "Répondre (o)ui ou (n)on.";;
-                esac
-            done; kill $SXIVPID; wait $SXIVPID 2>/dev/null
-        else sed -e 's/<em>/ItAlIk1/g' -e 's/<\/em>/ItAlIk2/g' $inplace $file
         fi
     fi
     if grep -q '     </span>' $file; then sed $inplace 's/     <\/span>/     <\/span><br>/g' $file; fi
@@ -98,7 +101,7 @@ if [[ $lang = fra ]]
     then echo "Traitement des faux positifs et Suppression des sous-titres vides."
     else echo "Treat false positives and Delete empty subtitles."
 fi
-if (($TessVersionNum2 >= 03));
+if (( TessVersionNum2 >= 3 ))
     then ls *.txt | parallel $popt \
         'if [ $(wc -c < {}) = 0 ]
             then tesseract ../ScreensFiltrés/{.}.jpg {.} -l '$lang' -psm 6 2> /dev/null
@@ -169,7 +172,7 @@ for SRT in $(printf OCR%s.srt\\n "" $Alt); do {
 ## Final
 for SRT in $(printf OCR%s.srt\\n "" $Alt); do {
     sed -e 's/_t/ --> /' -e 's/_v/,/g' -e 's/_dp/:/g' $inplace $SRT
-    if [[ "$OSTYPE" == "linux-gnu" ]]
+    if [[ "$OSTYPE" = "linux-gnu" || "$OSTYPE" = "cygwin" ]]
         then head -n -1 $SRT > "${FilteredVideo%.*}${SRT#*OCR}"
         else tail -r $SRT | tail -n +2 | tail -r > "${FilteredVideo%.*}${SRT#*OCR}"
              rm $SRT.bk
