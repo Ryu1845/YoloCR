@@ -69,27 +69,30 @@ if [[ $lang = fra ]]
 fi
 ls *.jpg | parallel $popt 'tesseract {} ../TessResult/{/.} -l '$lang' -psm 6 hocr 2> /dev/null'; cd ../TessResult
 if (( $TessVersionNum2 < 3 )); then for file in *.html; do mv "$file" "${file%.html}.hocr"; done; fi
-if [[ "$OSTYPE" != "cygwin" ]]; then if [[ $lang = fra ]]
+if [[ $lang = fra ]]
     then echo "Vérification de l'OCR italique."
     else echo "Verify the italics OCR."
-fi; fi
+fi
 for file in *.hocr; do
-    if [[ "$OSTYPE" != "cygwin" ]]; then
-        if grep -q '<em>' $file; then
-            if grep -q '\.\.\.' $file; then sxiv "../ScreensFiltrés/${file%.hocr}.jpg" & SXIVPID=$!
-                if [[ "$OSTYPE" = "linux-gnu" ]]; then
-                    while [ $(xdotool getactivewindow) = $Active ]; do sleep 0.1; done
-                    xdotool windowactivate $Active
-                fi
-                while true; do read -p "Est-ce de l'italique ? (o/n)" on
-                    case $on in
-                        [Oo]* ) sed -e 's/<em>/ItAlIk1/g' -e 's/<\/em>/ItAlIk2/g' $inplace $file; break;;
-                        [Nn]* ) break;;
-                        * ) echo "Répondre (o)ui ou (n)on.";;
-                    esac
-                done; kill $SXIVPID; wait $SXIVPID 2>/dev/null
-            else sed -e 's/<em>/ItAlIk1/g' -e 's/<\/em>/ItAlIk2/g' $inplace $file
+    if grep -q '<em>' $file; then
+        if grep -q '\.\.\.' $file; then
+            if [[ "$OSTYPE" != "cygwin" ]]
+                then sxiv "../ScreensFiltrés/${file%.hocr}.jpg" & SXIVPID=$!
+                     if [[ "$OSTYPE" = "linux-gnu" ]]; then
+                        while [ $(xdotool getactivewindow) = $Active ]; do sleep 0.1; done
+                        xdotool windowactivate $Active
+                     fi
+                     while true; do read -p "Est-ce de l'italique ? (o/n)" on
+                        case $on in
+                            [Oo]* ) sed -e 's/<em>/ItAlIk1/g' -e 's/<\/em>/ItAlIk2/g' $inplace $file; break;;
+                            [Nn]* ) break;;
+                            * ) echo "Répondre (o)ui ou (n)on.";;
+                        esac
+                     done; kill $SXIVPID; wait $SXIVPID 2>/dev/null
+                else sed -e 's/<em>/ItAlIk1/g' -e 's/<\/em>/ItAlIk2/g' $inplace $file
+                     echo "Vérifiez les balises italique à ${file%.hocr}" 
             fi
+        else sed -e 's/<em>/ItAlIk1/g' -e 's/<\/em>/ItAlIk2/g' $inplace $file
         fi
     fi
     if grep -q '     </span>' $file; then sed $inplace 's/     <\/span>/     <\/span><br>/g' $file; fi
