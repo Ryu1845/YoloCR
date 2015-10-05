@@ -44,18 +44,20 @@ Vapoursynth PPA for Ubuntu and Linux Mint (not tested) :
 
 The OCR procedure consists of two steps :
 First, you'll have to filter the video with Vapoursynth. Don't forget to edit the first lines in YoloCR.vpy according to your source file.
+	Once the parameters have been edited, close the editor. It will prevent the "SceneChanges.log" file to be wrongly overwritten.
 vspipe -y YoloCR.vpy - | ffmpeg -i - -c:v mpeg4 -qscale:v 3 -y Filtered_Video.mp4
+	Make sure that you are using a different name for your "Source_Video" and your "Filtered_Video".
 You now have an OCR-isable video and scenechange informations.
 Then you can OCR the video.
 ./YoloCR.sh Filtered_Video.mp4
 Now it's Checking time :D
 
 Help for determining the parameters :
-First, open YoloResize in Vapoursynth Editor.
+First, open YoloResize in Vapoursynth Editor ("F5" allows you to check your results).
 	FichierSource is the path of the video to OCR. Don't forget the apostrophes.
 	DimensionCropbox allows you to limit the OCR zone.
 	HauteurCropBox allows you to define the height of the Cropbox's bottom border.
-Note that theses two parameters have to be adjusted before upscale.
+		Note that theses two parameters have to be adjusted before upscale.
 	You can then change Supersampling parameter to -1 and verify that your subtitles aren't eated by the white borderline.
 Now open YoloSeuil in the editor.
 	Define FichierSource, DimensionCropBox and HauteurCropBox like you did previously.

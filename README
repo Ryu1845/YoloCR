@@ -42,12 +42,13 @@ PPA Vapoursynth pour Ubuntu et Linux Mint (non testé) :
 	https://launchpad.net/~djcj/+archive/ubuntu/vapoursynth
 
 
-0) Vous pouvez déterminer les paramètres à rentrer dans YoloCR.vpy à l'aide de YoloResize.vpy et YoloSeuil.vpy.
+0) Vous pouvez déterminer les paramètres à rentrer dans YoloCR.vpy à l'aide de Vapoursynth Editor et des scripts annexes.
+	Dans l'éditeur, vous pourrez vérifier vos résultats avec la touche "F5".
 	Ouvrez d'abord YoloResize dans Vapoursynth Editor.
 		FichierSource est le chemin de la vidéo à OCR. Ne pas oublier les apostrophes.
 		DimensionCropBox vous permet de limiter la zone à OCR. Cela augmentera la vitesse de traitement ET la fiabilité de l'OCR qui s'en suivra.
 		HauteurCropBox définit la hauteur du bord inférieur de la CropBox.
-	Notez que ces deux paramètres se règlent avant upscale, cela permet encore une fois d'augmenter la vitesse de traitement.
+			Notez que ces deux paramètres se règlent avant upscale.
 		Vous pouvez ensuite passer la valeur de Supersampling à -1 et vérifier que vos sous-titres ne sont pas en contact avec le bord blanc.
 	Ouvrez maintenant YoloSeuil dans l'éditeur.
 		Paramétrez les paramètres FichierSource, DimensionCropBox et HauteurCropBox comme précedemment.
@@ -58,7 +59,9 @@ PPA Vapoursynth pour Ubuntu et Linux Mint (non testé) :
 
 1) Filtrer la vidéo à l'aide du script YoloCR.vpy.
 	N'oubliez pas d'éditer les premières lignes de YoloCR.vpy en fonction de votre fichier source.
+		Une fois les paramètres configurés, fermez l'éditeur pour éviter que le fichier "SceneChanges.log" qui sera créé durant l'étape suivante ne soit écrasé par erreur.
 	vspipe -y YoloCR.vpy - | ffmpeg -i - -c:v mpeg4 -qscale:v 3 -y Vidéo_Filtrée.mp4
+		Faites bien attention à utiliser un nom différent pour votre "Vidéo_Source" et votre "Vidéo_Filtrée".
 	Vous disposez maintenant d'une vidéo OCR-isable et des informations de changement de scène.
  
 2) Script d'OCR en lui-même : YoloCR.sh.
