@@ -7,7 +7,10 @@ while true; do
     if [[ ! $(ps -hp $$ | grep bash) ]]; then echo -e "Ce script doit être lancé avec bash.\nExemple : bash YoloCR.sh Vidéo_Filtrée.mp4 <lang>"; exit=true; fi
     break
 done
-if [ -z $lang ]; then lang=$(tesseract --list-langs 2>&1 | egrep 'fra|eng' | head -1); fi
+if [ -z $lang ]; then if tesseract --list-langs 2>&1 | grep -q fra
+    then lang=fra
+    else lang=eng
+fi; fi
 if [[ $exit = true ]]; then tesseract --list-langs 2>&1 | sed "s/$lang/$lang \(default\)/"; exit; fi
 
 ## Prélude
