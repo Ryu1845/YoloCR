@@ -31,7 +31,7 @@ Windows Prerequisites :
 	mv ~/bin/parallel /usr/local/bin/
 - Cygwin terminal usage :
 	https://help.ubuntu.com/community/UsingTheTerminal
-	C drive path is "/cygdrive/c"
+	C drive path is "/cygdrive/c".
 	Scripts have to be used within Cygwin terminal.
 
 

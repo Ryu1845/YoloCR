@@ -31,7 +31,7 @@ Prérequis Windows :
 	mv ~/bin/parallel /usr/local/bin/
 - Utilisation de la console Cygwin :
 	https://doc.ubuntu-fr.org/tutoriel/console_commandes_de_base
-	Le chemin du disque C est "/cygdrive/c"
+	Le chemin du disque C est "/cygdrive/c".
 	Les scripts devront être lancés depuis la console Cygwin.
 
 
