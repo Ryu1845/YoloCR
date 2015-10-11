@@ -81,7 +81,8 @@ git clone https://bitbucket.org/mystery_keeper/vapoursynth-editor.git; cd vapour
 qmake -qt5 && make; cd ..
 su -c "cp build/release-64bit-gcc/vsedit /usr/local/bin/vsedit 
 install -D build/release-64bit-gcc/vsedit.svg /usr/local/share/pixmaps/vsedit.svg
-mkdir /usr/local/share/applications && wget https://gist.githubusercontent.com/YamashitaRen/4489ab810ee92f2fbbf7/raw/d38d73141eccafbeb936c9499fc3f10a885a3a42/vsedit.desktop -P /usr/local/share/applications"
+mkdir -p /usr/local/share/applications && wget https://gist.githubusercontent.com/YamashitaRen/4489ab810ee92f2fbbf7/raw/d38d73141eccafbeb936c9499fc3f10a885a3a42/vsedit.desktop -P 
+/usr/local/share/applications"
 cp /usr/local/share/applications/vsedit.desktop /home/$USER/$Desktop/vsedit.desktop
 
 # Vapoursynth doit fonctionner
