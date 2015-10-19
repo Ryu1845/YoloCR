@@ -1,4 +1,4 @@
-[yoloCR](http://gogs.seigi.tk/Yuri/YoloCR/)
+[YoloCR](http://gogs.seigi.tk/Yuri/YoloCR/)
 ========
 
 Requirements
@@ -10,21 +10,22 @@ Global Requirements for all the OS.
 
 * ffmpeg
 * Vapoursynth R27+
-    * plugins for Vapoursynth : [FFMS2](https://github.com/FFMS/ffms2), [HAvsFunc](http://forum.doom9.org/showthread.php?t=166582), [SceneChange](http://forum.doom9.org/showthread.php?t=166769), [fmtconv](http://forum.doom9.org/showthread.php?t=166504), [nnedi3](http://forum.doom9.org/showthread.php?t=166434)
+    * plugins for Vapoursynth : [FFMS2](https://github.com/FFMS/ffms2), [HAvsFunc](http://forum.doom9.org/showthread.php?t=166582), [SceneChange](http://forum.doom9.org/showthread.php?t=166769), [fmtconv](http://forum.doom9.org/showthread.php?t=166504), [nnedi3_rpow2](http://forum.doom9.org/showthread.php?t=172652) (Optional), [Waifu2x-w2xc](http://forum.doom9.org/showthread.php?t=172390) (Very Optional)
  * [Vapoursynth Editor](https://bitbucket.org/mystery_keeper/vapoursynth-editor)
 
 ### Unix/Linux Requirements
 
 * plugin for Vapoursynth : [GenericFilters](https://github.com/myrsloik/GenericFilters)
-* Tesseract-OCR (we recommand version 3.03+)
-  * and install the language package `eng` or `fra` too
+* Tesseract-OCR (we recommend version 3.03+)
+  * and install the data corresponding to the languages you want to OCR
 * links
 * sxiv (Simple X Image Viewer)
 * xdotool (Linux only)
 * parallel (GNU Parallel)
 
 >*Note*: most of these package, with the exception of all the plugins for vapoursynth, are available as official package for your distro.
-><br>For Ubuntu, adding the ppa: [`ppa:djcj/vapoursynth`](https://launchpad.net/~djcj/+archive/ubuntu/vapoursynth) is recommended to install *vapoursynth*, *vapoursynth-editor*, and  *vapoursynth-extra-plugins* (to install all the plugins above)
+><br>For Debian 8 and LMDE 2, all the requirements can be installed with the YoloDebInstallation script : `sh YoloDebInstallation.sh eng-only`
+><br>For Ubuntu, *vapoursynth*, *vapoursynth-editor* and  *vapoursynth-extra-plugins* (to install all the mandatory plugins above) are available through this ppa: [`ppa:djcj/vapoursynth`](https://launchpad.net/~djcj/+archive/ubuntu/vapoursynth)
 
 ### Windows Requirements
 
