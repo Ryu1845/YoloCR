@@ -80,8 +80,7 @@ def RGBBinarize(clip,seuil):
 	B=core.std.ShufflePlanes(clips=clip,planes=2,colorfamily=vs.GRAY)
 	for i in range(0,int(len(seuil)/3)):
 		i=i*3
-		ExprString="x "+str(seuil[i])+" >= y "+str(seuil[i+1])+" >= or z "+str(seuil[i+2])+" >= or 255 0 ?"
-		RGB=core.std.Expr(clips=[R,G,B],expr=[ExprString])
+		RGB=core.std.Expr(clips=[R,G,B],expr=["x "+str(seuil[i])+" >= y "+str(seuil[i+1])+" >= or z "+str(seuil[i+2])+" >= or 255 0 ?"])
 		if i==0:
 			clipfin=RGB
 		else:
@@ -92,8 +91,8 @@ def RGBBinarize(clip,seuil):
 def Cleaning(clip,blank,e):
 	if type(SeuilI) is list or type(SeuilO) is list:
 		clipRGB=core.fmtc.resample(clip=clip,css="444")
-		clipRGB=core.fmtc.matrix(clip=clip,mat="709",col_fam=vs.RGB)
-		clipRGB=core.fmtc.bitdepth(clip=clip,bits=8)
+		clipRGB=core.fmtc.matrix(clip=clipRGB,mat="709",col_fam=vs.RGB)
+		clipRGB=core.fmtc.bitdepth(clip=clipRGB,bits=8)
 		
 	if type(SeuilI) is int and type(SeuilO) is int:
 		White_Raw=core.std.Binarize(clip=clip,threshold=SeuilI)
