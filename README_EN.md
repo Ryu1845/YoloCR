@@ -90,5 +90,5 @@ Then you can OCR the video.
 
 **Now it's Checking time :D**
 
-Contact: [irc://irc.rizon.net/seigi-fr](irc://irc.rizon.net/seigi-fr)
+Contact: irc://irc.rizon.net/seigi-fr
 
