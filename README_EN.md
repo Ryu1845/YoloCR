@@ -1,4 +1,4 @@
-[YoloCR](http://gogs.seigi.tk/Yuri/YoloCR/)
+[YoloCR](https://bitbucket.org/YuriZero/yolocr/src)
 ========
 
 Requirements
