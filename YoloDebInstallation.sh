@@ -28,10 +28,24 @@ mkdir Gits; cd Gits
 git clone https://github.com/mcrapet/plowshare.git
 plowshare/src/mod.sh --install
 
+# Installation de zimg
+git clone https://github.com/sekrit-twc/zimg.git; cd zimg
+./autogen.sh && ./configure --enable-x86simd && make
+su -c "make install"; cd ..
+
 # Installation de Vapoursynth
 git clone https://github.com/vapoursynth/vapoursynth.git; cd vapoursynth
 ./autogen.sh && ./configure --disable-assvapour --disable-ocr && make
 su -c "make install"; cd ..
+
+# Installation de Vapoursynth Editor
+git clone https://bitbucket.org/mystery_keeper/vapoursynth-editor.git; cd vapoursynth-editor/pro
+qmake -qt5 && make; cd ..
+su -c "cp build/release-64bit-gcc/vsedit /usr/local/bin/vsedit 
+install -D build/release-64bit-gcc/vsedit.svg /usr/local/share/pixmaps/vsedit.svg; cd ..
+if [ ! -d /usr/local/share/applications ]; then mkdir /usr/local/share/applications; fi
+wget https://gist.githubusercontent.com/YamashitaRen/4489ab810ee92f2fbbf7/raw/d38d73141eccafbeb936c9499fc3f10a885a3a42/vsedit.desktop -P /usr/local/share/applications"
+cp /usr/local/share/applications/vsedit.desktop /home/$USER/$Desktop/vsedit.desktop
 
 # Création du lien symbolique FFMS2 dans le dossier plugins de Vapoursynth
 su -c "ln -s $(dpkg-query -L libffms2-3 | tail -1) /usr/local/lib/vapoursynth/libffms2.so"
@@ -70,20 +84,6 @@ su -c "make install"; cd ..
 # Installation de nnedi3_rpow2
 git clone https://gist.github.com/020c497524e794779d9c.git vapoursynth-nnedi3_rpow2
 su -c "cp vapoursynth-nnedi3_rpow2/nnedi3_rpow2.py /usr/local/lib/python3.4/site-packages/nnedi3_rpow2.py"
-
-# Installation de zimg
-git clone https://github.com/sekrit-twc/zimg.git; cd zimg
-./autogen.sh && ./configure --libdir=/usr/local/lib/vapoursynth --enable-x86simd && make
-su -c "make install"; cd ..
-
-# Installation de Vapoursynth Editor
-git clone https://bitbucket.org/mystery_keeper/vapoursynth-editor.git; cd vapoursynth-editor/pro
-qmake -qt5 && make; cd ..
-su -c "cp build/release-64bit-gcc/vsedit /usr/local/bin/vsedit 
-install -D build/release-64bit-gcc/vsedit.svg /usr/local/share/pixmaps/vsedit.svg
-if [ ! -d /usr/local/share/applications ]; then mkdir /usr/local/share/applications; fi
-wget https://gist.githubusercontent.com/YamashitaRen/4489ab810ee92f2fbbf7/raw/d38d73141eccafbeb936c9499fc3f10a885a3a42/vsedit.desktop -P /usr/local/share/applications"
-cp /usr/local/share/applications/vsedit.desktop /home/$USER/$Desktop/vsedit.desktop
 
 # Vapoursynth doit fonctionner
 if [[ $1 != eng-only ]]
