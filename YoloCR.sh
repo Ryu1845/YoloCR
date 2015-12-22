@@ -4,7 +4,7 @@ while true; do
     if [ -z $1 ]; then echo -e "N'oubliez pas de mettre le nom de la Vidéo Filtrée en argument.\nExemple : ./YoloCR.sh Vidéo_Filtrée.mp4 <lang>"; exit=true; break; fi
     if [[ $2 = fre || $2 = fra || $2 = eng ]]; then if [ ! $(tesseract  --list-langs 2>&1 | grep $2) ]; then exit=true; else lang=$2; fi
     elif [ ! -z $2 ]; then echo -e "Mettez le nom de la Vidéo Filtrée entre guillemets.\nExemple : ./YoloCR.sh \"Vidéo Filtrée.mp4\" <lang>"; exit=true; break; fi
-    if [[ ! $(ps -hp $$ | grep bash) ]]; then echo -e "Ce script doit être lancé avec bash.\nExemple : bash YoloCR.sh Vidéo_Filtrée.mp4 <lang>"; exit=true; fi
+    if [[ ! $(ps -p $$ | grep bash) ]]; then echo -e "Ce script doit être lancé avec bash.\nExemple : bash YoloCR.sh Vidéo_Filtrée.mp4 <lang>"; exit=true; fi
     break
 done
 if [ -z $lang ]; then if tesseract --list-langs 2>&1 | grep -q fra
