@@ -168,7 +168,8 @@ for SRT in $(printf OCR%s.srt\\n "" $Alt); do {
         sed 's/- /— /g' |
         sed 's/\.\.\./…/g' |
         sed 's/\([:;?\!]\)/ \1/g' | sed 's/  \([:;?\!]\)/ \1/g' |
-        sed 's/ :2/ ?/g' > $SRT.tmp
+        sed 's/ :2/ ?/g' |
+        perl -0777 -pe 's/\n\n[0-9]\n\n/\n\n/igs' > $SRT.tmp
         #sed $inplace 's/___/…/g' $SRT.tmp
         mv $SRT.tmp $SRT
     fi
