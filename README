@@ -71,4 +71,12 @@ PPA Vapoursynth pour Ubuntu et Linux Mint (non testé) :
 3) C'est l'heure du Check :D
 
 
+Bugs connus :
+- Cygwin (Windows), à la première utilisation du script YoloCR.sh.
+  Signal SIGCHLD received, but no signal handler set.
+  ./YoloCR.sh: ligne 121: ((: > 4 : erreur de syntaxe : opérande attendue (le sym bole erroné est "> 4 ").
+  Plus d'erreurs à partir de la seconde utilisation.
+- Babun (Windows), un florilège d'erreurs lors de l'utilisation du script YoloCR.sh.
+  Installez Cygwin à la place.
+
 Contact : irc://irc.rizon.net/seigi-fr

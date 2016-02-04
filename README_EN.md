@@ -58,7 +58,7 @@ Resize is very helpful to locate the subtitles.
   * `FichierSource` is the path of the video to OCR. Don't forget the apostrophes.
 	* `DimensionCropbox` allows you to limit the OCR zone.
 	* `HauteurCropBox` allows you to define the height of the Cropbox's bottom border.
-	<br>> Note that theses two parameters have to be adjusted before upscale.
+	<br> Note that theses two parameters have to be adjusted before upscale.
 	<br>You can then change `Supersampling` parameter to -1 and verify that your subtitles aren't eated by the white borderline by using **F5**.
 
 #### Determine the threshold of the subtitles
@@ -89,6 +89,15 @@ Then you can OCR the video.
 > The `nameOftheVideoOutput.mp4` must be the same than the output of the ffmpeg command.
 
 **Now it's Checking time :D**
+
+Known bugs
+----------
+
+* Cygwin (Windows), when you run YoloCR.sh for the first time.
+    Signal SIGCHLD received, but no signal handler set.
+    YoloCR will run without errors the next times.
+* Babun (Windows), you will have errors when trying to run YoloCR.sh.
+    Use Cygwin instead.
 
 Contact: irc://irc.rizon.net/seigi-fr
 
