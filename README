@@ -21,11 +21,12 @@ Prérequis Windows :
 - Tesseract et son dictionnaire français : https://code.google.com/p/tesseract-ocr/downloads/detail?name=tesseract-ocr-setup-3.02.02.exe
 - Cygwin : https://www.cygwin.com/
 - Paquets à activer durant l'installation de Cygwin :
-	gnupg
-	wget
-	perl
 	bc
+	gnupg
 	links
+	make
+	perl
+	wget
 - Installation de GNU Parallel, depuis la console Cygwin :
 	wget -O - pi.dk/3 | bash
 	mv ~/bin/parallel /usr/local/bin/

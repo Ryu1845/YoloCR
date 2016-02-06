@@ -37,12 +37,13 @@ Global Requirements for all the OS.
 
 * [Tesseract](https://code.google.com/p/tesseract-ocr/downloads/detail?name=tesseract-ocr-setup-3.02.02.exe)
 	* and install the language package `eng` or `fra` too.
-* [Cygwin](https://www.cygwin.com/). During the install, activate: 
-	* gnupg
-	* wget
-	* perl
+* [Cygwin](https://www.cygwin.com/). During the install, activate:
 	* bc
+	* gnupg
 	* links
+	* make
+	* perl
+	* wget
 
 * Install `GNU Parallel` from the Cygwin terminal:
 	* `wget -O - pi.dk/3 | bash`
