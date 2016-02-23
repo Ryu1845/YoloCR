@@ -67,7 +67,7 @@ cd ScreensFiltrés; find ./ -name "*.jpg" -size $(ls -l BlackFrame.jpg | awk '{p
 
 ## Sélection du moteur OCR
 if [[ "$OSTYPE" = "cygwin" ]]; then
-    if reg query HKLM\\Software\\ABBYY /ve | grep -q REG_SZ && hash tesseract 2>/dev/null; then
+    if reg query HKLM\\Software\\ABBYY\\FineReader /ve | grep -q REG_SZ && hash tesseract 2>/dev/null; then
         while true; do read -p "Voulez vous utiliser (T)esseract ou Abby (F)ineReader ?" TF
             case $TF in
                 [Tt]* ) OCRType=FineReader; break;;
@@ -75,7 +75,7 @@ if [[ "$OSTYPE" = "cygwin" ]]; then
                 * ) echo "Répondre (F)ineReader ou (T)esseract.";;
             esac
         done
-    elif reg query HKLM\\Software\\ABBYY /ve | grep -q REG_SZ; then OCRType=FineReader
+    elif reg query HKLM\\Software\\ABBYY\\FineReader /ve | grep -q REG_SZ; then OCRType=FineReader
     else OCRType=Tesseract
 else OCRType=Tesseract; fi
 
