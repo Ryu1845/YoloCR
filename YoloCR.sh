@@ -65,70 +65,97 @@ seq 1 2 $(($(wc -l < Timecodes.txt)-1)) | parallel $popt \
                 wait
 cd ScreensFiltrés; find ./ -name "*.jpg" -size $(ls -l BlackFrame.jpg | awk '{print $5}')c -delete
 
+## Sélection du moteur OCR
+if [[ "$OSTYPE" = "cygwin" ]]; then
+    if reg query HKLM\\Software\\ABBYY /ve | grep -q REG_SZ && hash tesseract 2>/dev/null; then
+        while true; do read -p "Voulez vous utiliser (T)esseract ou Abby (F)ineReader ?" TF
+            case $TF in
+                [Tt]* ) OCRType=FineReader; break;;
+                [Ff]* ) OCRType=Tesseract; break;;
+                * ) echo "Répondre (F)ineReader ou (T)esseract.";;
+            esac
+        done
+    elif reg query HKLM\\Software\\ABBYY /ve | grep -q REG_SZ; then OCRType=FineReader
+    else OCRType=Tesseract
+else OCRType=Tesseract; fi
+
 ## OCR d'un dossier avec Tesseract
-if [[ $lang = fra ]]
-    then echo "OCR du dossier ScreensFiltrés avec Tesseract v${TessVersionNum}."
-    else echo "OCR of the ScreensFiltrés directory with Tesseract v${TessVersionNum}."
-fi
-ls *.jpg | parallel $popt 'tesseract {} ../TessResult/{/.} -l '$lang' -psm 6 hocr 2> /dev/null'; cd ../TessResult
-if (( $TessVersionNum2 < 3 )); then for file in *.html; do mv "$file" "${file%.html}.hocr"; done; fi
-if [[ $lang = fra ]]
-    then echo "Vérification de l'OCR italique."
-    else echo "Verify the italics OCR."
-fi
-for file in *.hocr; do
-    if grep -q '<em>' $file; then
-        if grep -q '\.\.\.' $file; then
-            if [[ "$OSTYPE" != "cygwin" ]]
-                then sxiv "../ScreensFiltrés/${file%.hocr}.jpg" & SXIVPID=$!
-                     if [[ "$OSTYPE" = "linux-gnu" ]]; then
-                        while [ $(xdotool getactivewindow) = $Active ]; do sleep 0.1; done
-                        xdotool windowactivate $Active
-                     fi
-                     while true; do read -p "Est-ce de l'italique ? (o/n)" on
-                        case $on in
-                            [Oo]* ) sed -e 's/<em>/ItAlIk1/g' -e 's/<\/em>/ItAlIk2/g' $inplace $file; break;;
-                            [Nn]* ) break;;
-                            * ) echo "Répondre (o)ui ou (n)on.";;
-                        esac
-                     done; kill $SXIVPID; wait $SXIVPID 2>/dev/null
-                else sed -e 's/<em>/ItAlIk1/g' -e 's/<\/em>/ItAlIk2/g' $inplace $file
-                     echo "Vérifiez les balises italique à ${file%.hocr}" 
-            fi
-        else sed -e 's/<em>/ItAlIk1/g' -e 's/<\/em>/ItAlIk2/g' $inplace $file
-        fi
+if [[ $OCRType = Tesseract ]]; then
+    if [[ $lang = fra ]]
+        then echo "OCR du dossier ScreensFiltrés avec Tesseract v${TessVersionNum}."
+        else echo "OCR of the ScreensFiltrés directory with Tesseract v${TessVersionNum}."
     fi
-    if grep -q '     </span>' $file; then sed $inplace 's/     <\/span>/     <\/span><br>/g' $file; fi
-    links -dump -codepage UTF-8 -force-html -width 512 $file > ${file%.hocr}.txt
-done
+    ls *.jpg | parallel $popt 'tesseract {} ../TessResult/{/.} -l '$lang' -psm 6 hocr 2> /dev/null'; cd ../TessResult
+    if (( $TessVersionNum2 < 3 )); then for file in *.html; do mv "$file" "${file%.html}.hocr"; done; fi
+    if [[ $lang = fra ]]
+        then echo "Vérification de l'OCR italique."
+        else echo "Verify the italics OCR."
+    fi
+    for file in *.hocr; do
+        if grep -q '<em>' $file; then
+            if grep -q '\.\.\.' $file; then
+                if [[ "$OSTYPE" != "cygwin" ]]
+                    then sxiv "../ScreensFiltrés/${file%.hocr}.jpg" & SXIVPID=$!
+                        if [[ "$OSTYPE" = "linux-gnu" ]]; then
+                            while [ $(xdotool getactivewindow) = $Active ]; do sleep 0.1; done
+                            xdotool windowactivate $Active
+                        fi
+                        while true; do read -p "Est-ce de l'italique ? (o/n)" on
+                            case $on in
+                                [Oo]* ) sed -e 's/<em>/ItAlIk1/g' -e 's/<\/em>/ItAlIk2/g' $inplace $file; break;;
+                                [Nn]* ) break;;
+                                * ) echo "Répondre (o)ui ou (n)on.";;
+                            esac
+                        done; kill $SXIVPID; wait $SXIVPID 2>/dev/null
+                    else sed -e 's/<em>/ItAlIk1/g' -e 's/<\/em>/ItAlIk2/g' $inplace $file
+                         echo "Vérifiez les balises italique à ${file%.hocr}" 
+                fi
+            else sed -e 's/<em>/ItAlIk1/g' -e 's/<\/em>/ItAlIk2/g' $inplace $file
+            fi
+        fi
+        if grep -q '     </span>' $file; then sed $inplace 's/     <\/span>/     <\/span><br>/g' $file; fi
+        links -dump -codepage UTF-8 -force-html -width 512 $file > ${file%.hocr}.txt
+    done
 
 ## Vérification de la confidence OCR si Tesseract >= 3.03, ajout des retours à la ligne si besoin, workaround bug "sous-titres vides" et suppresion de ceux restant
-if [[ $lang = fra ]]
-    then echo "Traitement des faux positifs et Suppression des sous-titres vides."
-    else echo "Treat false positives and Delete empty subtitles."
+    if [[ $lang = fra ]]
+        then echo "Traitement des faux positifs et Suppression des sous-titres vides."
+        else echo "Treat false positives and Delete empty subtitles."
+    fi
+    if (( TessVersionNum2 >= 3 ))
+        then ls *.txt | parallel $popt \
+            'if [ $(wc -c < {}) = 0 ]
+                then tesseract ../ScreensFiltrés/{.}.jpg {.} -l '$lang' -psm 6 2> /dev/null
+                    if [ $(wc -c < {}) = 0 ]; then rm {}; fi
+                else n=$(grep -o x_wconf {.}.hocr | wc -l); j=0; OCR=$(grep x_wconf {.}.hocr | tr "\n" " ")
+                    for ((i=2;i<$((2+$n));i++)); do j=$(($j + $(echo $OCR | awk -F"x_wconf" -v var=$i \{print\ \$var} | cut -d" " -f2 | sed 's/.$//'))); done
+                    j=$(($j/$n)); if (($j >= 55)); then echo "" >> {}; else rm {}; fi
+            fi'
+        else ls *.txt | parallel $popt 'if [ $(wc -c < {}) = 0 ]; then tesseract ../ScreensFiltrés/{.}.jpg {.} -l '$lang' -psm 6 2> /dev/null; if [ $(wc -c < {}) = 0 ]; then rm {}; fi; else echo "" >> {}; fi'
+    fi
+    for file in *.txt; do if (( $(wc -l $file | awk '{print $1}') > 4 )); then tesseract ../ScreensFiltrés/${file%.txt}.jpg ${file%.txt} -l $lang -psm 7 2>/dev/null; fi; done # Workaround bug "psm" Tesseract, dangerous
 fi
-if (( TessVersionNum2 >= 3 ))
-    then ls *.txt | parallel $popt \
-        'if [ $(wc -c < {}) = 0 ]
-            then tesseract ../ScreensFiltrés/{.}.jpg {.} -l '$lang' -psm 6 2> /dev/null
-                if [ $(wc -c < {}) = 0 ]; then rm {}; fi
-            else n=$(grep -o x_wconf {.}.hocr | wc -l); j=0; OCR=$(grep x_wconf {.}.hocr | tr "\n" " ")
-                for ((i=2;i<$((2+$n));i++)); do j=$(($j + $(echo $OCR | awk -F"x_wconf" -v var=$i \{print\ \$var} | cut -d" " -f2 | sed 's/.$//'))); done
-                j=$(($j/$n)); if (($j >= 55)); then echo "" >> {}; else rm {}; fi
-        fi'
-    else ls *.txt | parallel $popt 'if [ $(wc -c < {}) = 0 ]; then tesseract ../ScreensFiltrés/{.}.jpg {.} -l '$lang' -psm 6 2> /dev/null; if [ $(wc -c < {}) = 0 ]; then rm {}; fi; else echo "" >> {}; fi'
+
+## OCR d'un dossier avec FineReader
+if [[ $OCRType = FineReader ]]; then
+    if [[ $lang = fra ]]
+        then echo "Une fois l'OCR par FineReader effectué, placez les fichiers dans le dossier TessResult et appuyez sur la touche de votre choix."
+        else echo "When you're done with FineReader's OCR, put the files in the TessResult direcory and press the key of your choice."
+    fi
+    read answer; case $answer in * ) ;; esac
 fi
-for file in *.txt; do if (( $(wc -l $file | awk '{print $1}') > 4 )); then tesseract ../ScreensFiltrés/${file%.txt}.jpg ${file%.txt} -l $lang -psm 7 2>/dev/null; fi; done # Workaround bug "psm" Tesseract, dangerous
-cd ..
 
 ## Remplacement anticipé des guillemets droits doubles ("...") en guillemets français doubles (« ... »)
 echo "Final."
+cd ..
 if [[ $lang = fra ]]; then for file in TessResult/*.txt; do if grep -q \" $file; then
+    if [[ $OCRType = FineReader ]]; then cat $file | iconv -f WINDOWS-1252 -t UTF-8 >> $file.tmp; mv $file.tmp $file; fi
     if [ $(grep -o \" $file | wc -l) = 1 ]
         then sed -e 's/"\. /… /g' -e 's/"\.$/…/g' $inplace $file # Correction éventuelle
              sed -e 's/^"/« /' -e 's/"$/ »/' $inplace $file
         else while grep -q \" $file; do sed '0,/"/{s/"/« /}' $file | sed '0,/"/{s/"/ »/}' > $file.tmp; mv $file.tmp $file; done
     fi
+    if [[ $OCRType = FineReader ]]; then cat $file | iconv -f UTF-8 -t WINDOWS-1252 >> $file.tmp; mv $file.tmp $file; fi
 fi; done; fi
  
 ## Transformation du dossier OCR en srt (les timecodes seront reformatés plus tard)
@@ -138,14 +165,18 @@ i=0; j=0; for file in TessResult/*.txt; do
         then i=$(($i + 1)); k=$i; Alt=""
         else j=$(($j + 1)); k=$j; Alt="_Alt"
     fi
-    echo $k >> OCR$Alt.srt; echo "`basename $file $Alt.txt | sed -e 's/[hm]/_dp/g' -e 's/s/_v/g' -e 's/-/_t/g'`" >> OCR$Alt.srt; cat $file >> OCR$Alt.srt
+    echo $k >> OCR$Alt.srt; echo "`basename $file $Alt.txt | sed -e 's/[hm]/_dp/g' -e 's/s/_v/g' -e 's/-/_t/g'`" >> OCR$Alt.srt
+    if [[ $OCRType=Tesseract ]]
+        then cat $file >> OCR$Alt.srt
+        else cat $file | iconv -f WINDOWS-1252 -t UTF-8 >> OCR$Alt.srt; echo -e "\n\n" >> OCR$Alt.srt
+    fi
 done
 if [ -f OCR_Alt.srt ]; then bAlt=true; Alt="_Alt"; else bAlt=false; Alt=""; fi
 sed $inplace 's/   //g' OCR.srt
 if $bAlt; then sed $inplace 's/   //g' OCR_Alt.srt; fi
 
 ## Conversion des tags "ItAlIk" en balises italiques SubRip
-for SRT in $(printf OCR%s.srt\\n "" $Alt); do {
+if [[ $OCRType = Tesseract ]]; then for SRT in $(printf OCR%s.srt\\n "" $Alt); do {
     if grep -q 'ItAlIk' $SRT; then
         sed $inplace 's/\//l/g' $SRT # Autre correction éventuelle
         sed 's/ItAlIk2 ItAlIk1/ /g' $SRT |
@@ -154,7 +185,7 @@ for SRT in $(printf OCR%s.srt\\n "" $Alt); do {
         sed -e 's/ItAlIk1/<i>/g' -e 's/ItAlIk2/<\/i>/g' > $SRT.tmp
         mv $SRT.tmp $SRT
     fi
-} & done; wait
+} & done; wait; fi
 
 ## Corrections OCR et normalisation
 for SRT in $(printf OCR%s.srt\\n "" $Alt); do {
