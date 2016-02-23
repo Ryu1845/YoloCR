@@ -88,8 +88,8 @@ if [[ $OCRType = Tesseract ]]; then
     ls *.jpg | parallel $popt 'tesseract {} ../TessResult/{/.} -l '$lang' -psm 6 hocr 2> /dev/null'; cd ../TessResult
     if (( $TessVersionNum2 < 3 )); then for file in *.html; do mv "$file" "${file%.html}.hocr"; done; fi
     if [[ $lang = fra ]]
-        then echo "Vérification de l'OCR italique."
-        else echo "Verify the italics OCR."
+        then echo "Vérification de l'OCR italique."; Question="Est-ce de l'italique ? (o/n)"; BadAnswer="Répondre (o)ui ou (n)on."
+        else echo "Verify the italics OCR."; Question="Is it italic type ? (y/n)"; BadAnswer="Answer (y)es or (n)o."
     fi
     for file in *.hocr; do
         if grep -q '<em>' $file; then
@@ -100,11 +100,11 @@ if [[ $OCRType = Tesseract ]]; then
                             while [ $(xdotool getactivewindow) = $Active ]; do sleep 0.1; done
                             xdotool windowactivate $Active
                         fi
-                        while true; do read -p "Est-ce de l'italique ? (o/n)" on
-                            case $on in
-                                [Oo]* ) sed -e 's/<em>/ItAlIk1/g' -e 's/<\/em>/ItAlIk2/g' $inplace $file; break;;
+                        while true; do read -p "$Question" oyn
+                            case $oyn in
+                                [OoYy]* ) sed -e 's/<em>/ItAlIk1/g' -e 's/<\/em>/ItAlIk2/g' $inplace $file; break;;
                                 [Nn]* ) break;;
-                                * ) echo "Répondre (o)ui ou (n)on.";;
+                                * ) echo "$BadAnswer";;
                             esac
                         done; kill $SXIVPID; wait $SXIVPID 2>/dev/null
                     else sed -e 's/<em>/ItAlIk1/g' -e 's/<\/em>/ItAlIk2/g' $inplace $file
