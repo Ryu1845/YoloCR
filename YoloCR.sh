@@ -166,7 +166,7 @@ i=0; j=0; for file in TessResult/*.txt; do
         else j=$(($j + 1)); k=$j; Alt="_Alt"
     fi
     echo $k >> OCR$Alt.srt; echo "`basename $file $Alt.txt | sed -e 's/[hm]/_dp/g' -e 's/s/_v/g' -e 's/-/_t/g'`" >> OCR$Alt.srt
-    if [[ $OCRType=Tesseract ]]
+    if [[ $OCRType = Tesseract ]]
         then cat $file >> OCR$Alt.srt
         else cat $file | iconv -f WINDOWS-1252 -t UTF-8 >> OCR$Alt.srt; echo -e "\n\n" >> OCR$Alt.srt
     fi
