@@ -70,9 +70,9 @@ if [[ "$OSTYPE" = "cygwin" ]]; then
     if reg query HKLM\\Software\\ABBYY\\FineReader /ve | grep -q REG_SZ && hash tesseract 2>/dev/null; then
         while true; do read -p "Voulez vous utiliser (T)esseract ou Abby (F)ineReader ?" TF
             case $TF in
-                [Tt]* ) OCRType=FineReader; break;;
-                [Ff]* ) OCRType=Tesseract; break;;
-                * ) echo "Répondre (F)ineReader ou (T)esseract.";;
+                [Tt]* ) OCRType=Tesseract; break;;
+                [Ff]* ) OCRType=FineReader; break;;
+                * ) echo "Répondre (T)esseract ou (F)ineReader.";;
             esac
         done
     elif reg query HKLM\\Software\\ABBYY\\FineReader /ve | grep -q REG_SZ; then OCRType=FineReader
