@@ -76,7 +76,7 @@ if [[ "$OSTYPE" = "cygwin" ]]; then
             esac
         done
     elif reg query HKLM\\Software\\ABBYY\\FineReader /ve | grep -q REG_SZ; then OCRType=FineReader
-    else OCRType=Tesseract
+    else OCRType=Tesseract; fi
 else OCRType=Tesseract; fi
 
 ## OCR d'un dossier avec Tesseract
