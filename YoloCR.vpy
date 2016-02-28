@@ -12,7 +12,7 @@ SeuilSCD=6 # Un seuil trop bas augmente le nombre de faux positifs, un seuil tro
 
 import vapoursynth as vs
 if ModeU=='nnedi3':
-	import nnedi3_rpow2 as nn3
+	import edi_rpow2 as edi
 import havsfunc as haf
 import functools
 core=vs.get_core()
@@ -58,7 +58,7 @@ def Resizing(clip,largeur,hauteur,hauteur2):
 	if Ss!=1:
 		if ModeU=='nnedi3' or ModeU=='waifu2x':
 			if ModeU=='nnedi3':
-				clip=nn3.nnedi3_rpow2(clip=clip,rfactor=Ss)
+				clip=edi.nnedi3_rpow2(clip=clip,rfactor=Ss)
 			else :
 				clip=core.fmtc.bitdepth(clip=clip,bits=32)
 				clip=core.w2xc.Waifu2x(clip=clip,scale=Ss)

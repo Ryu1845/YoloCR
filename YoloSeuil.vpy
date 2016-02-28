@@ -9,7 +9,7 @@ Seuil=230 # Seuil délimitant les sous-titres.
 
 import vapoursynth as vs
 if ModeU=='nnedi3':
-	import nnedi3_rpow2 as nn3
+	import edi_rpow2 as edi
 core=vs.get_core()
 
 Clip=core.ffms2.Source(source=FichierSource)
@@ -47,7 +47,7 @@ if ModeU=='nnedi3' and Ss!=1:
 if Ss!=1:
 	if ModeU=='nnedi3' or ModeU=='waifu2x':
 		if ModeU=='nnedi3':
-			Clip=nn3.nnedi3_rpow2(clip=Clip,rfactor=Ss)
+			Clip=edi.nnedi3_rpow2(clip=Clip,rfactor=Ss)
 		else :
 			Clip=core.fmtc.bitdepth(clip=Clip,bits=32)
 			Clip=core.w2xc.Waifu2x(clip=Clip,scale=Ss)
