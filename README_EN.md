@@ -10,10 +10,10 @@ Global Requirements for all the OS.
 * Vapoursynth R27+
 	* plugins for Vapoursynth : 
 		* [FFMS2](https://github.com/FFMS/ffms2)
-		* [HAvsFunc](http://forum.doom9.org/showthread.php?t=166582)
+		* [HAvsFunc](http://forum.doom9.org/showthread.php?t=166582), requires [mvsfunc](http://forum.doom9.org/showthread.php?t=172564) and [adjust](https://github.com/dubhater/vapoursynth-adjust)
 		* [SceneChange](http://forum.doom9.org/showthread.php?t=166769)
 		* [fmtconv](http://forum.doom9.org/showthread.php?t=166504)
-		* *optional*: [nnedi3_rpow2](http://forum.doom9.org/showthread.php?t=172652)
+		* *optional*: [nnedi3_rpow2](http://forum.doom9.org/showthread.php?t=172652), requires [nnedi3](http://forum.doom9.org/showthread.php?t=166434)
 		* *very optional*: [Waifu2x-w2xc](http://forum.doom9.org/showthread.php?t=172390)
  * [Vapoursynth Editor](https://bitbucket.org/mystery_keeper/vapoursynth-editor)
 

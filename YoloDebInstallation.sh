@@ -55,14 +55,14 @@ git clone https://github.com/myrsloik/GenericFilters.git; cd GenericFilters/src
 ./configure && make
 su -c "make install"; cd ../..
 
-# Installation de HAvsFunc
-cd ..
-Gits/plowshare/src/download.sh $(links -dump http://forum.doom9.org/archive/index.php/t-166582.html | grep mediafire | head -1 | cut -d'(' -f2 | cut -d')' -f1)
-bsdtar -xf $(ls havsfunc*.7z) && rm havsfunc*.7z
-su -c "cp havsfunc.py /usr/local/lib/python3.4/site-packages/havsfunc.py"
+# Installation de HAvsFunc, mvsfunc et adjust
+git clone https://github.com/HomeOfVapourSynthEvolution/havsfunc.git
+git clone https://github.com/HomeOfVapourSynthEvolution/mvsfunc.git
+git clone https://github.com/dubhater/vapoursynth-adjust.git
+su -c "cp havsfunc/havsfunc.py mvsfunc/mvsfunc.py vapoursynth-adjust/adjust.py /usr/local/lib/python3.4/site-packages/"
 
 # Installation de SceneChange
-mkdir SceneChange; cd $_
+mkdir ../SceneChange; cd $_
 ../Gits/plowshare/src/download.sh http://www.mediafire.com/download.php?dnld4p98i333idp
 bsdtar -xf scenechange-0.2.0-2.7z && rm scenechange-0.2.0-2.7z
 for i in {10..15}; do sed -i "${i}s/^/#/" src/compile.sh; done
