@@ -72,7 +72,7 @@ def Resizing(clip,largeur,hauteur,hauteur2):
 		else:
 			clip=core.fmtc.resample(clip=clip,scale=Ss,kernel="sinc",taps=2)
 			clip=core.fmtc.bitdepth(clip=clip,bits=8)
-        elif clip.format.bits_per_sample!=8:
+	elif clip.format.bits_per_sample!=8:
 		clip=core.fmtc.bitdepth(clip=clip,bits=8)
 	return clip
 	
