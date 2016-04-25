@@ -56,6 +56,8 @@ if Ss!=1:
 	else:
 		Clip=core.fmtc.resample(clip=Clip,scale=Ss,kernel="sinc",taps=2)
 		Clip=core.fmtc.bitdepth(clip=Clip,bits=8)
+	elif clip.format.bits_per_sample!=8:
+		clip=core.fmtc.bitdepth(clip=clip,bits=8)
 
 Crop=core.std.CropAbs(clip=Clip,width=Clip.width-20,height=Clip.height-20,left=10,top=10)
 Rect=core.std.AddBorders(clip=Crop,left=10,right=10,top=10,bottom=10,color=[255,128,128])
