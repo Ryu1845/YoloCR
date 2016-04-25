@@ -72,6 +72,8 @@ def Resizing(clip,largeur,hauteur,hauteur2):
 		else:
 			clip=core.fmtc.resample(clip=clip,scale=Ss,kernel="sinc",taps=2)
 			clip=core.fmtc.bitdepth(clip=clip,bits=8)
+        elif clip.format.bits_per_sample!=8:
+		clip=core.fmtc.bitdepth(clip=clip,bits=8)
 	return clip
 	
 def RGBBinarize(clip,seuil):
@@ -143,10 +145,7 @@ Blank=core.std.BlankClip(ClipResized,format=vs.GRAY8)
 
 ClipCleaned=Cleaning(ClipResized,Blank,ExpandRatio)
 
-if Supersampling==-1:
-	ClipCleanedSC=core.std.CropAbs(clip=ClipCleaned,width=500,height=56,left=int((ClipCleaned.width-500)/2),top=int(ClipCleaned.height/2))
-else:
-	ClipCleanedSC=core.std.CropAbs(clip=ClipCleaned,width=int(ClipCleaned.width/2.7),height=int(ClipCleaned.height/2.7),left=int(ClipCleaned.width*(1-1/2.7)/2),top=int(ClipCleaned.height/2))
+ClipCleanedSC=core.std.CropAbs(clip=ClipCleaned,width=int(ClipCleaned.width/2.7),height=int(ClipCleaned.height/2.7),left=int(ClipCleaned.width*(1-1/2.7)/2),top=int(ClipCleaned.height/2))
 ClipCleanedSC=core.scd.Detect(clip=ClipCleanedSC,thresh=SeuilSCD,log="SceneChanges.log")
 ClipCleaned=core.std.FrameEval(ClipCleaned,functools.partial(Identity,clip=ClipCleaned),prop_src=ClipCleanedSC)
 
@@ -155,10 +154,7 @@ if HauteurCropBoxAlt>=0:
 	
 	ClipCleanedAlt=Cleaning(ClipResizedAlt,Blank,ExpandRatio)
 	
-	if Supersampling==-1:
-		ClipCleanedAltSC=core.std.CropAbs(clip=ClipCleanedAlt,width=500,height=56,left=int((ClipCleanedAlt.width-500)/2),top=int(ClipCleanedAlt.height/2-56))
-	else:
-		ClipCleanedAltSC=core.std.CropAbs(clip=ClipCleanedAlt,width=int(ClipCleanedAlt.width/2.7),height=int(ClipCleanedAlt.height/2.7),left=int(ClipCleanedAlt.width*(1-1/2.7)/2),top=int(ClipCleanedAlt.height*(1/2-1/2.7)))
+	ClipCleanedAltSC=core.std.CropAbs(clip=ClipCleanedAlt,width=int(ClipCleanedAlt.width/2.7),height=int(ClipCleanedAlt.height/2.7),left=int(ClipCleanedAlt.width*(1-1/2.7)/2),top=int(ClipCleanedAlt.height*(1/2-1/2.7)))
 	ClipCleanedAltSC=core.scd.Detect(clip=ClipCleanedAltSC,thresh=SeuilSCD,log="SceneChangesAlt.log")
 	ClipCleanedAlt=core.std.FrameEval(ClipCleanedAlt,functools.partial(Identity,clip=ClipCleanedAlt),prop_src=ClipCleanedAltSC)
 	
