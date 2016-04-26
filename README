@@ -20,7 +20,7 @@ Prérequis Unix :
 - GNU Parallel (version 20131122+ recommandée) : http://www.gnu.org/software/parallel/
 
 Prérequis Windows :
-- Tesseract et son dictionnaire français : https://code.google.com/p/tesseract-ocr/downloads/detail?name=tesseract-ocr-setup-3.02.02.exe
+- Tesseract et son dictionnaire français : https://github.com/tesseract-ocr/tesseract/wiki/Downloads
   Ou ABBYY FineReader
 - Cygwin : https://www.cygwin.com/
 - Paquets à activer durant l'installation de Cygwin :
