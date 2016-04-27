@@ -57,12 +57,15 @@ PPA Vapoursynth pour Ubuntu et Linux Mint (non testé) :
 	Ouvrez maintenant YoloSeuil dans l'éditeur.
 		Paramétrez les paramètres FichierSource, DimensionCropBox et HauteurCropBox comme précedemment.
 		Choisissez le ModeS qui vous convient. 'L' dans le cas d'un seuil blanc ou noir, successivement 'R', 'G' et 'B' dans le cas contraire.
-		Réglez le Seuil.
-			Dans le cas de l'inline (intérieur des sous-titres), ce seuil doit être au maximum et les sous-titres doivent rester pleinement visibles.
-			Dans de le cas de l'outline (bordure des sous-titres), ce seuil doit être au minimum et l'outline doit être complètement noire.
+		Réglez le Seuil. Les valeurs pourront être trouvées à l'aide du "Color Panel" disponible dans la fenêtre de prévisualiation.
+			Dans le cas de l'inline (intérieur des sous-titres), cherchez le seuil minimum.
+			Dans de le cas de l'outline (bordure des sous-titres), cherchez le seuil maximum.
+                Vous pouvez vérifier les valeurs sucessivement trouvées en modifant le paramètre Seuil par celles-ci.
+			Dans le cas de l'inline, les sous-titres doivent rester pleinement visibles.
+			Dans de le cas de l'outline, l'outline doit être complètement noire.
 
 1) Filtrer la vidéo à l'aide du script YoloCR.vpy.
-	N'oubliez pas d'éditer les premières lignes de YoloCR.vpy en fonction de votre fichier source.
+	N'oubliez pas d'éditer les premières lignes de YoloCR.vpy en fonction de votre fichier source et des réglages trouvés précedemment.
 		Une fois les paramètres configurés, fermez l'éditeur pour éviter que le fichier "SceneChanges.log" qui sera créé durant l'étape suivante ne soit écrasé par erreur.
 	vspipe -y YoloCR.vpy - | ffmpeg -i - -c:v mpeg4 -qscale:v 3 -y Vidéo_Filtrée.mp4
 		Faites bien attention à utiliser un nom différent pour votre "Vidéo_Source" et votre "Vidéo_Filtrée".

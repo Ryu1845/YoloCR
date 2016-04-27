@@ -83,12 +83,17 @@ It's to improve the OCR-process and the subtitles detection.
 1. Open `YoloSeuil.vpy` in Vapoursynth editor.
 2. Report `FichierSource`, `DimensionCropBox` and `HauteurCropBox` you have defined in the `Resize` file.
 3. Choose the fitting ModeS. 'L' if you want to define a white or black threshold, succesively 'R', 'G' and 'B' otherwise.
-4. Adjust the Threshold by using **F5**.
+4. Adjust the Threshold with the help of the "Color Panel" found in the **F5** window.
 
-You must to do this two times:
+You must to do this two times if you are using ModeS=L:
 
-* in the first case, the Inline threshold have to be as high as possible, and subtitles must remain completely visible.
-* in the second case, the Outline threshold have to be as low as possible, completely black, subtitles must remain completely visible.
+* in the first case, the Inline threshold will be the minimum.
+* in the second case, the Outline threshold will be the maximum.
+
+You can then change `Seuil` paremeter to the values previously found.
+
+* in the first case, the subtitles must remain completely visible. The highest the value, the better.
+* in the second case, the Outline must remain completely black. The lowest the value, the better.
 
 ### Filter the video
 

@@ -4,7 +4,7 @@ HauteurCropBox=46 # Hauteur de la CropBox délimitant les sous-titres à OCR.
 Supersampling=-1 # Facteur de supersampling (multiplication de la résolution de la vidéo). Mettre à -1 pour calculer le facteur automatiquement.
 ModeU='sinc' # 'sinc' (2 taps, plus rapide), 'nnedi3' (plus lent) ou 'waifu2x' (beaucoup plus lent), contrôle la méthode d'Upscale.
 ModeS='L' # 'L' pour Luma, 'R' pour Rouge, 'B' pour Bleu ou 'G' pour Vert. Seuil à analyser.
-Seuil=230 # Seuil délimitant les sous-titres.
+Seuil=-1 # Seuil délimitant les sous-titres. Mettre à -1 pour chercher le seuil à l'aide de VapourSynth Editor.
 
 
 import vapoursynth as vs
@@ -74,8 +74,9 @@ if ModeS=='R' or ModeS=='G' or ModeS=='B':
 		Clip=core.std.ShufflePlanes(clips=Clip,planes=1,colorfamily=vs.GRAY)
 	else:
 		Clip=core.std.ShufflePlanes(clips=Clip,planes=2,colorfamily=vs.GRAY)
-		
-Clip=core.std.Binarize(clip=Clip,threshold=Seuil)
+
+if Seuil>=0:	
+	Clip=core.std.Binarize(clip=Clip,threshold=Seuil)	
 Crop=core.std.CropAbs(clip=Clip,width=Clip.width-20,height=Clip.height-20,left=10,top=10)
 Rect=core.std.AddBorders(clip=Crop,left=10,right=10,top=10,bottom=10,color=255)
 Rect.set_output()
