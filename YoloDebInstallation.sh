@@ -21,7 +21,7 @@ if [[ $release = jessie && ! $(apt-cache policy | grep "Unofficial Multimedia Pa
 	apt update; apt install deb-multimedia-keyring
 	apt update; apt dist-upgrade"
 fi
-su -c "apt install curl tesseract-ocr $tesseractfra links sxiv xdotool parallel ffmpeg git build-essential autoconf automake libtool libavcodec-dev libswscale-dev yasm python3-dev cython3 libffms2-3 bsdtar qtbase5-dev qt5-qmake"
+su -c "apt install curl tesseract-ocr $tesseractfra links sxiv xdotool parallel ffmpeg git build-essential autoconf automake libtool yasm python3-dev cython3 libffms2-3 bsdtar qtbase5-dev qt5-qmake"
 mkdir Gits; cd Gits
 
 # Téléchargement de Plowshare
