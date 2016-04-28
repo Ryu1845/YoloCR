@@ -81,9 +81,9 @@ git clone https://github.com/dubhater/vapoursynth-nnedi3.git; cd vapoursynth-nne
 ./autogen.sh && ./configure --libdir=/usr/local/lib/vapoursynth && make
 su -c "make install"; cd ..
 
-# Installation de nnedi3_rpow2
-git clone https://gist.github.com/020c497524e794779d9c.git vapoursynth-nnedi3_rpow2
-su -c "cp vapoursynth-nnedi3_rpow2/nnedi3_rpow2.py /usr/local/lib/python3.4/site-packages/nnedi3_rpow2.py"
+# Installation de edi_rpow2
+git clone https://gist.github.com/020c497524e794779d9c.git vapoursynth-edi_rpow2
+su -c "cp vapoursynth-edi_rpow2/edi_rpow2.py /usr/local/lib/python3.4/site-packages/edi_rpow2.py"
 
 # Vapoursynth doit fonctionner
 if [[ $1 != eng-only ]]
