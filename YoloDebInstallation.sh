@@ -30,12 +30,12 @@ plowshare/src/mod.sh --install
 
 # Installation de zimg
 git clone https://github.com/sekrit-twc/zimg.git; cd zimg
-./autogen.sh && ./configure --enable-x86simd && make
+./autogen.sh && ./configure && make
 su -c "make install"; cd ..
 
 # Installation de Vapoursynth
 git clone https://github.com/vapoursynth/vapoursynth.git; cd vapoursynth
-./autogen.sh && ./configure --disable-assvapour --disable-ocr && make
+./autogen.sh && ./configure && make
 su -c "make install"; cd ..
 
 # Installation de Vapoursynth Editor
