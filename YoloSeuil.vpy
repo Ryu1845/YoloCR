@@ -61,8 +61,8 @@ if Ss!=1:
 	else:
 		Clip=core.fmtc.resample(clip=Clip,scale=Ss,kernel="sinc",taps=2)
 		Clip=core.fmtc.bitdepth(clip=Clip,bits=8)
-elif clip.format.bits_per_sample!=8:
-	clip=core.fmtc.bitdepth(clip=clip,bits=8)
+elif Clip.format.bits_per_sample!=8:
+	Clip=core.fmtc.bitdepth(clip=Clip,bits=8)
 
 if ModeS=='R' or ModeS=='G' or ModeS=='B':
 	Clip=core.fmtc.resample(clip=Clip,css="444")
