@@ -42,10 +42,11 @@ su -c "make install"; cd ..
 git clone https://bitbucket.org/mystery_keeper/vapoursynth-editor.git; cd vapoursynth-editor/pro
 qmake -qt5 && make; cd ..
 su -c "cp build/release-64bit-gcc/vsedit /usr/local/bin/vsedit 
-install -D build/release-64bit-gcc/vsedit.svg /usr/local/share/pixmaps/vsedit.svg; cd ..
+install -D build/release-64bit-gcc/vsedit.svg /usr/local/share/pixmaps/vsedit.svg
 if [ ! -d /usr/local/share/applications ]; then mkdir /usr/local/share/applications; fi
 wget https://gist.githubusercontent.com/YamashitaRen/4489ab810ee92f2fbbf7/raw/d38d73141eccafbeb936c9499fc3f10a885a3a42/vsedit.desktop -P /usr/local/share/applications"
 cp /usr/local/share/applications/vsedit.desktop /home/$USER/$Desktop/vsedit.desktop
+cd ..
 
 # Création du lien symbolique FFMS2 dans le dossier plugins de Vapoursynth
 su -c "ln -s $(dpkg-query -L libffms2-3 | tail -1) /usr/local/lib/vapoursynth/libffms2.so"
