@@ -94,9 +94,9 @@ if [ $OCRType = Tesseract ]; then
     for file in *.hocr; do
         if grep -q '<em>' $file; then
             if grep -q '\.\.\.' $file; then
-                if [ "$OSTYPE" != "cygwin" ]
+                if [ "$OSTYPE" != "cygwin" ] && ! grep -q Microsoft /proc/version;
                     then sxiv "../ScreensFiltrés/${file%.hocr}.jpg" & SXIVPID=$!
-                        if [ -n "$Active" ]; then
+                        if [ "$OSTYPE" = "linux-gnu" ]; then
                             while [ $(xdotool getactivewindow) = $Active ]; do sleep 0.1; done
                             xdotool windowactivate $Active
                         fi
