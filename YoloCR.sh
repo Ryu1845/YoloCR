@@ -11,7 +11,7 @@ if [ -z $lang ]; then if tesseract --list-langs 2>&1 | grep -q fra
     then lang=fra
     else lang=eng
 fi; fi
-if [ $exit = true ]; then tesseract --list-langs 2>&1 | sed "s/$lang/$lang \(default\)/"; exit; fi
+if [ "$exit" = "true" ]; then tesseract --list-langs 2>&1 | sed "s/$lang/$lang \(default\)/"; exit; fi
 
 ## Prélude
 if [ $lang = fra ]
@@ -27,7 +27,7 @@ fi
 if [ -d ScreensFiltrés ]; then rm ScreensFiltrés/*.jpg 2> /dev/null; else mkdir ScreensFiltrés; fi
 if [ -d TessResult ]; then rm TessResult/*.hocr TessResult/*.txt 2> /dev/null; else mkdir TessResult; fi
 if [ -f SceneChangesAlt.log ]; then bAlt=true; else bAlt=false; rm TimecodesAlt.txt 2> /dev/null; fi
-if [ $(head -3 SceneChanges.log | tail -1 | cut -d' ' -f2-) != $(head -4 SceneChanges.log | tail -1 | cut -d' ' -f2-) ]; then tailnum=3; else tailnum=4; fi # Workaround bug SceneChangeDetection
+if [[ $(head -3 SceneChanges.log | tail -1 | cut -d' ' -f2-) != $(head -4 SceneChanges.log | tail -1 | cut -d' ' -f2-) ]]; then tailnum=3; else tailnum=4; fi # Workaround bug SceneChangeDetection
 FPS=$(ffprobe "$FilteredVideo" -v 0 -select_streams v -print_format flat -show_entries stream=r_frame_rate | cut -d'"' -f2 | bc -l)
 tail -n +$tailnum SceneChanges.log | awk -v fps=$FPS '{if ($3 == 0) {var=sprintf ("%.4f", $1/fps); print substr(var, 0, length(var)-1)} else if ($2 == 0) {var=sprintf ("%.4f", ($1+1)/fps); print substr(var, 0, length(var)-1)}}' | sort -n > Timecodes.txt &
     if $bAlt; then tail -n +$tailnum SceneChangesAlt.log | awk -v fps=$FPS '{if ($3 == 0) {var=sprintf ("%.4f", $1/fps); print substr(var, 0, length(var)-1)} else if ($2 == 0) {var=sprintf ("%.4f", ($1+1)/fps); print substr(var, 0, length(var)-1)}}' | sort -n > TimecodesAlt.txt; fi
