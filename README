@@ -23,6 +23,7 @@ Prérequis Windows :
 - Tesseract et son dictionnaire français : https://github.com/tesseract-ocr/tesseract/wiki/Downloads
   Ou ABBYY FineReader
 - Cygwin : https://www.cygwin.com/
+	/!\ Si vous utilisez Windows 10, vous pouvez installer BashOnWindows à la place de Cygwin.
 - Paquets à activer durant l'installation de Cygwin :
 	bc
 	gnupg
@@ -86,4 +87,4 @@ Bugs connus :
 - Babun (Windows), un florilège d'erreurs lors de l'utilisation du script YoloCR.sh.
   Installez Cygwin à la place.
 
-Contact : irc://irc.hakku.tk/kyohansha
+Contact : irc://irc.rizon.net/Genshiken

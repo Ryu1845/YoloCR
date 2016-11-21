@@ -56,7 +56,9 @@ Global Requirements for all the OS.
 
 > C drive path is "/cygdrive/c".
 
->Scripts have to be used within Cygwin terminal.
+> Scripts have to be used within Cygwin terminal.
+
+> If you use Windows 10, you can install BashOnWindows instead of Cygwin.
 
 ## How to use?
 
@@ -123,4 +125,4 @@ Then you can OCR the video: `./YoloCR.sh nameOftheVideoOutput.mp4`
 * Babun (Windows), you will have errors when trying to run YoloCR.sh.
 	* Use Cygwin instead.
 
-Contact: irc://irc.hakku.tk/kyohansha
+Contact: irc://irc.rizon.net/Genshiken
