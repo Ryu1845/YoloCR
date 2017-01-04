@@ -4,7 +4,7 @@ Prérequis :
 - le plugin FFMS2 pour Vapoursynth : https://github.com/FFMS/ffms2/releases
 - le plugin HAvsFunc pour Vapoursynth : http://forum.doom9.org/showthread.php?t=166582
 	nécessite mvsfunc (http://forum.doom9.org/showthread.php?t=172564) et adjust (https://github.com/dubhater/vapoursynth-adjust)
-- le plugin SceneChange pour Vapoursynth : http://forum.doom9.org/showthread.php?t=166769
+- le plugin miscfilters pour Vapoursynth : http://forum.doom9.org/showthread.php?t=173871
 - le plugin fmtconv pour Vapoursynth : http://forum.doom9.org/showthread.php?t=166504
 - (Conseillé) Vapoursynth Editor : http://forum.doom9.org/showthread.php?t=170965
 - (Optionnel) le plugin nnedi3_rpow2 pour Vapoursynth : http://forum.doom9.org/showthread.php?t=172652
@@ -12,7 +12,6 @@ Prérequis :
 - (Très optionnel) le plugin Waifu2x-w2xc pour Vapoursynth : https://github.com/HomeOfVapourSynthEvolution/VapourSynth-Waifu2x-w2xc/
 
 Prérequis Unix :
-- le plugin GenericFilters pour Vapoursynth : https://github.com/myrsloik/GenericFilters
 - Tesseract (version 3.03+ recommandée) et son dictionnaire français : https://github.com/tesseract-ocr/tesseract
 - Links : http://links.twibright.com/
 - Simple X Image Viewer : https://github.com/muennich/sxiv

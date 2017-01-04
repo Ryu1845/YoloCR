@@ -11,7 +11,7 @@ Global Requirements for all the OS.
 	* plugins for Vapoursynth : 
 		* [FFMS2](https://github.com/FFMS/ffms2)
 		* [HAvsFunc](http://forum.doom9.org/showthread.php?t=166582), requires [mvsfunc](http://forum.doom9.org/showthread.php?t=172564) and [adjust](https://github.com/dubhater/vapoursynth-adjust)
-		* [SceneChange](http://forum.doom9.org/showthread.php?t=166769)
+		* [Miscellaneous filters](http://forum.doom9.org/showthread.php?t=173871)
 		* [fmtconv](http://forum.doom9.org/showthread.php?t=166504)
 		* *optional*: [nnedi3_rpow2](http://forum.doom9.org/showthread.php?t=172652), requires [nnedi3](http://forum.doom9.org/showthread.php?t=166434)
 		* *very optional*: [Waifu2x-w2xc](http://forum.doom9.org/showthread.php?t=172390)
@@ -19,7 +19,6 @@ Global Requirements for all the OS.
 
 ### Unix/Linux Requirements
 
-* plugin for Vapoursynth : [GenericFilters](https://github.com/myrsloik/GenericFilters)
 * Tesseract-OCR (we recommend version 3.03+)
 	* and install the data corresponding to the languages you want to OCR
 * links

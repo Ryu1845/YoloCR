@@ -7,7 +7,7 @@ ExpandRatio=1 # EXPERIMENTAL ! Facteur Expand/Inpand. La valeur 1 est adaptée p
 ModeU='sinc' # 'sinc' (2 taps, plus rapide), 'nnedi3' (plus lent) ou 'waifu2x' (beaucoup plus lent), contrôle la méthode d'Upscale.
 SeuilI=230 # Seuil délimitant les sous-titres. Cette valeur correspond à la luminosité minimale de l'intérieur (Inline).
 SeuilO=80 # Seuil délimitant les sous-titres. Cette valeur correspond à la luminosité maximale de l'extérieur (Outline).
-SeuilSCD=6 # Un seuil trop bas augmente le nombre de faux positifs, un seuil trop haut ne permet pas de détecter tous les sous-titres.
+SeuilSCD=0.03 # Un seuil trop bas augmente le nombre de faux positifs, un seuil trop haut ne permet pas de détecter tous les sous-titres.
 
 
 import vapoursynth as vs
@@ -19,9 +19,6 @@ core=vs.get_core()
 
 def minimum(x,y):
 	return min(x,y)
-
-def Identity(n,clip,f):
-	return clip
 
 Clip=core.ffms2.Source(source=FichierSource)
 if type(SeuilI) is int and type(SeuilO) is int:
@@ -113,7 +110,7 @@ def Cleaning(clip,blank,e):
 
 	Bright_Out=core.std.Lut2(clipa=Bright_Raw,clipb=Rect,function=minimum)
 
-	Bright_Not=core.generic.Hysteresis(base=Bright_Out,alt=Bright_Raw)
+	Bright_Not=core.misc.Hysteresis(clipa=Bright_Out,clipb=Bright_Raw)
 	Bright_Not=core.std.Invert(Bright_Not)
 
 	White_Txt=core.std.MaskedMerge(blank,White_Raw,Bright_Not)
@@ -126,12 +123,17 @@ def Cleaning(clip,blank,e):
 	White_Ub=core.std.Invert(White_Ub)
 
 	White=core.std.MaskedMerge(Blank,White_Lb,White_Ub)
-	White=core.generic.Hysteresis(base=White,alt=White_Txt)
+	White=core.misc.Hysteresis(clipa=White,clipb=White_Txt)
 
 	ClipCleaning=core.std.MaskedMerge(Blank,White_Raw,White)
 	ClipCleaning=core.std.Median(clip=ClipCleaning)
 	
 	return ClipCleaning
+	
+def SceneLog(n,f,clip,log):
+	if f.props._SceneChangeNext == 1 or f.props._SceneChangePrev == 1:
+		open(log, "a").write(str(n)+" "+str(f.props._SceneChangePrev)+" "+str(f.props._SceneChangeNext)+"\n")
+	return clip
 
 HauteurCropBox=HauteurCropBox+DimensionCropBox[1]
 if HauteurCropBoxAlt>=0:
@@ -145,18 +147,20 @@ Blank=core.std.BlankClip(ClipResized,format=vs.GRAY8)
 
 ClipCleaned=Cleaning(ClipResized,Blank,ExpandRatio)
 
+open("SceneChanges.log", "w").write("0 1 0\n")
 ClipCleanedSC=core.std.CropAbs(clip=ClipCleaned,width=int(ClipCleaned.width/2.7),height=int(ClipCleaned.height/2.7),left=int(ClipCleaned.width*(1-1/2.7)/2),top=int(ClipCleaned.height/2))
-ClipCleanedSC=core.scd.Detect(clip=ClipCleanedSC,thresh=SeuilSCD,log="SceneChanges.log")
-ClipCleaned=core.std.FrameEval(ClipCleaned,functools.partial(Identity,clip=ClipCleaned),prop_src=ClipCleanedSC)
+ClipCleanedSC=core.misc.SCDetect(clip=ClipCleanedSC,threshold=SeuilSCD)
+ClipCleaned=core.std.FrameEval(ClipCleaned,functools.partial(SceneLog,clip=ClipCleaned,log="SceneChanges.log"),prop_src=ClipCleanedSC)
 
 if HauteurCropBoxAlt>=0:
 	ClipResizedAlt=Resizing(Clip,DimensionCropBox[0],DimensionCropBox[1],HauteurCropBoxAlt)
 	
 	ClipCleanedAlt=Cleaning(ClipResizedAlt,Blank,ExpandRatio)
 	
+	open("SceneChangesAlt.log", "w").write("0 1 0\n")
 	ClipCleanedAltSC=core.std.CropAbs(clip=ClipCleanedAlt,width=int(ClipCleanedAlt.width/2.7),height=int(ClipCleanedAlt.height/2.7),left=int(ClipCleanedAlt.width*(1-1/2.7)/2),top=int(ClipCleanedAlt.height*(1/2-1/2.7)))
-	ClipCleanedAltSC=core.scd.Detect(clip=ClipCleanedAltSC,thresh=SeuilSCD,log="SceneChangesAlt.log")
-	ClipCleanedAlt=core.std.FrameEval(ClipCleanedAlt,functools.partial(Identity,clip=ClipCleanedAlt),prop_src=ClipCleanedAltSC)
+	ClipCleanedAltSC=core.misc.SCDetect(clip=ClipCleanedAltSC,threshold=SeuilSCD)
+	ClipCleanedAlt=core.std.FrameEval(ClipCleanedAlt,functools.partial(SceneLog,clip=ClipCleanedAlt,log="SceneChangesAlt.log"),prop_src=ClipCleanedAltSC)
 	
 	Clip=core.std.StackVertical([ClipCleanedAlt,ClipCleaned])
 

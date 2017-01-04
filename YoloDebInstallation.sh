@@ -24,10 +24,6 @@ fi
 su -c "apt install curl tesseract-ocr $tesseractfra links sxiv xdotool parallel ffmpeg git build-essential autoconf automake libtool yasm python3-dev cython3 libffms2-3 bsdtar qtbase5-dev qt5-qmake"
 mkdir Gits; cd Gits
 
-# Téléchargement de Plowshare
-git clone https://github.com/mcrapet/plowshare.git
-plowshare/src/mod.sh --install
-
 # Installation de zimg
 git clone https://github.com/sekrit-twc/zimg.git; cd zimg
 ./autogen.sh && ./configure && make
@@ -51,26 +47,18 @@ cd ..
 # Création du lien symbolique FFMS2 dans le dossier plugins de Vapoursynth
 su -c "ln -s $(dpkg-query -L libffms2-3 | tail -1) /usr/local/lib/vapoursynth/libffms2.so"
 
-# Installation du plugin GenericFilters
-git clone https://github.com/myrsloik/GenericFilters.git; cd GenericFilters/src
-./configure && make
-su -c "make install"; cd ../..
+# Installation du plugin Miscellaneous filters
+git clone https://github.com/vapoursynth/miscfilters.git; cd miscfilters
+sed -e 's|"VSHelper.h"|<VSHelper.h>|g' -e 's|"VapourSynth.h"|<VapourSynth.h>|g' -i filtersharedcpp.h -i filtershared.h
+g++ -c -std=c++11 -fPIC -I. $(pkg-config --cflags vapoursynth) -o miscfilters.o miscfilters.cpp
+g++ -shared  -fPIC -o libvsmiscfilters.so miscfilters.o
+su -c "cp libvsmiscfilters.so /usr/local/lib/vapoursynth/"; cd ..
 
 # Installation de HAvsFunc, mvsfunc et adjust
 git clone https://github.com/HomeOfVapourSynthEvolution/havsfunc.git
 git clone https://github.com/HomeOfVapourSynthEvolution/mvsfunc.git
 git clone https://github.com/dubhater/vapoursynth-adjust.git
 su -c "cp havsfunc/havsfunc.py mvsfunc/mvsfunc.py vapoursynth-adjust/adjust.py /usr/local/lib/python3.4/site-packages/"
-
-# Installation de SceneChange
-mkdir ../SceneChange; cd $_
-../Gits/plowshare/src/download.sh http://www.mediafire.com/download.php?dnld4p98i333idp
-bsdtar -xf scenechange-0.2.0-2.7z && rm scenechange-0.2.0-2.7z
-for i in {10..15}; do sed -i "${i}s/^/#/" src/compile.sh; done
-for i in {18..24}; do sed -i "${i}s/#//" src/compile.sh; done
-cd src && sh compile.sh
-su -c "cp libscenechange.so libtemporalsoften2.so /usr/local/lib/vapoursynth/"
-cd ../../Gits
 
 # Installation de fmtconv
 git clone https://github.com/EleonoreMizo/fmtconv.git; cd fmtconv/build/unix
