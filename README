@@ -1,10 +1,9 @@
 Prérequis :
 - FFmpeg : https://www.ffmpeg.org/
-- Vapoursynth R27+ : http://www.vapoursynth.com/
+- Vapoursynth R36+ : http://www.vapoursynth.com/
 - le plugin FFMS2 pour Vapoursynth : https://github.com/FFMS/ffms2/releases
 - le plugin HAvsFunc pour Vapoursynth : http://forum.doom9.org/showthread.php?t=166582
 	nécessite mvsfunc (http://forum.doom9.org/showthread.php?t=172564) et adjust (https://github.com/dubhater/vapoursynth-adjust)
-- le plugin miscfilters pour Vapoursynth : http://forum.doom9.org/showthread.php?t=173871
 - le plugin fmtconv pour Vapoursynth : http://forum.doom9.org/showthread.php?t=166504
 - (Conseillé) Vapoursynth Editor : http://forum.doom9.org/showthread.php?t=170965
 - (Optionnel) le plugin nnedi3_rpow2 pour Vapoursynth : http://forum.doom9.org/showthread.php?t=172652

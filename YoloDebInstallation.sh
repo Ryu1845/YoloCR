@@ -47,13 +47,6 @@ cd ..
 # Création du lien symbolique FFMS2 dans le dossier plugins de Vapoursynth
 su -c "ln -s $(dpkg-query -L libffms2-3 | tail -1) /usr/local/lib/vapoursynth/libffms2.so"
 
-# Installation du plugin Miscellaneous filters
-git clone https://github.com/vapoursynth/miscfilters.git; cd miscfilters
-sed -e 's|"VSHelper.h"|<VSHelper.h>|g' -e 's|"VapourSynth.h"|<VapourSynth.h>|g' -i filtersharedcpp.h -i filtershared.h
-g++ -c -std=c++11 -fPIC -I. $(pkg-config --cflags vapoursynth) -o miscfilters.o miscfilters.cpp
-g++ -shared  -fPIC -o libvsmiscfilters.so miscfilters.o
-su -c "cp libvsmiscfilters.so /usr/local/lib/vapoursynth/"; cd ..
-
 # Installation de HAvsFunc, mvsfunc et adjust
 git clone https://github.com/HomeOfVapourSynthEvolution/havsfunc.git
 git clone https://github.com/HomeOfVapourSynthEvolution/mvsfunc.git
