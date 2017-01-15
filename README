@@ -18,8 +18,6 @@ Prérequis Unix :
 - GNU Parallel (version 20131122+ recommandée) : http://www.gnu.org/software/parallel/
 
 Prérequis Windows :
-- Tesseract et son dictionnaire français : https://github.com/tesseract-ocr/tesseract/wiki/Downloads
-  Ou ABBYY FineReader
 - Cygwin : https://www.cygwin.com/
 	/!\ Si vous utilisez Windows 10, vous pouvez installer BashOnWindows à la place de Cygwin.
 - Paquets à activer durant l'installation de Cygwin :
@@ -29,9 +27,12 @@ Prérequis Windows :
 	make
 	perl
 	wget
+	tesseract-ocr
+	tesseract-ocr-fra
+- ABBYY FineReader (Optionnel), si vous ne souhaitez pas utiliser ou installer Tesseract   
 - Installation de GNU Parallel, depuis la console Cygwin :
 	wget -O - pi.dk/3 | bash
-	mv ~/bin/parallel /usr/local/bin/
+	if [ -f ~/bin/parallel ]; then mv ~/bin/parallel /usr/local/bin/; fi
 - Utilisation de la console Cygwin :
 	https://doc.ubuntu-fr.org/tutoriel/console_commandes_de_base
 	Le chemin du disque C est "/cygdrive/c".

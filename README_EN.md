@@ -33,11 +33,6 @@ Global Requirements for all the OS.
 
 ### Windows Requirements
 
-* [Tesseract](https://github.com/tesseract-ocr/tesseract/wiki/Downloads)
-	* and install the language package `eng` or `fra` too.
-
-> You can use ABBYY FineReader instead of Tesseract.
-
 * [Cygwin](https://www.cygwin.com/). During the install, activate:
 	* bc
 	* gnupg
@@ -45,10 +40,14 @@ Global Requirements for all the OS.
 	* make
 	* perl
 	* wget
+	* tesseract-ocr
+	* tesseract-ocr-eng
+
+> You can use ABBYY FineReader instead of Tesseract.
 
 * Install `GNU Parallel` from the Cygwin terminal:
 	* `wget -O - pi.dk/3 | bash`
-	* `mv ~/bin/parallel /usr/local/bin/`
+	* `if [ -f ~/bin/parallel ]; then mv ~/bin/parallel /usr/local/bin/; fi`
 
 > *Note*: Cygwin terminal usage here → [https://help.ubuntu.com/community/UsingTheTerminal](https://help.ubuntu.com/community/UsingTheTerminal)
 
