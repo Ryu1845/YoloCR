@@ -4,7 +4,7 @@ while true; do
     if [ -z $1 ]; then echo -e "N'oubliez pas de mettre le nom de la Vidéo Filtrée en argument.\nExemple : ./YoloCR.sh Vidéo_Filtrée.mp4 <lang>"; exit=true; break; fi
     if [[ $2 = fre || $2 = fra || $2 = eng ]]; then if [ ! $(tesseract  --list-langs 2>&1 | grep $2) ]; then exit=true; else lang=$2; fi
     elif [ ! -z $2 ]; then echo -e "Mettez le nom de la Vidéo Filtrée entre guillemets.\nExemple : ./YoloCR.sh \"Vidéo Filtrée.mp4\" <lang>"; exit=true; break; fi
-    if ! ps -p $$ | grep -q bash; then echo -e "Ce script doit être lancé avec bash.\nExemple : bash YoloCR.sh Vidéo_Filtrée.mp4 <lang>"; exit=true; fi
+    if ! echo $BASH | grep -q bash; then echo -e "Ce script doit être lancé avec bash.\nExemple : bash YoloCR.sh Vidéo_Filtrée.mp4 <lang>"; exit=true; fi
     break
 done
 if [ -z $lang ]; then if tesseract --list-langs 2>&1 | grep -q fra
@@ -14,12 +14,15 @@ fi; fi
 if [ "$exit" = "true" ]; then tesseract --list-langs 2>&1 | sed "s/$lang/$lang \(default\)/"; exit; fi
 
 ## Prélude
+if hash sxiv 2>/dev/null
+    then mode=GUI; Active=$(xdotool getactivewindow)
+    else mode=CLI
+fi
 if [ $lang = fra ]
-    then echo "Prélude."
-    else echo "Prelude."
+    then echo -e "Utilisation de YoloCR en mode $mode.\nPrélude."
+    else echo -e "Using YoloCR in $mode mode.\nPrelude."
 fi
 FilteredVideo=$1
-if [ "$OSTYPE" = "linux-gnu" ] && ! grep -q Microsoft /proc/version; then Active=$(xdotool getactivewindow); fi
 if [[ "$OSTYPE" = "linux-gnu" || "$OSTYPE" = "cygwin" ]]
     then inplace="-i"
     else inplace="-i .bk"
@@ -93,7 +96,7 @@ if [ $OCRType = Tesseract ]; then
     for file in *.hocr; do
         if grep -q '<em>' $file; then
             if grep -q '\.\.\.' $file; then
-                if [ "$OSTYPE" != "cygwin" ] && ! grep -q Microsoft /proc/version;
+                if [ $mode = GUI ]
                     then sxiv "../ScreensFiltrés/${file%.hocr}.jpg" & SXIVPID=$!
                         if [ "$OSTYPE" = "linux-gnu" ]; then
                             while [ $(xdotool getactivewindow) = $Active ]; do sleep 0.1; done
@@ -123,13 +126,13 @@ if [ $OCRType = Tesseract ]; then
     fi
     if (( TessVersionNum2 >= 3 ))
         then ls *.txt | parallel $popt \
-            'if [ $(wc -c < {}) = 0 ]
-                then tesseract ../ScreensFiltrés/{.}.jpg {.} -l '$lang' -psm 6 2> /dev/null
-                    if [ $(wc -c < {}) = 0 ]; then rm {}; fi
-                else n=$(grep -o x_wconf {.}.hocr | wc -l); j=0; OCR=$(grep x_wconf {.}.hocr | tr "\n" " ")
-                    for ((i=2;i<$((2+$n));i++)); do j=$(($j + $(echo $OCR | awk -F"x_wconf" -v var=$i \{print\ \$var} | cut -d" " -f2 | sed 's/.$//'))); done
-                    j=$(($j/$n)); if (($j >= 55)); then echo "" >> {}; else rm {}; fi
-            fi'
+             if [ \$\(wc -c \< {}\) \= 0 ]\; \
+                then tesseract ../ScreensFiltrés/{.}.jpg {.} -l \$lang -psm 6 2\>/dev/null\; \
+                     if [ \$\(wc -c \< {}\) \= 0 ]\; then rm {}\; fi\; \
+                else n=\$\(grep -o x_wconf {.}.hocr \| wc -l\)\; \
+                     j=\$\(cat {.}.hocr \| grep -Po \"x_wconf \\K[^\']*\" \| tr '\\n' +\)\; \
+                     j=\$\(\(\${j::-1}/\$n\)\)\; if \(\(\$j \>\= 55\)\)\; then echo "" \>\> {}\; else rm {}\; fi\; \
+             fi
         else ls *.txt | parallel $popt 'if [ $(wc -c < {}) = 0 ]; then tesseract ../ScreensFiltrés/{.}.jpg {.} -l '$lang' -psm 6 2> /dev/null; if [ $(wc -c < {}) = 0 ]; then rm {}; fi; else echo "" >> {}; fi'
     fi
     for file in *.txt; do if (( $(wc -l $file | awk '{print $1}') > 4 )); then tesseract ../ScreensFiltrés/${file%.txt}.jpg ${file%.txt} -l $lang -psm 7 2>/dev/null; fi; done # Workaround bug "psm" Tesseract, dangerous

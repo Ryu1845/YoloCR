@@ -13,8 +13,8 @@ Prérequis :
 Prérequis Unix :
 - Tesseract (version 3.03+ recommandée) et son dictionnaire français : https://github.com/tesseract-ocr/tesseract
 - Links : http://links.twibright.com/
-- Simple X Image Viewer : https://github.com/muennich/sxiv
-- xdotool (Linux uniquement) : http://www.semicomplete.com/projects/xdotool/
+- Simple X Image Viewer (mode GUI uniquement) : https://github.com/muennich/sxiv
+- xdotool (Linux uniquement, mode GUI uniquement) : http://www.semicomplete.com/projects/xdotool/
 - GNU Parallel (version 20131122+ recommandée) : http://www.gnu.org/software/parallel/
 
 Prérequis Windows :

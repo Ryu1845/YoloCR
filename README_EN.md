@@ -21,8 +21,8 @@ Global Requirements for all the OS.
 * Tesseract-OCR (we recommend version 3.03+)
 	* and install the data corresponding to the languages you want to OCR
 * links
-* sxiv (Simple X Image Viewer)
-* xdotool (Linux only)
+* sxiv (Simple X Image Viewer) (GUI mode only)
+* xdotool (Linux only, GUI mode only)
 * parallel (GNU Parallel)
 
 > *Note*: most of these package, with the exception of all the plugins for vapoursynth, are available as official package for your distro.
