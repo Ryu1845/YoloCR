@@ -1,5 +1,9 @@
 # [YoloCR](https://bitbucket.org/YuriZero/yolocr/src)
 
+## For noobs
+Install the requirements with the Debian installation script.
+You can install Debian Jessie inside a virtual machine like Virtualbox.
+
 ## Requirements
 
 Global Requirements for all the OS.

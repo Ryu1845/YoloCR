@@ -1,3 +1,8 @@
+Pour les nuls :
+   Installer les prérequis avec le script d'installation pour Debian Jessie.
+   Vous pouvez installer Debian Jessie dans une machine virtuelle telle que Virtualbox.
+
+
 Prérequis :
 - FFmpeg : https://www.ffmpeg.org/
 - Vapoursynth R36+ : http://www.vapoursynth.com/

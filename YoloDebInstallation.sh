@@ -16,12 +16,17 @@ if [[ $1 != eng-only ]]; then tesseractfra=tesseract-ocr-fra; fi
 Desktop=$(grep DESKTOP /home/$USER/.config/user-dirs.dirs 2>/dev/null | cut -d/ -f2 | rev | cut -c 2- | rev)
 if [ -z $Desktop ]; then Desktop=Desktop; fi
 
+if [[ ! $(apt-cache policy | grep "Debian Backports") ]]; then
+    if [[ $release = jessie ]]; then su -c "echo -e '\n# Debian Backports\ndeb http://ftp.debian.org/debian jessie-backports main' >> /etc/apt/sources.list"
+    else su -c "echo -e 'deb http://ftp.debian.org/debian jessie-backports main' >> /etc/apt/sources.list.d/additional-repositories.list"; fi
+fi 
 if [[ $release = jessie && ! $(apt-cache policy | grep "Unofficial Multimedia Packages") ]]; then
-	su -c "echo -e '\n#Marillat\ndeb http://www.deb-multimedia.org jessie main non-free' >> /etc/apt/sources.list
+	su -c "echo -e '\n# Debian Multimedia\ndeb http://www.deb-multimedia.org jessie main non-free' >> /etc/apt/sources.list
 	apt update; apt install deb-multimedia-keyring
 	apt update; apt dist-upgrade"
 fi
-su -c "apt install curl tesseract-ocr $tesseractfra links sxiv xdotool parallel ffmpeg git build-essential autoconf automake libtool yasm python3-dev cython3 libffms2-3 bsdtar qtbase5-dev qt5-qmake"
+su -c "apt install curl tesseract-ocr $tesseractfra links sxiv xdotool parallel ffmpeg git build-essential autoconf automake libtool pkg-config yasm python3-dev cython3 libffms2-3 bsdtar qtbase5-dev qt5-qmake"
+su -c "apt -t jessie-backports install cython3"
 mkdir Gits; cd Gits
 
 # Installation de zimg
