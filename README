@@ -1,19 +1,22 @@
 Pour les nuls :
-   Installer les prérequis avec le script d'installation pour Debian Jessie.
-   Vous pouvez installer Debian Jessie dans une machine virtuelle telle que Virtualbox.
+	Installer les prérequis avec le script d'installation pour Debian Jessie.
+	Vous pouvez installer Debian Jessie dans une machine virtuelle telle que Virtualbox.
 
 
 Prérequis :
 - FFmpeg : https://www.ffmpeg.org/
 - Vapoursynth R36+ : http://www.vapoursynth.com/
 - le plugin FFMS2 pour Vapoursynth : https://github.com/FFMS/ffms2/releases
-- le plugin HAvsFunc pour Vapoursynth : http://forum.doom9.org/showthread.php?t=166582
+- le script HAvsFunc pour Vapoursynth : http://forum.doom9.org/showthread.php?t=166582
 	nécessite mvsfunc (http://forum.doom9.org/showthread.php?t=172564) et adjust (https://github.com/dubhater/vapoursynth-adjust)
 - le plugin fmtconv pour Vapoursynth : http://forum.doom9.org/showthread.php?t=166504
 - (Conseillé) Vapoursynth Editor : http://forum.doom9.org/showthread.php?t=170965
 - (Optionnel) le plugin nnedi3_rpow2 pour Vapoursynth : http://forum.doom9.org/showthread.php?t=172652
 	nécessite nnedi3 (http://forum.doom9.org/showthread.php?t=166434)
 - (Très optionnel) le plugin Waifu2x-w2xc pour Vapoursynth : https://github.com/HomeOfVapourSynthEvolution/VapourSynth-Waifu2x-w2xc/
+- Note :
+	Les plugins Vapoursynth (.so sur Unix, .dll sur Windows) doivent être placés dans l'un de ces dossiers : http://www.vapoursynth.com/doc/autoloading.html
+	Les scripts Vapoursynth (.py) doivent être placés dans le dossier "site-packages" de votre installation Python3.
 
 Prérequis Unix :
 - Tesseract (version 3.03+ recommandée) et son dictionnaire français : https://github.com/tesseract-ocr/tesseract
