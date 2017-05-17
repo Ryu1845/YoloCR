@@ -104,8 +104,8 @@ You can then change `Seuil` paremeter to the values previously found.
 ### Filter the video
 
 1. Edit the first lines in `YoloCR.vpy` thanks to the two previos steps (and the previous file `YoloSeuil.vpy`).
-	* SeuilI = the inline threshold value
-	* seuilO = the outline threshold value
+	* SeuilI = the inline threshold value (decrease it if it improves the clarity of the letters)
+	* SeuilO = the outline threshold value (increase it if some letters got erased)
  
 2. Then filter it: `vspipe -y YoloCR.vpy - | ffmpeg -i - -c:v mpeg4 -qscale:v 3 -y nameOftheVideoOutput.mp4`
 

@@ -56,13 +56,13 @@ PPA Vapoursynth pour Ubuntu et Linux Mint (non testé) :
 
 0) Vous pouvez déterminer les paramètres à rentrer dans YoloCR.vpy à l'aide de Vapoursynth Editor et des scripts annexes.
 	Dans l'éditeur, vous pourrez vérifier vos résultats avec la touche "F5".
-	Ouvrez d'abord YoloResize dans Vapoursynth Editor.
+	Ouvrez d'abord YoloResize.vpy dans Vapoursynth Editor.
 		FichierSource est le chemin de la vidéo à OCR. Ne pas oublier les apostrophes.
 		DimensionCropBox vous permet de limiter la zone à OCR. Cela augmentera la vitesse de traitement ET la fiabilité de l'OCR qui s'en suivra.
 		HauteurCropBox définit la hauteur du bord inférieur de la CropBox.
 			Notez que ces deux paramètres se règlent avant upscale.
 		Vous pouvez ensuite passer la valeur de Supersampling à -1 et vérifier que vos sous-titres ne sont pas en contact avec le bord blanc.
-	Ouvrez maintenant YoloSeuil dans l'éditeur.
+	Ouvrez maintenant YoloSeuil.vpy dans l'éditeur.
 		Paramétrez les paramètres FichierSource, DimensionCropBox et HauteurCropBox comme précedemment.
 		Choisissez le ModeS qui vous convient. 'L' dans le cas d'un seuil blanc ou noir, successivement 'R', 'G' et 'B' dans le cas contraire.
 		Réglez le Seuil. Les valeurs pourront être trouvées à l'aide du "Color Panel" disponible dans la fenêtre de prévisualiation.
@@ -71,6 +71,10 @@ PPA Vapoursynth pour Ubuntu et Linux Mint (non testé) :
                 Vous pouvez vérifier les valeurs sucessivement trouvées en modifant le paramètre Seuil par celles-ci.
 			Dans le cas de l'inline, les sous-titres doivent rester pleinement visibles.
 			Dans de le cas de l'outline, l'outline doit être complètement noire.
+        Si vous ne comprenez pas l'utilisation de ce script, passez à l'étape suivante.
+    Vérifiez dans YoloCR.vpy que le résultat du filtrage vous convient.
+        Augmentez le SeuilO (seuil outline) si il manque des lettres.
+        Diminuez le SeuilI (seuil inline) si cela permet une amélioration de la propreté des lettres.
 
 1) Filtrer la vidéo à l'aide du script YoloCR.vpy.
 	N'oubliez pas d'éditer les premières lignes de YoloCR.vpy en fonction de votre fichier source et des réglages trouvés précedemment.
