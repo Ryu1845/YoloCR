@@ -74,6 +74,11 @@ if ModeS=='R' or ModeS=='G' or ModeS=='B':
 		Clip=core.std.ShufflePlanes(clips=Clip,planes=1,colorfamily=vs.GRAY)
 	else:
 		Clip=core.std.ShufflePlanes(clips=Clip,planes=2,colorfamily=vs.GRAY)
+	def remove_matrix(n,f):
+		fout = f.copy()
+		del fout.props._Matrix
+		return fout
+	Clip=core.std.ModifyFrame(clip=Clip,clips=Clip,selector=remove_matrix)
 
 if Seuil>=0:	
 	Clip=core.std.Binarize(clip=Clip,threshold=Seuil)	
