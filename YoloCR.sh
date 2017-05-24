@@ -68,8 +68,8 @@ seq 1 2 $(($(wc -l < Timecodes.txt)-1)) | parallel $popt \
 cd ScreensFiltrés; find ./ -name "*.jpg" -size $(ls -l BlackFrame.jpg | awk '{print $5}')c -delete
 
 ## Sélection du moteur OCR
-if [ "$OSTYPE" = "cygwin" ]; then
-    if reg query HKLM\\Software\\ABBYY\\FineReader /ve | grep -q REG_SZ && hash tesseract 2>/dev/null; then
+if grep -q Microsoft /proc/version || [ "$OSTYPE" = "cygwin" ]; then
+    if reg.exe query HKEY_CURRENT_USER\\Software\\ABBYY\\FineReader /ve | grep -q REG_SZ && hash tesseract 2>/dev/null; then
         while true; do read -p "Voulez vous utiliser (T)esseract ou Abby (F)ineReader ?" TF
             case $TF in
                 [Tt]* ) OCRType=Tesseract; break;;
@@ -77,7 +77,7 @@ if [ "$OSTYPE" = "cygwin" ]; then
                 * ) echo "Répondre (T)esseract ou (F)ineReader.";;
             esac
         done
-    elif reg query HKLM\\Software\\ABBYY\\FineReader /ve | grep -q REG_SZ; then OCRType=FineReader
+    elif reg.exe query HKEY_CURRENT_USER\\Software\\ABBYY\\FineReader /ve | grep -q REG_SZ; then OCRType=FineReader
     else OCRType=Tesseract; fi
 else OCRType=Tesseract; fi
 
