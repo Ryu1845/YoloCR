@@ -25,7 +25,7 @@ if [[ $release = jessie && ! $(apt-cache policy | grep "Unofficial Multimedia Pa
 	apt update; apt install deb-multimedia-keyring
 	apt update; apt dist-upgrade"
 fi
-su -c "apt install curl tesseract-ocr $tesseractfra links sxiv xdotool parallel ffmpeg git build-essential autoconf automake libtool pkg-config yasm python3-dev cython3 libffms2-3 bsdtar qtbase5-dev qt5-qmake"
+su -c "apt install curl tesseract-ocr $tesseractfra links sxiv xdotool parallel ffmpeg git build-essential autoconf automake libtool pkg-config nasm python3-dev cython3 libffms2-3 bsdtar qtbase5-dev qt5-qmake"
 su -c "apt -t jessie-backports install cython3"
 mkdir Gits; cd Gits
 
@@ -40,7 +40,8 @@ git clone https://github.com/vapoursynth/vapoursynth.git; cd vapoursynth
 su -c "make install"; cd ..
 
 # Installation de Vapoursynth Editor
-git clone https://bitbucket.org/mystery_keeper/vapoursynth-editor.git; cd vapoursynth-editor/pro
+#git clone https://bitbucket.org/mystery_keeper/vapoursynth-editor.git; cd vapoursynth-editor/pro
+wget https://bitbucket.org/mystery_keeper/vapoursynth-editor/get/r16.tar.bz2; bsdtar -xf r16.tar.bz2; rm r16.tar.bz2; cd mystery_keeper-vapoursynth-editor-3a304dd94528/pro
 qmake -qt5 && make; cd ..
 su -c "cp build/release-64bit-gcc/vsedit /usr/local/bin/vsedit 
 install -D build/release-64bit-gcc/vsedit.svg /usr/local/share/pixmaps/vsedit.svg
