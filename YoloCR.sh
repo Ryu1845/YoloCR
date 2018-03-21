@@ -4,9 +4,9 @@
 if [ ! -z $2 ]; then test=false; for testlang in $(tesseract  --list-langs | tail -n +2); do if [ $testlang == $2 ]; then test=true; fi; done; fi
 if [ -z $1 ]; then echo -e "N'oubliez pas de mettre le nom de la Vidéo Filtrée en argument.\nExemple : ./YoloCR.sh Vidéo_Filtrée.mp4 <lang>"; exit=true
 elif [ ! -z $3 ]; then echo -e "Mettez le nom de la Vidéo Filtrée entre guillemets.\nExemple : ./YoloCR.sh \"Vidéo Filtrée.mp4\" <lang>"; exit=true
-elif [ $test = false ]; then echo -e "Vérifiez que le dictionnaire Tesseract correspondant à la langue choisie est bien installé.\nExemple : ./YoloCR.sh Vidéo_Filtrée.mp4 fra"; exit=true
+elif [[ $test = false ]]; then echo -e "Vérifiez que le dictionnaire Tesseract correspondant à la langue choisie est bien installé.\nExemple : ./YoloCR.sh Vidéo_Filtrée.mp4 fra"; exit=true
 elif ! echo $BASH | grep -q bash; then echo -e "Ce script doit être lancé avec bash.\nExemple : bash YoloCR.sh Vidéo_Filtrée.mp4 <lang>"; exit=true
-elif [ $test = true ]; then lang=$2; fi
+elif [[ $test = true ]]; then lang=$2; fi
 
 if [ -z $lang ]; then if tesseract --list-langs 2>&1 | grep -q fra
     then lang=fra
