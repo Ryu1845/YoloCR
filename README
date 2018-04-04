@@ -47,7 +47,7 @@ Prérequis Windows :
 	Les scripts devront être lancés depuis la console Cygwin.
 
 
-Script d'installation des prérequis pour Debian Jessie et LMDE Betsy :
+Script d'installation des prérequis pour Debian Stretch :
 	sh YoloDebInstallation.sh
 
 PPA Vapoursynth pour Ubuntu et Linux Mint (non testé) : 

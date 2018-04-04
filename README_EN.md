@@ -34,7 +34,7 @@ Global Requirements for all the OS.
 
 > *Note*: most of these package, with the exception of all the plugins for vapoursynth, are available as official package for your distro.
 
-> For Debian 8 and LMDE 2, all the requirements can be installed with the YoloDebInstallation script : `sh YoloDebInstallation.sh eng-only`
+> For Debian 9, all the requirements can be installed with the YoloDebInstallation script : `sh YoloDebInstallation.sh eng-only`
 
 > For Ubuntu, *vapoursynth*, *vapoursynth-editor* and  *vapoursynth-extra-plugins* (to install all the mandatory plugins above) are available through this ppa: [`ppa:djcj/vapoursynth`](https://launchpad.net/~djcj/+archive/ubuntu/vapoursynth)
 
