@@ -1,6 +1,6 @@
 Pour les nuls :
-	Installer les prérequis avec le script d'installation pour Debian Jessie.
-	Vous pouvez installer Debian Jessie dans une machine virtuelle telle que Virtualbox.
+	Installer les prérequis avec le script d'installation pour Debian Stretch.
+	Vous pouvez installer Debian Stretch dans une machine virtuelle telle que Virtualbox.
 
 
 Prérequis :
@@ -65,7 +65,7 @@ PPA Vapoursynth pour Ubuntu et Linux Mint (non testé) :
 	Ouvrez maintenant YoloSeuil.vpy dans l'éditeur.
 		Paramétrez les paramètres FichierSource, DimensionCropBox et HauteurCropBox comme précedemment.
 		Choisissez le ModeS qui vous convient. 'L' dans le cas d'un seuil blanc ou noir, successivement 'R', 'G' et 'B' dans le cas contraire.
-		Réglez le Seuil. Les valeurs pourront être trouvées à l'aide du "Color Panel" disponible dans la fenêtre de prévisualiation.
+		Réglez le Seuil. Les valeurs pourront être trouvées à l'aide du "Color Panel" disponible dans la fenêtre de prévisualisation.
 			Dans le cas de l'inline (intérieur des sous-titres), cherchez le seuil minimum.
 			Dans de le cas de l'outline (bordure des sous-titres), cherchez le seuil maximum.
                 Vous pouvez vérifier les valeurs sucessivement trouvées en modifant le paramètre Seuil par celles-ci.

@@ -2,7 +2,7 @@
 
 ## For noobs
 Install the requirements with the Debian installation script.
-You can install Debian Jessie inside a virtual machine like Virtualbox.
+You can install Debian Stretch inside a virtual machine like Virtualbox.
 
 ## Requirements
 
