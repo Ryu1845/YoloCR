@@ -2,7 +2,7 @@
 ##
 
 if [ ! -z $2 ]; then test=false; for testlang in $(tesseract  --list-langs | tail -n +2); do if [ $testlang == $2 ]; then test=true; fi; done; fi
-if [ -z $1 ]; then echo -e "N'oubliez pas de mettre le nom de la Vidéo Filtrée en argument.\nExemple : ./YoloCR.sh Vidéo_Filtrée.mp4 <lang>"; exit=true
+if [ -z "$1" ]; then echo -e "N'oubliez pas de mettre le nom de la Vidéo Filtrée en argument.\nExemple : ./YoloCR.sh Vidéo_Filtrée.mp4 <lang>"; exit=true
 elif [ ! -z $3 ]; then echo -e "Mettez le nom de la Vidéo Filtrée entre guillemets.\nExemple : ./YoloCR.sh \"Vidéo Filtrée.mp4\" <lang>"; exit=true
 elif [[ $test = false ]]; then echo -e "Vérifiez que le dictionnaire Tesseract correspondant à la langue choisie est bien installé.\nExemple : ./YoloCR.sh Vidéo_Filtrée.mp4 fra"; exit=true
 elif ! echo $BASH | grep -q bash; then echo -e "Ce script doit être lancé avec bash.\nExemple : bash YoloCR.sh Vidéo_Filtrée.mp4 <lang>"; exit=true
@@ -57,7 +57,7 @@ export -f convertsecs
 if $bAlt; then Crop="-filter:v crop=h=ih/2:y=ih/2"; fi
 if file SceneChanges.log | grep CRLF 1> /dev/null; then CRLFtoLF="tr -d '\015' |"; fi
 seq 1 2 $(($(wc -l < Timecodes.txt)-1)) | parallel $popt \
-    'a=$(sed "{}q;d" Timecodes.txt); b=$(sed "$(({}+1))q;d" Timecodes.txt); ffmpeg -loglevel error -ss $(echo "if ($b-$a-0.003>2/'$FPS') x=($b+$a)/2 else x=$a; if (x<1) print 0; x" | bc -l) -i '$FilteredVideo' -vframes 1 '$Crop' ScreensFiltrés/$(convertsecs "$a")-$(convertsecs "$b").jpg' &
+    'a=$(sed "{}q;d" Timecodes.txt); b=$(sed "$(({}+1))q;d" Timecodes.txt); ffmpeg -loglevel error -ss $(echo "if ($b-$a-0.003>2/'$FPS') x=($b+$a)/2 else x=$a; if (x<1) print 0; x" | bc -l) -i '\"$FilteredVideo\"' -vframes 1 '$Crop' ScreensFiltrés/$(convertsecs "$a")-$(convertsecs "$b").jpg' &
         if $bAlt; then
             for ((i=1;i<=$(wc -l < TimecodesAlt.txt)-1;i+=2)); do
                 a=$(sed "${i}q;d" TimecodesAlt.txt); b=$(sed "$((${i}+1))q;d" TimecodesAlt.txt)
