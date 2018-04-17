@@ -95,7 +95,7 @@ Utilisation de YoloCR en série :
     2) Assurez-vous que le répertoire YoloCR contient tous les épisodes à OCR et uniquement ceux-ci.
     3) Commentez la première ligne de YoloCR.vpy. ("FichierSource" devient "#FichierSource".)
     4) Placez vous dans le répertoire de YoloCR et utilisez cette commande bash :
-        for file in *.mp4; do filef="${file%.*}_filtered.mp4"; vspipe -y --arg FichierSource="r\'$file\'" YoloCR.vpy - | ffmpeg -i - -c:v mpeg4 -qscale:v 3 -y "$filef"; ./YoloCR.sh "$filef"; done
+        for file in *.mp4; do filef="${file%.*}_filtered.mp4"; vspipe -y --arg FichierSource="$file" YoloCR.vpy - | ffmpeg -i - -c:v mpeg4 -qscale:v 3 -y "$filef"; ./YoloCR.sh "$filef"; done
             "*.mp4" signifie "tous les fichiers possédant l'extension mp4". Documentez vous sur les regex bash pour plus de souplesse.
 
 

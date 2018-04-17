@@ -126,7 +126,7 @@ Then you can OCR the video: `./YoloCR.sh nameOftheVideoOutput.mp4`
 2. Make sure that YoloCR directory includes the video files you want to OCR and only theses.
 3. Comment the first line of YoloCR.vpy. ("FichierSource" becomes "#FichierSource".)
 4. Move to the YoloCR directory and use this bash command:
-	* `for file in *.mp4; do filef="${file%.*}_filtered.mp4"; vspipe -y --arg FichierSource="r\'$file\'" YoloCR.vpy - | ffmpeg -i - -c:v mpeg4 -qscale:v 3 -y "$filef"; ./YoloCR.sh "$filef"; done`
+	* `for file in *.mp4; do filef="${file%.*}_filtered.mp4"; vspipe -y --arg FichierSource="$file" YoloCR.vpy - | ffmpeg -i - -c:v mpeg4 -qscale:v 3 -y "$filef"; ./YoloCR.sh "$filef"; done`
 
 > "*.mp4" means that all files having the mp4 extension will be processed. Read about bash regex if you want more flexibility.
 
