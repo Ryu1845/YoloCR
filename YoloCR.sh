@@ -164,7 +164,7 @@ fi; done; fi
 ## Transformation du dossier OCR en srt (les timecodes seront reformatés plus tard)
 rm "${FilteredVideo%.mp4}.srt" "${FilteredVideo%.mp4}_Alt.srt" 2> /dev/null
 i=0; j=0; for file in TessResult/*.txt; do 
-    if [ $file != *_Alt.txt ];
+    if [[ $file != *_Alt.txt ]];
         then i=$(($i + 1)); k=$i; Alt=""
         else j=$(($j + 1)); k=$j; Alt="_Alt"
     fi
