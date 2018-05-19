@@ -56,10 +56,10 @@ git clone https://github.com/EleonoreMizo/fmtconv.git; cd fmtconv/build/unix
 ./autogen.sh && ./configure --libdir=/usr/local/lib/vapoursynth && make -j$(nproc)
 su -c "make install"; cd ../../..
 
-# Installation de nnedi3
-git clone https://github.com/dubhater/vapoursynth-nnedi3.git; cd vapoursynth-nnedi3
-./autogen.sh && ./configure --libdir=/usr/local/lib/vapoursynth && make -j$(nproc)
-su -c "make install"; cd ..
+# Installation de znedi3
+git clone https://github.com/sekrit-twc/znedi3.git; cd znedi3
+make -j$(nproc) X86=1
+su -c "cp vsznedi3.so /usr/local/lib/vapoursynth/"; cd ..
 
 # Installation de edi_rpow2
 git clone https://gist.github.com/020c497524e794779d9c.git vapoursynth-edi_rpow2

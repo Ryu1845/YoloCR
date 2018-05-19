@@ -2,13 +2,13 @@ FichierSource=r'Vidéo_Source.mkv'
 DimensionCropBox=[1344,150] # Taille en largeur et hauteur de la CropBox délimitant les sous-titres à OCR.
 HauteurCropBox=46 # Hauteur de la CropBox délimitant les sous-titres à OCR.
 Supersampling=-1 # Facteur de supersampling (multiplication de la résolution de la vidéo). Mettre à -1 pour calculer le facteur automatiquement.
-ModeU='sinc' # 'sinc' (2 taps, plus rapide), 'nnedi3' (plus lent) ou 'waifu2x' (beaucoup plus lent), contrôle la méthode d'Upscale.
+ModeU='sinc' # 'sinc' (2 taps, plus rapide), 'znedi3' (plus lent) ou 'waifu2x' (beaucoup plus lent), contrôle la méthode d'Upscale.
 ModeS='L' # 'L' pour Luma, 'R' pour Rouge, 'B' pour Bleu ou 'G' pour Vert. Seuil à analyser.
 Seuil=-1 # Seuil délimitant les sous-titres. Mettre à -1 pour chercher le seuil à l'aide de VapourSynth Editor.
 
 
 import vapoursynth as vs
-if ModeU=='nnedi3':
+if ModeU=='znedi3':
 	import edi_rpow2 as edi
 core=vs.get_core()
 
@@ -25,7 +25,7 @@ if Supersampling<0:
 	else:
 		TargetRes=1080
 		CurrentRes=Clip.height
-	if ModeU=='nnedi3':
+	if ModeU=='znedi3':
 		Ss=TargetRes/CurrentRes/1.125	
 	else:
 		Ss=TargetRes/CurrentRes
@@ -34,7 +34,7 @@ elif Supersampling==0:
 else:
 	Ss=Supersampling
 
-if ModeU=='nnedi3' and Ss!=1:
+if ModeU=='znedi3' and Ss!=1:
 	if Ss-int(Ss)>0:
 		Ss=int(Ss/2)*2+2
 	else:
@@ -45,9 +45,9 @@ if ModeU=='nnedi3' and Ss!=1:
 		Ssbis=Supersampling/Ss
 
 if Ss!=1:
-	if ModeU=='nnedi3' or ModeU=='waifu2x':
-		if ModeU=='nnedi3':
-			Clip=edi.nnedi3_rpow2(clip=Clip,rfactor=Ss)
+	if ModeU=='znedi3' or ModeU=='waifu2x':
+		if ModeU=='znedi3':
+			Clip=edi.znedi3_rpow2(clip=Clip,rfactor=Ss)
 		else :
 			Clip=core.fmtc.bitdepth(clip=Clip,bits=32)
 			Clip=core.w2xc.Waifu2x(clip=Clip,scale=Ss)
