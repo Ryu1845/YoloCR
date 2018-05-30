@@ -1,7 +1,7 @@
 #!/bin/bash
 ##
 
-if [ ! -z $2 ]; then test=false; for testlang in $(tesseract  --list-langs | tail -n +2); do if [ $testlang == $2 ]; then test=true; fi; done; fi
+if [ ! -z $2 ]; then test=false; for testlang in $(tesseract  --list-langs 2>&1 | tail -n +2); do if [ $testlang == $2 ]; then test=true; fi; done; fi
 if [ -z "$1" ]; then echo -e "N'oubliez pas de mettre le nom de la Vidéo Filtrée en argument.\nExemple : ./YoloCR.sh Vidéo_Filtrée.mp4 <lang>"; exit=true
 elif [ ! -z $3 ]; then echo -e "Mettez le nom de la Vidéo Filtrée entre guillemets.\nExemple : ./YoloCR.sh \"Vidéo Filtrée.mp4\" <lang>"; exit=true
 elif [[ $test = false ]]; then echo -e "Vérifiez que le dictionnaire Tesseract correspondant à la langue choisie est bien installé.\nExemple : ./YoloCR.sh Vidéo_Filtrée.mp4 fra"; exit=true
@@ -12,7 +12,9 @@ if [ -z $lang ]; then if tesseract --list-langs 2>&1 | grep -q fra
     then lang=fra
     else lang=eng
 fi; fi
+
 if [ "$exit" = "true" ]; then tesseract --list-langs 2>&1 | sed "s/$lang/$lang \(default\)/"; exit; fi
+if ! awk -W version 2>&1 | grep -q GNU; then echo "Ce script nécessite gawk."; exit; fi
 
 ## Prélude
 if hash sxiv 2>/dev/null
