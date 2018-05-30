@@ -16,7 +16,7 @@ if [[ $1 != eng-only ]]; then tesseractfra=tesseract-ocr-fra; fi
 Desktop=$(grep DESKTOP /home/$USER/.config/user-dirs.dirs 2>/dev/null | cut -d/ -f2 | rev | cut -c 2- | rev)
 if [ -z $Desktop ]; then Desktop=Desktop; fi
 
-su -c "apt install curl tesseract-ocr $tesseractfra links sxiv xdotool parallel ffmpeg git build-essential autoconf automake libtool pkg-config yasm python3-dev cython3 libffms2-4 bsdtar qtbase5-dev qt5-qmake libqt5websockets5-dev"
+su -c "apt install bc gawk curl tesseract-ocr $tesseractfra links sxiv xdotool parallel ffmpeg git build-essential autoconf automake libtool pkg-config yasm python3-dev cython3 libffms2-4 bsdtar qtbase5-dev qt5-qmake libqt5websockets5-dev"
 nasmurl=http://ftp.debian.org/debian/pool/main/n/nasm/
 nasmdeb=$(links -dump $nasmurl | grep _amd64 | tail -1 | awk '{ print $3; }')
 wget $nasmurl$nasmdeb; su -c "dpkg -i $nasmdeb"; rm $nasmdeb
