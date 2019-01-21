@@ -138,4 +138,4 @@ Then you can OCR the video: `./YoloCR.sh nameOftheVideoOutput.mp4`
 * Babun (Windows), you will have errors when trying to run YoloCR.sh.
 	* Use Cygwin instead.
 
-Contact: https://discord.gg/n4Yh2zs
+Contact: https://discord.gg/USD6wK3
