@@ -28,7 +28,7 @@ git clone https://github.com/sekrit-twc/zimg.git; cd zimg
 su -c "make install"; cd ..
 
 # Installation de Vapoursynth
-git clone https://github.com/vapoursynth/vapoursynth.git; cd vapoursynth
+wget https://github.com/vapoursynth/vapoursynth/archive/R43.tar.gz -O - | bsdtar -xf -; cd vapoursynth-R43
 ./autogen.sh && ./configure && make -j$(nproc)
 su -c "make install"; cd ..
 
