@@ -40,7 +40,8 @@ awk -v fps=$FPS '{if ($3 == 0) {var=sprintf ("%.4f", $1/fps); print substr(var, 
 if parallel --minversion 20131122 1> /dev/null; then popt='--no-notice --bar'; else popt='--no-notice --eta'; fi
 TessVersionNum=$(tesseract -v 2>&1 | head -1 | cut -d' ' -f2)
 if [ "$OSTYPE" = "cygwin" ]; then TessVersionNum=$(echo $TessVersionNum | tr -d '\015'); fi
-TessVersionNum2=$(echo $TessVersionNum | cut -d. -f2 | bc)
+TessVersionNum1=$(echo $TessVersionNum | cut -d. -f1)
+TessVersionNum2=$(echo $TessVersionNum | cut -d. -f2)
 
 ## Utilisation des timecodes pour générer les images à OCR
 if [ $lang = fra ]
@@ -90,8 +91,9 @@ if [ $OCRType = Tesseract ]; then
         then echo "OCR du dossier ScreensFiltrés avec Tesseract v${TessVersionNum}."
         else echo "OCR of the ScreensFiltrés directory with Tesseract v${TessVersionNum}."
     fi
-    ls *.jpg | parallel $popt 'tesseract {} ../TessResult/{/.} -l '$lang' -psm 6 hocr 2> /dev/null'; cd ../TessResult
-    if (( $TessVersionNum2 < 3 )); then for file in *.html; do mv "$file" "${file%.html}.hocr"; done; fi
+    if (( $TessVersionNum1 >= 4 )); then oem="--oem 0 " psm="--psm"; else psm=-psm; fi
+    ls *.jpg | parallel $popt 'tesseract {} ../TessResult/{/.} -l '$lang' '$oem''$psm' 6 hocr 2> /dev/null'; cd ../TessResult
+    if (( $TessVersionNum1 < 4 )) && (( $TessVersionNum2 < 3 )); then for file in *.html; do mv "$file" "${file%.html}.hocr"; done; fi
     if [ $lang = fra ]
         then echo "Vérification de l'OCR italique."; Question="Est-ce de l'italique ? (o/n)"; BadAnswer="Répondre (o)ui ou (n)on."
         else echo "Verify the italics OCR."; Question="Is it italic type ? (y/n)"; BadAnswer="Answer (y)es or (n)o."
