@@ -37,7 +37,7 @@ FPS=$(ffprobe "$FilteredVideo" -v 0 -select_streams v -print_format flat -show_e
 awk -v fps=$FPS '{if ($3 == 0) {var=sprintf ("%.4f", $1/fps); print substr(var, 0, length(var)-1)} else if ($2 == 0) {var=sprintf ("%.4f", ($1+1)/fps); print substr(var, 0, length(var)-1)}}' SceneChanges.log | sort -n > Timecodes.txt &
     if $bAlt; then awk -v fps=$FPS '{if ($3 == 0) {var=sprintf ("%.4f", $1/fps); print substr(var, 0, length(var)-1)} else if ($2 == 0) {var=sprintf ("%.4f", ($1+1)/fps); print substr(var, 0, length(var)-1)}}' SceneChangesAlt.log | sort -n > TimecodesAlt.txt; fi
         wait
-if parallel --minversion 20131122 1> /dev/null; then popt='--no-notice --bar'; else popt='--no-notice --eta'; fi
+if parallel --minversion 20131122 1> /dev/null; then popt="--no-notice --bar -j $(nproc)"; else popt="--no-notice --eta -j $(nproc)"; fi
 TessVersionNum=$(tesseract -v 2>&1 | head -1 | cut -d' ' -f2)
 if [ "$OSTYPE" = "cygwin" ]; then TessVersionNum=$(echo $TessVersionNum | tr -d '\015'); fi
 TessVersionNum1=$(echo $TessVersionNum | cut -d. -f1)
