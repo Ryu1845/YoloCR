@@ -67,7 +67,7 @@ seq 1 2 $(($(wc -l < Timecodes.txt)-1)) | parallel $popt \
                 ffmpeg -loglevel error -ss $(echo "if ($b-$a-0.003>2/$FPS) x=($b+$a)/2 else x=$a; if (x<1) print 0; x" | bc -l) -i "$FilteredVideo" -vframes 1 -filter:v crop=h=ih/2:y=0 ScreensFiltrés/$(convertsecs $a)-$(convertsecs $b)_Alt.jpg
             done
         fi &
-            ffmpeg -loglevel error -ss $(echo "($(eval "head -2 SceneChanges.log | tail -1 | $CRLFtoLF cut -d' ' -f2") + 255/2) / $FPS" | bc -l) -i "$FilteredVideo" $Crop -vframes 1 ScreensFiltrés/BlackFrame.jpg
+            ffmpeg -loglevel error -ss $(echo "($(ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 Vidéo_Filtrée.mp4) + $(tail -1 Timecodes.txt)) / 2" | bc) -i "$FilteredVideo" $Crop -vframes 1 ScreensFiltrés/BlackFrame.jpg
                 wait
 cd ScreensFiltrés; find ./ -name "*.jpg" -size $(ls -l BlackFrame.jpg | awk '{print $5}')c -delete
 
@@ -91,8 +91,8 @@ if [ $OCRType = Tesseract ]; then
         then echo "OCR du dossier ScreensFiltrés avec Tesseract v${TessVersionNum}."
         else echo "OCR of the ScreensFiltrés directory with Tesseract v${TessVersionNum}."
     fi
-    if (( $TessVersionNum1 >= 4 )); then oem="--oem 0 " psm="--psm"; else psm=-psm; fi
-    ls *.jpg | parallel $popt 'tesseract {} ../TessResult/{/.} -l '$lang' '$oem''$psm' 6 hocr 2> /dev/null'; cd ../TessResult
+    if (( $TessVersionNum1 >= 4 )); then psm="--psm"; topt="$psm 6 --oem 0"; else psm="-psm"; topt="$psm 6"; fi
+    ls *.jpg | parallel $popt 'tesseract {} ../TessResult/{/.} -l '$lang' '$topt' hocr 2> /dev/null'; cd ../TessResult
     if (( $TessVersionNum1 < 4 )) && (( $TessVersionNum2 < 3 )); then for file in *.html; do mv "$file" "${file%.html}.hocr"; done; fi
     if [ $lang = fra ]
         then echo "Vérification de l'OCR italique."; Question="Est-ce de l'italique ? (o/n)"; BadAnswer="Répondre (o)ui ou (n)on."
@@ -132,15 +132,15 @@ if [ $OCRType = Tesseract ]; then
     if (( TessVersionNum2 >= 3 ))
         then ls *.txt | parallel $popt \
              if [ \$\(wc -c \< {}\) \= 0 ]\; \
-                then tesseract ../ScreensFiltrés/{.}.jpg {.} -l \$lang -psm 6 2\>/dev/null\; \
+                then tesseract ../ScreensFiltrés/{.}.jpg {.} -l \$lang \$topt 2\>/dev/null\; \
                      if [ \$\(wc -c \< {}\) \= 0 ]\; then rm {}\; fi\; \
                 else n=\$\(grep -o x_wconf {.}.hocr \| wc -l\)\; \
                      j=\$\(cat {.}.hocr \| grep -Po \"x_wconf \\K[^\']*\" \| tr '\\n' +\)\; \
                      j=\$\(\(\${j::-1}/\$n\)\)\; if \(\(\$j \>\= 55\)\)\; then echo "" \>\> {}\; else rm {}\; fi\; \
              fi
-        else ls *.txt | parallel $popt 'if [ $(wc -c < {}) = 0 ]; then tesseract ../ScreensFiltrés/{.}.jpg {.} -l '$lang' -psm 6 2> /dev/null; if [ $(wc -c < {}) = 0 ]; then rm {}; fi; else echo "" >> {}; fi'
+        else ls *.txt | parallel $popt 'if [ $(wc -c < {}) = 0 ]; then tesseract ../ScreensFiltrés/{.}.jpg {.} -l '$lang' '$topt' 2> /dev/null; if [ $(wc -c < {}) = 0 ]; then rm {}; fi; else echo "" >> {}; fi'
     fi
-    for file in *.txt; do if (( $(wc -l $file | awk '{print $1}') > 4 )); then tesseract ../ScreensFiltrés/${file%.txt}.jpg ${file%.txt} -l $lang -psm 7 2>/dev/null; fi; done # Workaround bug "psm" Tesseract, dangerous
+    for file in *.txt; do if (( $(wc -l $file | awk '{print $1}') > 4 )); then tesseract ../ScreensFiltrés/${file%.txt}.jpg ${file%.txt} -l $lang $psm 7 2>/dev/null; echo "" >> $file; fi; done # Workaround bug "psm" Tesseract, dangerous
 fi
 
 ## OCR d'un dossier avec FineReader
