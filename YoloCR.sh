@@ -129,14 +129,14 @@ if [ $OCRType = Tesseract ]; then
         then echo "Traitement des faux positifs et Suppression des sous-titres vides."
         else echo "Treat false positives and Delete empty subtitles."
     fi
-    if (( TessVersionNum2 >= 3 ))
+    if (( $TessVersionNum1 >= 4 || $TessVersionNum2 >= 3 ))
         then ls *.txt | parallel $popt \
-             if [ \$\(wc -c \< {}\) \= 0 ]\; \
+             if [ \$\(wc -c \< {}\) = 0 ]\; \
                 then tesseract ../ScreensFiltrés/{.}.jpg {.} -l \$lang \$topt 2\>/dev/null\; \
-                     if [ \$\(wc -c \< {}\) \= 0 ]\; then rm {}\; fi\; \
+                     if \(\( \$\(wc -c \< {}\) \> 0 \)\)\; then echo "" \>\> {}\; else rm {}\; fi\; \
                 else n=\$\(grep -o x_wconf {.}.hocr \| wc -l\)\; \
                      j=\$\(cat {.}.hocr \| grep -Po \"x_wconf \\K[^\']*\" \| tr '\\n' +\)\; \
-                     j=\$\(\(\${j::-1}/\$n\)\)\; if \(\(\$j \>\= 55\)\)\; then echo "" \>\> {}\; else rm {}\; fi\; \
+                     j=\$\(\(\${j::-1}/\$n\)\)\; if \(\( \$j \>= 55 \)\)\; then echo "" \>\> {}\; else rm {}\; fi\; \
              fi
         else ls *.txt | parallel $popt 'if [ $(wc -c < {}) = 0 ]; then tesseract ../ScreensFiltrés/{.}.jpg {.} -l '$lang' '$topt' 2> /dev/null; if [ $(wc -c < {}) = 0 ]; then rm {}; fi; else echo "" >> {}; fi'
     fi
