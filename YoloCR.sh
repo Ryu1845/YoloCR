@@ -57,7 +57,10 @@ convertsecs() {
  printf "%02dh%02dm%02ds%03d\n" $h $m $s $ms
 }
 export -f convertsecs
-if $bAlt; then Crop="-filter:v crop=h=ih/2:y=ih/2"; fi
+if $bAlt
+    then Crop="-filter:v crop=h=ih/2:y=ih/2"
+         if (( $(tail -1 SceneChangesAlt.log  | cut -d' ' -f1) > $(tail -1 SceneChanges.log | cut -d' ' -f1) )); then Alt=Alt; fi
+fi
 if file SceneChanges.log | grep CRLF 1> /dev/null; then CRLFtoLF="tr -d '\015' |"; fi
 seq 1 2 $(($(wc -l < Timecodes.txt)-1)) | parallel $popt \
     'a=$(sed "{}q;d" Timecodes.txt); b=$(sed "$(({}+1))q;d" Timecodes.txt); ffmpeg -loglevel error -ss $(echo "if ($b-$a-0.003>2/'$FPS') x=($b+$a)/2 else x=$a; if (x<1) print 0; x" | bc -l) -i '\"$FilteredVideo\"' -vframes 1 '$Crop' ScreensFiltrés/$(convertsecs "$a")-$(convertsecs "$b").jpg' &
@@ -67,7 +70,7 @@ seq 1 2 $(($(wc -l < Timecodes.txt)-1)) | parallel $popt \
                 ffmpeg -loglevel error -ss $(echo "if ($b-$a-0.003>2/$FPS) x=($b+$a)/2 else x=$a; if (x<1) print 0; x" | bc -l) -i "$FilteredVideo" -vframes 1 -filter:v crop=h=ih/2:y=0 ScreensFiltrés/$(convertsecs $a)-$(convertsecs $b)_Alt.jpg
             done
         fi &
-            ffmpeg -loglevel error -ss $(echo "($(ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "$FilteredVideo") + $(tail -1 Timecodes.txt)) / 2" | bc) -i "$FilteredVideo" $Crop -vframes 1 ScreensFiltrés/BlackFrame.jpg
+            ffmpeg -loglevel error -ss $(echo "$(tail -1 Timecodes$Alt.txt) * 1/8 + $(ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "$FilteredVideo") * 7/8" | bc) -i "$FilteredVideo" $Crop -vframes 1 ScreensFiltrés/BlackFrame.jpg
                 wait
 cd ScreensFiltrés; find ./ -name "*.jpg" -size $(ls -l BlackFrame.jpg | awk '{print $5}')c -delete
 
