@@ -20,6 +20,7 @@ Prérequis :
 
 Prérequis Unix :
 - Tesseract (version 3.03+ recommandée) et son dictionnaire français : https://github.com/tesseract-ocr/tesseract
+- Imagemagick (si vous utilisez le moteur LSTM de Tesseract) : https://www.imagemagick.org/
 - Links : http://links.twibright.com/
 - Simple X Image Viewer (mode GUI uniquement) : https://github.com/muennich/sxiv
 - xdotool (Linux uniquement, mode GUI uniquement) : http://www.semicomplete.com/projects/xdotool/
@@ -86,6 +87,8 @@ PPA Vapoursynth pour Ubuntu et Linux Mint (non testé) :
 2) Script d'OCR en lui-même : YoloCR.sh.
 	La vidéo OCR-isable et les informations de changement de scène doivent être dans le même dossier.
 	./YoloCR.sh Vidéo_Filtrée.mp4
+	
+	Vous pouvez utiliser YoloTime.sh à la place de YoloCR.sh si vous souhaitez seulement le Time des sous-titres.
  
 3) C'est l'heure du Check :D
 
@@ -100,10 +103,12 @@ Utilisation de YoloCR en série :
 
 
 Bugs connus :
+- Le moteur LSTM de Tesseract produit un OCR de moindre qualité (notamment au niveau de la détection des italiques).
+  Utiliser les traineddata du moteur Legacy à la place : https://github.com/tesseract-ocr/tessdata
 - Cygwin (Windows), à la première utilisation du script YoloCR.sh.
   Signal SIGCHLD received, but no signal handler set.
   ./YoloCR.sh: ligne 121: ((: > 4 : erreur de syntaxe : opérande attendue (le sym bole erroné est "> 4 ").
-  Plus d'erreurs à partir de la seconde utilisation.
+  L'erreur disparaît à partir de la seconde utilisation.
 - Babun (Windows), un florilège d'erreurs lors de l'utilisation du script YoloCR.sh.
   Installez Cygwin à la place.
 

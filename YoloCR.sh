@@ -30,14 +30,14 @@ if [[ "$OSTYPE" = "linux-gnu" || "$OSTYPE" = "cygwin" ]]
     then inplace="-i"
     else inplace="-i .bk"
 fi
-if [ -d ScreensFiltrés ]; then rm ScreensFiltrés/*.jpg 2> /dev/null; else mkdir ScreensFiltrés; fi
-if [ -d TessResult ]; then rm TessResult/*.hocr TessResult/*.txt 2> /dev/null; else mkdir TessResult; fi
-if [ -f SceneChangesAlt.log ]; then bAlt=true; else bAlt=false; rm TimecodesAlt.txt 2> /dev/null; fi
+if [ -d ScreensFiltrés ]; then rm ScreensFiltrés/*.jpg 2>/dev/null; else mkdir ScreensFiltrés; fi
+if [ -d TessResult ]; then rm TessResult/*.hocr TessResult/*.txt 2>/dev/null; else mkdir TessResult; fi
+if [ -f SceneChangesAlt.log ]; then bAlt=true; else bAlt=false; rm TimecodesAlt.txt 2>/dev/null; fi
 FPS=$(ffprobe "$FilteredVideo" -v 0 -select_streams v -print_format flat -show_entries stream=r_frame_rate | cut -d'"' -f2 | bc -l)
 awk -v fps=$FPS '{if ($3 == 0) {var=sprintf ("%.4f", $1/fps); print substr(var, 0, length(var)-1)} else if ($2 == 0) {var=sprintf ("%.4f", ($1+1)/fps); print substr(var, 0, length(var)-1)}}' SceneChanges.log | sort -n > Timecodes.txt &
     if $bAlt; then awk -v fps=$FPS '{if ($3 == 0) {var=sprintf ("%.4f", $1/fps); print substr(var, 0, length(var)-1)} else if ($2 == 0) {var=sprintf ("%.4f", ($1+1)/fps); print substr(var, 0, length(var)-1)}}' SceneChangesAlt.log | sort -n > TimecodesAlt.txt; fi
         wait
-if parallel --minversion 20131122 1> /dev/null; then popt="--no-notice --bar -j $(nproc)"; else popt="--no-notice --eta -j $(nproc)"; fi
+if parallel --minversion 20131122 1>/dev/null; then popt="--no-notice --bar -j $(nproc)"; else popt="--no-notice --eta -j $(nproc)"; fi
 TessVersionNum=$(tesseract -v 2>&1 | head -1 | cut -d' ' -f2)
 if [ "$OSTYPE" = "cygwin" ]; then TessVersionNum=$(echo $TessVersionNum | tr -d '\015'); fi
 TessVersionNum1=$(echo $TessVersionNum | cut -d. -f1)
@@ -61,7 +61,7 @@ if $bAlt
     then Crop="-filter:v crop=h=ih/2:y=ih/2"
          if (( $(tail -1 SceneChangesAlt.log  | cut -d' ' -f1) > $(tail -1 SceneChanges.log | cut -d' ' -f1) )); then Alt=Alt; fi
 fi
-if file SceneChanges.log | grep CRLF 1> /dev/null; then CRLFtoLF="tr -d '\015' |"; fi
+if file SceneChanges.log | grep CRLF 1>/dev/null; then CRLFtoLF="tr -d '\015' |"; fi
 seq 1 2 $(($(wc -l < Timecodes.txt)-1)) | parallel $popt \
     'a=$(sed "{}q;d" Timecodes.txt); b=$(sed "$(({}+1))q;d" Timecodes.txt); ffmpeg -loglevel error -ss $(echo "if ($b-$a-0.003>2/'$FPS') x=($b+$a)/2 else x=$a; if (x<1) print 0; x" | bc -l) -i '\"$FilteredVideo\"' -vframes 1 '$Crop' ScreensFiltrés/$(convertsecs "$a")-$(convertsecs "$b").jpg' &
         if $bAlt; then
@@ -92,10 +92,19 @@ else OCRType=Tesseract; fi
 if [ $OCRType = Tesseract ]; then
     if [ $lang = fra ]
         then echo "OCR du dossier ScreensFiltrés avec Tesseract v${TessVersionNum}."
+             msg="Utilisation du moteur"
         else echo "OCR of the ScreensFiltrés directory with Tesseract v${TessVersionNum}."
+             msg="Using engine"
     fi
-    if (( $TessVersionNum1 >= 4 )); then psm="--psm"; topt="$psm 6 --oem 0"; else psm="-psm"; topt="$psm 6"; fi
-    ls *.jpg | parallel $popt 'tesseract {} ../TessResult/{/.} -l '$lang' '$topt' hocr 2> /dev/null'; cd ../TessResult
+    if (( $TessVersionNum1 >= 4 ))
+        then psm="--psm"
+             if tesseract $(ls *.jpg | head -1) - -l $lang --oem 0 1>/dev/null 2>&1
+                then echo "$msg Legacy."; oem="--oem 0"
+                else echo "$msg LSTM."; ls *.jpg | parallel $popt convert {} -negate {}
+             fi
+        else echo "$msg Legacy."; psm="-psm"
+    fi
+    ls *.jpg | parallel $popt 'tesseract {} ../TessResult/{/.} -l '$lang' '$oem' '$psm' 6 hocr 2>/dev/null'; cd ../TessResult
     if (( $TessVersionNum1 < 4 )) && (( $TessVersionNum2 < 3 )); then for file in *.html; do mv "$file" "${file%.html}.hocr"; done; fi
     if [ $lang = fra ]
         then echo "Vérification de l'OCR italique."; Question="Est-ce de l'italique ? (o/n)"; BadAnswer="Répondre (o)ui ou (n)on."
@@ -135,15 +144,15 @@ if [ $OCRType = Tesseract ]; then
     if (( $TessVersionNum1 >= 4 || $TessVersionNum2 >= 3 ))
         then ls *.txt | parallel $popt \
              if [ \$\(wc -c \< {}\) = 0 ]\; \
-                then tesseract ../ScreensFiltrés/{.}.jpg {.} -l \$lang \$topt 2\>/dev/null\; \
+                then tesseract ../ScreensFiltrés/{.}.jpg {.} -l \$lang \$oem \$psm 6 2\>/dev/null\; \
                      if \(\( \$\(wc -c \< {}\) \> 0 \)\)\; then echo "" \>\> {}\; else rm {}\; fi\; \
                 else n=\$\(grep -o x_wconf {.}.hocr \| wc -l\)\; \
                      j=\$\(cat {.}.hocr \| grep -Po \"x_wconf \\K[^\']*\" \| tr '\\n' +\)\; \
                      j=\$\(\(\${j::-1}/\$n\)\)\; if \(\( \$j \>= 55 \)\)\; then echo "" \>\> {}\; else rm {}\; fi\; \
              fi
-        else ls *.txt | parallel $popt 'if [ $(wc -c < {}) = 0 ]; then tesseract ../ScreensFiltrés/{.}.jpg {.} -l '$lang' '$topt' 2> /dev/null; if [ $(wc -c < {}) = 0 ]; then rm {}; fi; else echo "" >> {}; fi'
+        else ls *.txt | parallel $popt 'if [ $(wc -c < {}) = 0 ]; then tesseract ../ScreensFiltrés/{.}.jpg {.} -l '$lang' '$oem' '$psm' 6 2>/dev/null; if [ $(wc -c < {}) = 0 ]; then rm {}; fi; else echo "" >> {}; fi'
     fi
-    for file in *.txt; do if (( $(wc -l $file | awk '{print $1}') > 4 )); then tesseract ../ScreensFiltrés/${file%.txt}.jpg ${file%.txt} -l $lang $psm 7 2>/dev/null; echo "" >> $file; fi; done # Workaround bug "psm" Tesseract, dangerous
+    for file in *.txt; do if (( $(wc -l $file | awk '{print $1}') > 4 )); then tesseract ../ScreensFiltrés/${file%.txt}.jpg ${file%.txt} -l $lang $oem $psm 7 2>/dev/null; echo "" >> $file; fi; done # Workaround bug "psm" Tesseract, dangerous
 fi
 
 ## OCR d'un dossier avec FineReader
@@ -169,7 +178,7 @@ if [ $lang = fra ]; then for file in TessResult/*.txt; do if grep -q \" $file; t
 fi; done; fi
  
 ## Transformation du dossier OCR en srt (les timecodes seront reformatés plus tard)
-rm "${FilteredVideo%.mp4}.srt" "${FilteredVideo%.mp4}_Alt.srt" 2> /dev/null
+rm "${FilteredVideo%.mp4}.srt" "${FilteredVideo%.mp4}_Alt.srt" 2>/dev/null
 i=0; j=0; for file in TessResult/*.txt; do 
     if [[ $file != *_Alt.txt ]];
         then i=$(($i + 1)); k=$i; Alt=""
@@ -201,13 +210,16 @@ if [ $OCRType = Tesseract ]; then for SRT in $(printf OCR%s.srt\\n "" $Alt); do 
 for SRT in $(printf OCR%s.srt\\n "" $Alt); do {
     sed $inplace 's/|/l/g' $SRT
     if [[ $lang = fra ]]; then
-        sed "s/I'/l'/g" $SRT |
+        sed -e "s/I'/l'/g" -e 's/iI /il /g' $SRT |
+        sed 's/^\]/J/g' |
         sed 's/[®©]/O/g' |
         sed -e 's/\([cs]\)oeur/\1œur/g' -e 's/oeuvre/œuvre/g' -e 's/oeuf/œuf/g' |
         sed "s/ *['‘]/’/g" |
         sed 's/\(.\)—\(.\)/\1-\2/g' |
+        sed -e 's/<< /« /g' -e 's/ >>/ »/g' |
         sed 's/- /— /g' |
         sed 's/\.\.\./…/g' |
+        sed 's/…\./…/g' |
         sed 's/\([:;?\!]\)/ \1/g' | sed 's/  \([:;?\!]\)/ \1/g' |
         sed 's/ :2/ ?/g' |
         perl -0777 -pe 's/\n\n[0-9]\n\n/\n\n/igs' > $SRT.tmp
@@ -219,11 +231,6 @@ for SRT in $(printf OCR%s.srt\\n "" $Alt); do {
 
 ## Final
 for SRT in $(printf OCR%s.srt\\n "" $Alt); do {
-    sed -e 's/_t/ --> /' -e 's/_v/,/g' -e 's/_dp/:/g' $inplace $SRT
-    if [[ "$OSTYPE" = "linux-gnu" || "$OSTYPE" = "cygwin" ]]
-        then head -n -1 $SRT > "${FilteredVideo%.*}${SRT#*OCR}"
-        else tail -r $SRT | tail -n +2 | tail -r > "${FilteredVideo%.*}${SRT#*OCR}"
-             rm $SRT.bk
-    fi
-    rm $SRT
+    sed -e 's/_t/ --> /' -e 's/_v/,/g' -e 's/_dp/:/g' $SRT > "${FilteredVideo%.*}${SRT#*OCR}"
+    rm $SRT $SRT.bk 2>/dev/null
 } & done; wait

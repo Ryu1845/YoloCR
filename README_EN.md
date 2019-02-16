@@ -27,6 +27,7 @@ Global Requirements for all the OS.
 
 * Tesseract-OCR (we recommend version 3.03+)
 	* and install the data corresponding to the languages you want to OCR
+	* Imagemagick is required if you use LSTM engine
 * links
 * sxiv (Simple X Image Viewer) (GUI mode only)
 * xdotool (Linux only, GUI mode only)
@@ -119,9 +120,12 @@ Then you can OCR the video: `./YoloCR.sh nameOftheVideoOutput.mp4`
 
 > The `nameOftheVideoOutput.mp4` must be the same than the output of the ffmpeg command.
 
+> You can use `YoloTime.sh` instead of `YoloCR.sh` if you only want the Timing of the subtitles.
+
 **Now it's Checking time :D**
 
 ## Serial use of YoloCR
+
 1. Make sure that sxiv isn't installed.
 2. Make sure that YoloCR directory includes the video files you want to OCR and only theses.
 3. Comment the first line of YoloCR.vpy. ("FichierSource" becomes "#FichierSource".)
@@ -132,6 +136,8 @@ Then you can OCR the video: `./YoloCR.sh nameOftheVideoOutput.mp4`
 
 ## Known bugs
 
+* Tesseract's LSTM engine produce a lower quality OCR (such as a worse italics detection).
+	* Use Legacy engine [traineddata](https://github.com/tesseract-ocr/tessdata) instead.
 * Cygwin (Windows), when you run YoloCR.sh for the first time.
 	* Signal SIGCHLD received, but no signal handler set.
 	* YoloCR will run without errors the next times.
