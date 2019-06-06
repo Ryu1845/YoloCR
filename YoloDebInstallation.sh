@@ -24,11 +24,13 @@ mkdir Gits; cd Gits
 
 # Installation de zimg
 git clone https://github.com/sekrit-twc/zimg.git; cd zimg
+git checkout v2.8
 ./autogen.sh && ./configure && make -j$(nproc)
 su -c "make install"; cd ..
 
 # Installation de Vapoursynth
-wget https://github.com/vapoursynth/vapoursynth/archive/R43.tar.gz -O - | bsdtar -xf -; cd vapoursynth-R43
+git clone https://github.com/vapoursynth/vapoursynth.git; cd vapoursynth
+git checkout R43
 ./autogen.sh && ./configure && make -j$(nproc)
 su -c "make install"; cd ..
 
