@@ -10,16 +10,20 @@ if ModeU=='znedi3':
 	import edi_rpow2 as edi
 core=vs.get_core()
 
-Clip=core.ffms2.Source(source=FichierSource)
-Clip=core.std.CropAbs(clip=Clip,width=DimensionCropBox[0],height=DimensionCropBox[1],left=int((Clip.width-DimensionCropBox[0])/2),top=Clip.height-HauteurCropBox-DimensionCropBox[1])
+def Grayuv(x):
+	return 128
+
+ClipSource=core.ffms2.Source(source=FichierSource)
+CropBox=core.std.CropAbs(clip=ClipSource,width=DimensionCropBox[0],height=DimensionCropBox[1],left=int((ClipSource.width-DimensionCropBox[0])/2),top=ClipSource.height-HauteurCropBox-DimensionCropBox[1])
+ClipGray=core.std.Lut(clip=ClipSource,planes=[1,2],function=Grayuv)
 
 if Supersampling<0:
-	if Clip.width/Clip.height>16/9:	
+	if ClipSource.width/ClipSource.height>16/9:	
 		TargetRes=1920
-		CurrentRes=Clip.width	
+		CurrentRes=ClipSource.width	
 	else:
 		TargetRes=1080
-		CurrentRes=Clip.height
+		CurrentRes=ClipSource.height
 	if ModeU=='znedi3':
 		Ss=TargetRes/CurrentRes/1.125	
 	else:
@@ -39,26 +43,34 @@ if ModeU=='znedi3' and Ss!=1:
 	else:
 		Ssbis=Supersampling/Ss
 
-if Ss!=1:
-	if ModeU=='znedi3' or ModeU=='waifu2x':
-		if ModeU=='znedi3':
-			Clip=edi.znedi3_rpow2(clip=Clip,rfactor=Ss)
-		else :
-			Clip=core.fmtc.bitdepth(clip=Clip,bits=32)
-			Clip=core.w2xc.Waifu2x(clip=Clip,scale=Ss)
-			if Ssbis!=1:
-				Clip=core.fmtc.bitdepth(clip=Clip,bits=16)
+def SuperSampling(clip):
+	if Ss!=1:
+		if ModeU=='znedi3' or ModeU=='waifu2x':
+			if ModeU=='znedi3':
+				clip=edi.znedi3_rpow2(clip=clip,rfactor=Ss)
 			else :
-				Clip=core.fmtc.bitdepth(clip=Clip,bits=8)
-		if Ssbis!=1:
-			Clip=core.fmtc.resample(clip=Clip,scale=Ssbis,kernel="sinc",taps=2)
-			Clip=core.fmtc.bitdepth(clip=Clip,bits=8)
-	else:
-		Clip=core.fmtc.resample(clip=Clip,scale=Ss,kernel="sinc",taps=2)
-		Clip=core.fmtc.bitdepth(clip=Clip,bits=8)
-elif Clip.format.bits_per_sample!=8:
-	Clip=core.fmtc.bitdepth(clip=Clip,bits=8)
+				clip=core.fmtc.bitdepth(clip=clip,bits=32)
+				clip=core.w2xc.Waifu2x(clip=clip,scale=Ss)
+			if Ssbis!=1:
+				clip=core.fmtc.resample(clip=clip,scale=Ssbis,kernel="sinc",taps=2)
+		else:
+			clip=core.fmtc.resample(clip=clip,scale=Ss,kernel="sinc",taps=2)
+	clip=core.fmtc.resample(clip=clip,css="444")
+	clip=core.fmtc.bitdepth(clip=clip,bits=8)
+	return clip
 
-Crop=core.std.CropAbs(clip=Clip,width=Clip.width-20,height=Clip.height-20,left=10,top=10)
-Rect=core.std.AddBorders(clip=Crop,left=10,right=10,top=10,bottom=10,color=[255,128,128])
-Rect.set_output()
+CropBox=SuperSampling(clip=CropBox)
+ClipGray=SuperSampling(clip=ClipGray)
+
+ClipLeft=core.std.Crop(clip=ClipGray,right=int((CropBox.width+ClipGray.width)/2))
+ClipRight=core.std.Crop(clip=ClipGray,left=ClipLeft.width+CropBox.width)
+Clip=core.std.CropAbs(clip=ClipGray,width=CropBox.width,height=ClipGray.height,left=int((ClipGray.width-CropBox.width)/2))
+ClipTop=core.std.Crop(clip=Clip,bottom=int(HauteurCropBox*Ss)+CropBox.height)
+ClipBottom=core.std.Crop(clip=Clip,top=ClipTop.height+CropBox.height)
+
+Bord=int(10*Ss)
+Crop=core.std.Crop(clip=CropBox,left=Bord,right=Bord,top=Bord,bottom=Bord)
+Rect=core.std.AddBorders(clip=Crop,left=Bord,right=Bord,top=Bord,bottom=Bord,color=[255,128,128])
+Clip=core.std.StackVertical([ClipTop,Rect,ClipBottom])
+Clip=core.std.StackHorizontal([ClipLeft,Clip,ClipRight])
+Clip.set_output()
