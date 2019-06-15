@@ -12,11 +12,21 @@ if [[ $release != stretch ]]
 	fi; exit
 fi
 
-if [[ $1 != eng-only ]]; then tesseractfra=tesseract-ocr-fra; fi
-Desktop=$(grep DESKTOP /home/$USER/.config/user-dirs.dirs 2>/dev/null | cut -d/ -f2 | rev | cut -c 2- | rev)
-if [ -z $Desktop ]; then Desktop=Desktop; fi
+if (( $EUID == 0 ))
+	then if [[ $1 != eng-only ]]
+		then echo "Ce script ne doit pas être lancé en root."
+		else echo "This script should not be run as root."
+	fi; exit
+fi
 
-su -c "apt install bc gawk curl tesseract-ocr $tesseractfra links sxiv xdotool parallel ffmpeg git build-essential autoconf automake libtool pkg-config yasm python3-dev cython3 libffms2-4 bsdtar qtbase5-dev qt5-qmake libqt5websockets5-dev"
+if [[ $1 != eng-only ]]; then tesseractfra=tesseract-ocr-fra; fi
+if [ ! -z $DISPLAY ]; then
+	Desktop=$(grep DESKTOP /home/$USER/.config/user-dirs.dirs 2>/dev/null | cut -d/ -f2 | rev | cut -c 2- | rev)
+	if [ -z $Desktop ]; then Desktop=Desktop; fi
+	DesktopPkg="sxiv xdotool qtbase5-dev qt5-qmake libqt5websockets5-dev"
+fi
+
+su -c "apt install bc gawk curl tesseract-ocr $tesseractfra links parallel ffmpeg git build-essential autoconf automake libtool pkg-config yasm python3-dev cython3 libffms2-4 bsdtar $DesktopPkg"
 nasmurl=http://ftp.debian.org/debian/pool/main/n/nasm/
 nasmdeb=$(links -dump $nasmurl | grep _amd64 | tail -1 | awk '{ print $3; }')
 wget $nasmurl$nasmdeb; su -c "dpkg -i $nasmdeb"; rm $nasmdeb
@@ -35,14 +45,16 @@ git checkout R43
 su -c "make install"; cd ..
 
 # Installation de Vapoursynth Editor
-git clone https://bitbucket.org/mystery_keeper/vapoursynth-editor.git; cd vapoursynth-editor/pro
-qmake -qt5 && make -j$(nproc); cd ..
-su -c "cp build/release-64bit-gcc/vsedit /usr/local/bin/vsedit 
-install -D build/release-64bit-gcc/vsedit.svg /usr/local/share/pixmaps/vsedit.svg
-if [ ! -d /usr/local/share/applications ]; then mkdir /usr/local/share/applications; fi
-wget https://gist.githubusercontent.com/YamashitaRen/4489ab810ee92f2fbbf7/raw/d38d73141eccafbeb936c9499fc3f10a885a3a42/vsedit.desktop -P /usr/local/share/applications"
-cp /usr/local/share/applications/vsedit.desktop /home/$USER/$Desktop/vsedit.desktop
-cd ..
+if [ ! -z $DISPLAY ]; then
+	git clone https://bitbucket.org/mystery_keeper/vapoursynth-editor.git; cd vapoursynth-editor/pro
+	qmake -qt5 && make -j$(nproc); cd ..
+	su -c "cp build/release-64bit-gcc/vsedit /usr/local/bin/vsedit 
+	install -D build/release-64bit-gcc/vsedit.svg /usr/local/share/pixmaps/vsedit.svg
+	if [ ! -d /usr/local/share/applications ]; then mkdir /usr/local/share/applications; fi
+	wget https://gist.githubusercontent.com/YamashitaRen/4489ab810ee92f2fbbf7/raw/d38d73141eccafbeb936c9499fc3f10a885a3a42/vsedit.desktop -P /usr/local/share/applications"
+	cp /usr/local/share/applications/vsedit.desktop /home/$USER/$Desktop/vsedit.desktop
+	cd ..
+fi
 
 # Création du lien symbolique FFMS2 dans le dossier plugins de Vapoursynth
 su -c "ln -s $(dpkg-query -L libffms2-4 | grep libffms2.so | tail -1) /usr/local/lib/vapoursynth/libffms2.so"
@@ -69,13 +81,17 @@ su -c "cp vapoursynth-edi_rpow2/edi_rpow2.py /usr/local/lib/python3.5/site-packa
 
 # Vapoursynth doit fonctionner
 if [[ $1 != eng-only ]]
-then echo -e '\n# Nécessaire pour Vapoursynth\nexport PYTHONPATH=/usr/local/lib/python3.5/site-packages' >> ~/.bashrc
-else echo -e '\n# Required for Vapoursynth\nexport PYTHONPATH=/usr/local/lib/python3.5/site-packages' >> ~/.bashrc
+	then echo -e '\n# Nécessaire pour Vapoursynth\nexport PYTHONPATH=/usr/local/lib/python3.5/site-packages' >> ~/.bashrc
+	else echo -e '\n# Required for Vapoursynth\nexport PYTHONPATH=/usr/local/lib/python3.5/site-packages' >> ~/.bashrc
 fi
 
 # Éviter un reboot
 su -c "ldconfig"
 if [[ $1 != eng-only ]]
-then echo -e "Script installation terminé.\nUn raccourci pour Vapoursynth Editor a été créé sur le Bureau.\nNotez que les commandes "vsedit" et "vspipe" ne fonctionneront pas depuis le terminal actuel." 
-else echo -e "Installation script finished.\nA shortcut for Vapoursynth Editor had been created on the Desktop.\nNote that "vsedit" and "vspipe" commands will not work from current terminal."
+	then echo "Script d'installation terminé."
+	else echo "Installation script finished."
 fi
+if [ ! -z $DISPLAY ]; then if [[ $1 != eng-only ]]
+	then echo -e "Un raccourci pour Vapoursynth Editor a été créé sur le Bureau.\nNotez que les commandes "vsedit" et "vspipe" ne fonctionneront pas depuis le terminal actuel."
+	else echo -e "A shortcut for Vapoursynth Editor had been created on the Desktop.\nNote that "vsedit" and "vspipe" commands will not work from current terminal."
+fi; fi
