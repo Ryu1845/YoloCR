@@ -26,7 +26,7 @@ if [ $lang = fra ]
     else echo -e "Using YoloCR in $mode mode.\nPrelude."
 fi
 FilteredVideo=$1
-if [[ "$OSTYPE" = "linux-gnu" || "$OSTYPE" = "cygwin" ]]
+if [[ "$OSTYPE" = *"linux"* || "$OSTYPE" = "cygwin" ]]
     then inplace="-i"
     else inplace="-i .bk"
 fi
@@ -69,10 +69,10 @@ seq 1 2 $(($(wc -l < Timecodes.txt)-1)) | parallel $popt \
                 a=$(sed "${i}q;d" TimecodesAlt.txt); b=$(sed "$((${i}+1))q;d" TimecodesAlt.txt)
                 ffmpeg -loglevel error -ss $(echo "if ($b-$a-0.003>2/$FPS) x=($b+$a)/2 else x=$a; if (x<1) print 0; x" | bc -l) -i "$FilteredVideo" -vframes 1 -filter:v crop=h=ih/2:y=0 ScreensFiltrés/$(convertsecs $a)-$(convertsecs $b)_Alt.jpg
             done
-        fi &
-            ffmpeg -loglevel error -ss $(echo "$(tail -1 Timecodes$Alt.txt) * 1/8 + $(ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "$FilteredVideo") * 7/8" | bc) -i "$FilteredVideo" $Crop -vframes 1 ScreensFiltrés/BlackFrame.jpg
-                wait
-cd ScreensFiltrés; find ./ -name "*.jpg" -size $(ls -l BlackFrame.jpg | awk '{print $5}')c -delete
+        fi
+            wait; cd ScreensFiltrés
+ffmpeg -loglevel error -i $(ls | head -1) -filter:v colorchannelmixer=rr=0:gg=0:bb=0 -pix_fmt yuvj420p BlackFrame.jpg
+find ./ -name "*.jpg" -size $(ls -l BlackFrame.jpg | awk '{print $5}')c -delete
 
 ## Sélection du moteur OCR
 if grep -q Microsoft /proc/version || [ "$OSTYPE" = "cygwin" ]; then

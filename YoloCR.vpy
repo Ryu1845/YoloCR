@@ -167,5 +167,4 @@ if HauteurCropBoxAlt>=0:
 else:
 	Clip=ClipCleaned
 
-Clip=Clip+core.std.BlankClip(clip=Clip,length=255,color=0)
 Clip.set_output()
