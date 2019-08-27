@@ -87,7 +87,7 @@ def RGBBinarize(clip,seuil):
 	clipfin=core.std.Binarize(clip=clipfin,threshold=1)
 	return clipfin
 
-def Cleaning(clip,blank,e):
+def Cleaning(clip,e):
 	if type(SeuilI) is list or type(SeuilO) is list:
 		clipRGB=core.fmtc.resample(clip=clip,css="444")
 		clipRGB=core.fmtc.matrix(clip=clipRGB,mat="709",col_fam=vs.RGB)
@@ -113,7 +113,7 @@ def Cleaning(clip,blank,e):
 	Bright_Not=core.misc.Hysteresis(clipa=Bright_Out,clipb=Bright_Raw)
 	Bright_Not=core.std.Invert(Bright_Not)
 
-	White_Txt=core.std.MaskedMerge(blank,White_Raw,Bright_Not)
+	White_Txt=core.std.MaskedMerge(Blank,White_Raw,Bright_Not)
 
 	White_Lb=haf.mt_inpand_multi(src=White_Txt,sw=int(e),sh=int(e),mode="ellipse")
 	White_Lb=haf.mt_expand_multi(src=White_Lb,sw=int(e),sh=int(e),mode="ellipse")
@@ -145,7 +145,7 @@ Blackclip=core.std.BlankClip(width=int(ClipResized.width-20),height=int(ClipResi
 Rect=core.std.AddBorders(clip=Blackclip,left=10,right=10,top=10,bottom=10,color=255)
 Blank=core.std.BlankClip(ClipResized,format=vs.GRAY8)
 
-ClipCleaned=Cleaning(ClipResized,Blank,ExpandRatio)
+ClipCleaned=Cleaning(ClipResized,ExpandRatio)
 
 open("SceneChanges.log", "w").write("0 1 0\n")
 ClipCleanedSC=core.std.CropAbs(clip=ClipCleaned,width=int(ClipCleaned.width/2.7),height=int(ClipCleaned.height/2.7),left=int(ClipCleaned.width*(1-1/2.7)/2),top=int(ClipCleaned.height/2))
@@ -155,7 +155,7 @@ ClipCleaned=core.std.FrameEval(ClipCleaned,functools.partial(SceneLog,clip=ClipC
 if HauteurCropBoxAlt>=0:
 	ClipResizedAlt=Resizing(Clip,DimensionCropBox[0],DimensionCropBox[1],HauteurCropBoxAlt)
 	
-	ClipCleanedAlt=Cleaning(ClipResizedAlt,Blank,ExpandRatio)
+	ClipCleanedAlt=Cleaning(ClipResizedAlt,ExpandRatio)
 	
 	open("SceneChangesAlt.log", "w").write("0 1 0\n")
 	ClipCleanedAltSC=core.std.CropAbs(clip=ClipCleanedAlt,width=int(ClipCleanedAlt.width/2.7),height=int(ClipCleanedAlt.height/2.7),left=int(ClipCleanedAlt.width*(1-1/2.7)/2),top=int(ClipCleanedAlt.height*(1/2-1/2.7)))
