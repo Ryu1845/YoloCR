@@ -105,6 +105,7 @@ Utilisation de YoloCR en série :
 Bugs connus :
 - Le moteur LSTM de Tesseract produit un OCR de moindre qualité (notamment au niveau de la détection des italiques).
   Utiliser les traineddata du moteur Legacy à la place : https://github.com/tesseract-ocr/tessdata
+  Ces fichiers peuvent être placés dans le dossier tessdata de YoloCR.
 - Cygwin (Windows), à la première utilisation du script YoloCR.sh.
   Signal SIGCHLD received, but no signal handler set.
   ./YoloCR.sh: ligne 121: ((: > 4 : erreur de syntaxe : opérande attendue (le sym bole erroné est "> 4 ").

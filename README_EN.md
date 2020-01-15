@@ -138,6 +138,7 @@ Then you can OCR the video: `./YoloCR.sh nameOftheVideoOutput.mp4`
 
 * Tesseract's LSTM engine produce a lower quality OCR (such as a worse italics detection).
 	* Use Legacy engine [traineddata](https://github.com/tesseract-ocr/tessdata) instead.
+	* You can put these files inside YoloCR's tessdata directory.
 * Cygwin (Windows), when you run YoloCR.sh for the first time.
 	* Signal SIGCHLD received, but no signal handler set.
 	* YoloCR will run without errors the next times.
