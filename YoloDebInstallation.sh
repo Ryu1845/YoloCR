@@ -60,13 +60,13 @@ fi
 su -c "ln -s $(dpkg-query -L libffms2-4 | grep libffms2.so | tail -1) /usr/local/lib/vapoursynth/libffms2.so"
 
 # Installation de HAvsFunc, mvsfunc et adjust
-git clone https://github.com/HomeOfVapourSynthEvolution/havsfunc.git
+git clone https://github.com/HomeOfVapourSynthEvolution/havsfunc.git; cd havsfunc; git checkout r31; cd ..
 git clone https://github.com/HomeOfVapourSynthEvolution/mvsfunc.git
 git clone https://github.com/dubhater/vapoursynth-adjust.git
 su -c "cp havsfunc/havsfunc.py mvsfunc/mvsfunc.py vapoursynth-adjust/adjust.py /usr/local/lib/python3.5/site-packages/"
 
 # Installation de fmtconv
-git clone https://github.com/EleonoreMizo/fmtconv.git; cd fmtconv/build/unix
+git clone https://github.com/EleonoreMizo/fmtconv.git; cd fmtconv; git checkout r22; cd build/unix
 ./autogen.sh && ./configure --libdir=/usr/local/lib/vapoursynth && make -j$(nproc)
 su -c "make install"; cd ../../..
 
