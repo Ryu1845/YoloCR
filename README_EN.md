@@ -1,8 +1,8 @@
 # [YoloCR](https://bitbucket.org/YuriZero/yolocr/src)
 
 ## For noobs
-Install the requirements with the Debian installation script.
-You can install Debian Stretch inside a virtual machine like Virtualbox.
+Install the requirements with the Ubuntu 20.04 (Focal Fossa) installation script.
+You can install Ubuntu 20.04 inside a virtual machine like Virtualbox.
 
 ## Requirements
 
@@ -35,7 +35,7 @@ Global Requirements for all the OS.
 
 > *Note*: most of these package, with the exception of all the plugins for vapoursynth, are available as official package for your distro.
 
-> For Debian 9, all the requirements can be installed with the YoloDebInstallation script : `sh YoloDebInstallation.sh eng-only`
+> For Ubuntu 20.04, all the requirements can be installed with the YoloBuntuInstallation script : `sh YoloBuntuInstallation.sh eng-only`
 
 > For Ubuntu, *vapoursynth*, *vapoursynth-editor* and  *vapoursynth-extra-plugins* (to install all the mandatory plugins above) are available through this ppa: [`ppa:djcj/vapoursynth`](https://launchpad.net/~djcj/+archive/ubuntu/vapoursynth)
 
