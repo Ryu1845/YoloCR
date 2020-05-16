@@ -26,10 +26,7 @@ if [ ! -z $DISPLAY ]; then
 	DesktopPkg="sxiv xdotool qtbase5-dev qt5-qmake libqt5websockets5-dev"
 fi
 
-sudo apt install bc gawk curl tesseract-ocr $tesseractfra links parallel ffmpeg git build-essential autoconf automake libtool pkg-config yasm python3-dev cython3 libffms2-4 libarchive-tools $DesktopPkg
-nasmurl=http://ftp.debian.org/debian/pool/main/n/nasm/
-nasmdeb=$(links -dump $nasmurl | grep _amd64 | tail -1 | awk '{ print $3; }')
-wget $nasmurl$nasmdeb; sudo dpkg -i $nasmdeb; rm $nasmdeb
+sudo apt install bc gawk curl tesseract-ocr $tesseractfra links parallel ffmpeg git build-essential autoconf automake libtool pkg-config python3-dev cython3 libffms2-4 libarchive-tools $DesktopPkg
 mkdir Gits; cd Gits
 
 # Installation de zimg
