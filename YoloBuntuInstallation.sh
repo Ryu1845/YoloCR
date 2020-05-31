@@ -19,14 +19,18 @@ if (( $EUID == 0 ))
 	fi; exit
 fi
 
-if [[ $1 != eng-only ]]; then tesseractfra=tesseract-ocr-fra; fi
 if [ ! -z $DISPLAY ]; then
 	Desktop=$(grep DESKTOP /home/$USER/.config/user-dirs.dirs 2>/dev/null | cut -d/ -f2 | rev | cut -c 2- | rev)
 	if [ -z $Desktop ]; then Desktop=Desktop; fi
 	DesktopPkg="sxiv xdotool qtbase5-dev qt5-qmake libqt5websockets5-dev"
 fi
 
-sudo apt install bc gawk curl tesseract-ocr $tesseractfra links parallel ffmpeg git build-essential autoconf automake libtool pkg-config python3-dev cython3 libffms2-4 libarchive-tools $DesktopPkg
+sudo apt install bc gawk curl tesseract-ocr imagemagick links parallel ffmpeg git build-essential autoconf automake libtool pkg-config python3-dev cython3 libffms2-4 libarchive-tools $DesktopPkg
+if [[ $1 != eng-only ]]
+	then sudo apt install tesseract-ocr-fra
+		 wget https://github.com/tesseract-ocr/tessdata/blob/master/fra.traineddata?raw=true -O tessdata/fra.traineddata
+	else wget https://github.com/tesseract-ocr/tessdata/blob/master/eng.traineddata?raw=true -O tessdata/eng.traineddata
+fi
 mkdir Gits; cd Gits
 
 # Installation de zimg
