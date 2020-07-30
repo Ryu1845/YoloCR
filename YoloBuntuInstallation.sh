@@ -25,6 +25,7 @@ if [ ! -z $DISPLAY ]; then
 	DesktopPkg="sxiv xdotool qtbase5-dev qt5-qmake libqt5websockets5-dev"
 fi
 
+sudo apt update
 sudo apt install bc gawk curl tesseract-ocr imagemagick links parallel ffmpeg git build-essential autoconf automake libtool pkg-config python3-dev cython3 libffms2-4 libarchive-tools $DesktopPkg
 if [[ $1 != eng-only ]]
 	then sudo apt install tesseract-ocr-fra
