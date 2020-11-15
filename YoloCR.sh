@@ -105,7 +105,7 @@ if [ $OCRType = Tesseract ]; then
                  fi
         else echo "$msg Legacy."; psm="-psm"
     fi
-    ls *.jpg | parallel $popt 'tesseract {} ../TessResult/{/.} '$tessdata' -l '$lang' '$oem' '$psm' 6 hocr 2>/dev/null'; cd ../TessResult
+    ls *.jpg | parallel $popt 'OMP_THREAD_LIMIT=1 tesseract {} ../TessResult/{/.} '$tessdata' -l '$lang' '$oem' '$psm' 6 hocr 2>/dev/null'; cd ../TessResult
     if (( $TessVersionNum1 < 4 )) && (( $TessVersionNum2 < 3 )); then for file in *.html; do mv "$file" "${file%.html}.hocr"; done; fi
     if [ $lang = fra ]
         then echo "Vérification de l'OCR italique."; Question="Est-ce de l'italique ? (o/n)"; BadAnswer="Répondre (o)ui ou (n)on."
@@ -145,13 +145,13 @@ if [ $OCRType = Tesseract ]; then
     if (( $TessVersionNum1 >= 4 || $TessVersionNum2 >= 3 ))
         then ls *.txt | parallel $popt \
              if [ \$\(wc -c \< {}\) = 0 ]\; \
-                then tesseract ../ScreensFiltrés/{.}.jpg {.} \$tessdata -l \$lang \$oem \$psm 6 2\>/dev/null\; \
+                then OMP_THREAD_LIMIT=1 tesseract ../ScreensFiltrés/{.}.jpg {.} \$tessdata -l \$lang \$oem \$psm 6 2\>/dev/null\; \
                      if \(\( \$\(wc -c \< {}\) \> 0 \)\)\; then echo "" \>\> {}\; else rm {}\; fi\; \
                 else n=\$\(grep -o x_wconf {.}.hocr \| wc -l\)\; \
                      j=\$\(cat {.}.hocr \| grep -Po \"x_wconf \\K[^\']*\" \| tr '\\n' +\)\; \
                      j=\$\(\(\${j::-1}/\$n\)\)\; if \(\( \$j \>= 55 \)\)\; then echo "" \>\> {}\; else rm {}\; fi\; \
              fi
-        else ls *.txt | parallel $popt 'if [ $(wc -c < {}) = 0 ]; then tesseract ../ScreensFiltrés/{.}.jpg {.} -l '$lang' '$oem' '$psm' 6 2>/dev/null; if [ $(wc -c < {}) = 0 ]; then rm {}; fi; else echo "" >> {}; fi'
+        else ls *.txt | parallel $popt 'if [ $(wc -c < {}) = 0 ]; then OMP_THREAD_LIMIT=1 tesseract ../ScreensFiltrés/{.}.jpg {.} -l '$lang' '$oem' '$psm' 6 2>/dev/null; if [ $(wc -c < {}) = 0 ]; then rm {}; fi; else echo "" >> {}; fi'
     fi
     for file in *.txt; do if (( $(wc -l $file | awk '{print $1}') > 4 )); then tesseract ../ScreensFiltrés/${file%.txt}.jpg ${file%.txt} $tessdata -l $lang $oem $psm 7 2>/dev/null; echo "" >> $file; fi; done # Workaround bug "psm" Tesseract, dangerous
 fi
