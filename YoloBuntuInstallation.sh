@@ -60,7 +60,7 @@ fi
 sudo ln -s $(dpkg-query -L libffms2-4 | grep libffms2.so | tail -1) /usr/local/lib/vapoursynth/libffms2.so
 
 # Installation de HAvsFunc, mvsfunc et adjust
-git clone https://github.com/HomeOfVapourSynthEvolution/havsfunc.git; cd havsfunc; cd ..
+git clone https://github.com/HomeOfVapourSynthEvolution/havsfunc.git
 git clone https://github.com/HomeOfVapourSynthEvolution/mvsfunc.git
 git clone https://github.com/dubhater/vapoursynth-adjust.git
 sudo cp havsfunc/havsfunc.py mvsfunc/mvsfunc.py vapoursynth-adjust/adjust.py /usr/local/lib/python3.8/site-packages/
