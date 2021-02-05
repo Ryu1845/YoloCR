@@ -15,6 +15,7 @@ if ModeU=='znedi3':
 	import edi_rpow2 as edi
 import havsfunc as haf
 import functools
+import os
 core=vs.get_core()
 
 def minimum(x,y):
@@ -165,6 +166,8 @@ if HauteurCropBoxAlt>=0:
 	Clip=core.std.StackVertical([ClipCleanedAlt,ClipCleaned])
 
 else:
+	if os.path.exists("SceneChangesAlt.log"):
+		os.remove("SceneChangesAlt.log")
 	Clip=ClipCleaned
 
 Clip.set_output()
