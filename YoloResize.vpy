@@ -2,7 +2,8 @@ import toml
 import vapoursynth as vs
 
 core = vs.get_core()
-config = toml.load('config.toml')
+config_path = 'config.toml'
+config = toml.load(config_path)
 FichierSource = config['FichierSource']
 DimensionCropBox = config['crop']['DimensionCropBox']
 HauteurCropBox = config['crop']['HauteurCropBox']
