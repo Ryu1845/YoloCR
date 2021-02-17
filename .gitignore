@@ -1,0 +1,8 @@
+ScreensFiltrés/
+tessdata/
+TessResult/
+SceneChanges.log
+Timecodes.txt
+config.toml
+*.srt
+*.mp4
