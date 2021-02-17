@@ -1,5 +1,7 @@
+This is a fork of the original one linked just below
 # [YoloCR](https://bitbucket.org/YuriZero/yolocr/src)
-
+I cleaned the vpy so they use a config file and are __somewhat__ pep8 compliant and as such more readable
+There's also a PKGBUILD, don't try to use it, it doesn't work
 ## For noobs
 Install the requirements with the Ubuntu 20.04 (Focal Fossa) installation script.
 You can install Ubuntu 20.04 inside a virtual machine like Virtualbox.
