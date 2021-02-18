@@ -8,26 +8,26 @@ import vapoursynth as vs
 core = vs.get_core()
 config_path = 'config.toml'
 config = toml.load(config_path)
-FichierSource = config['FichierSource']
-DimensionCropBox = config['crop']['DimensionCropBox']
-HauteurCropBox = config['crop']['HauteurCropBox']
-HauteurCropBoxAlt = config['crop']['HauteurCropBoxAlt']
-Supersampling = config['upscale']['Supersampling']
-ExpandRatio = config['upscale']['ExpandRatio']
-ModeU = config['upscale']['ModeU']
-SeuilI = config['seuil']['SeuilI']
-SeuilO = config['seuil']['SeuilO']
-SeuilSCD = config['seuil']['SeuilSCD']
-if ModeU == 'znedi3':
+source_file = config['source_file']
+crop_box_dimension = config['crop']['crop_box_dimension']
+crop_box_height = config['crop']['crop_box_height']
+crop_box_height_alt = config['crop']['crop_box_height_alt']
+supersampling_factor = config['upscale']['supersampling_factor']
+expand_ratio = config['upscale']['expand_ratio']
+upscale_mode = config['upscale']['upscale_mode']
+inline_threshold = config['threshold']['inline_threshold']
+outline_threshold = config['threshold']['outline_threshold']
+SCD_threshold = config['threshold']['SCD_threshold']
+if upscale_mode == 'znedi3':
     import edi_rpow2 as edi
 
 
-def Resizing(clip, largeur, hauteur, hauteur2):
-    clip = core.std.CropAbs(clip=clip, width=largeur, height=hauteur, left=int(
-        (clip.width-largeur)/2), top=clip.height-hauteur2)
+def resizing(clip, width, height, height2):
+    clip = core.std.CropAbs(clip=clip, width=width, height=height, left=int(
+        (clip.width-width)/2), top=clip.height-height2)
     if Ss != 1:
-        if ModeU == 'znedi3' or ModeU == 'waifu2x':
-            if ModeU == 'znedi3':
+        if upscale_mode in ('znedi3', 'waifu2x'):
+            if upscale_mode == 'znedi3':
                 clip = edi.znedi3_rpow2(clip=clip, rfactor=Ss)
             else:
                 clip = core.fmtc.bitdepth(clip=clip, bits=32)
@@ -49,14 +49,14 @@ def Resizing(clip, largeur, hauteur, hauteur2):
     return clip
 
 
-def RGBBinarize(clip, seuil):
+def binarize_RGB(clip, threshold):
     R = core.std.ShufflePlanes(clips=clip, planes=0, colorfamily=vs.GRAY)
     G = core.std.ShufflePlanes(clips=clip, planes=1, colorfamily=vs.GRAY)
     B = core.std.ShufflePlanes(clips=clip, planes=2, colorfamily=vs.GRAY)
-    for i in range(0, int(len(seuil)/3)):
+    for i in range(0, int(len(threshold)/3)):
         i = i*3
-        RGB = core.std.Expr(clips=[R, G, B], expr=[
-                            "x "+str(seuil[i])+" >= y "+str(seuil[i+1])+" >= or z "+str(seuil[i+2])+" >= or 255 0 ?"])
+        expr = [f"x {str(threshold[i])} >= y {str(threshold[i+1])} >= or z {str(threshold[i+2])} >= or 255 0 ?"]
+        RGB = core.std.Expr(clips=[R, G, B], expr=expr)
         if i == 0:
             clipfin = RGB
         else:
@@ -65,134 +65,181 @@ def RGBBinarize(clip, seuil):
     return clipfin
 
 
-def Cleaning(clip, e):
-    if type(SeuilI) is list or type(SeuilO) is list:
-        clipRGB = core.fmtc.resample(clip=clip, css="444")
-        clipRGB = core.fmtc.matrix(clip=clipRGB, mat="709", col_fam=vs.RGB)
-        clipRGB = core.fmtc.bitdepth(clip=clipRGB, bits=8)
+def cleaning(clip, e):
+    if isinstance(inline_threshold, list) or isinstance(outline_threshold, list):
+        clip_RGB = core.fmtc.resample(clip=clip, css="444")
+        clip_RGB = core.fmtc.matrix(clip=clip_RGB, mat="709", col_fam=vs.RGB)
+        clip_RGB = core.fmtc.bitdepth(clip=clip_RGB, bits=8)
 
-    if type(SeuilI) is int and type(SeuilO) is int:
-        White_Raw = core.std.Binarize(clip=clip, threshold=SeuilI)
-        Bright_Raw = core.std.Binarize(clip=clip, threshold=SeuilO)
-    elif type(SeuilI) is int and type(SeuilO) is list:
-        White_Raw = core.std.ShufflePlanes(
+    if isinstance(inline_threshold, int) and isinstance(outline_threshold, int):
+        white_raw = core.std.Binarize(clip=clip, threshold=inline_threshold)
+        bright_raw = core.std.Binarize(clip=clip, threshold=outline_threshold)
+    elif isinstance(inline_threshold, int) and isinstance(outline_threshold, list):
+        white_raw = core.std.ShufflePlanes(
             clips=clip, planes=0, colorfamily=vs.GRAY)
-        White_Raw = core.std.Binarize(clip=White_Raw, threshold=SeuilI)
-        Bright_Raw = RGBBinarize(clipRGB, SeuilO)
-    elif type(SeuilI) is list and type(SeuilO) is int:
-        White_Raw = RGBBinarize(clipRGB, SeuilI)
-        Bright_Raw = core.std.ShufflePlanes(
+        white_raw = core.std.Binarize(
+            clip=white_raw,
+            threshold=inline_threshold
+            )
+        bright_raw = binarize_RGB(clip_RGB, outline_threshold)
+    elif isinstance(inline_threshold, list) and isinstance(outline_threshold, int):
+        white_raw = binarize_RGB(clip_RGB, inline_threshold)
+        bright_raw = core.std.ShufflePlanes(
             clips=clip, planes=0, colorfamily=vs.GRAY)
-        Bright_Raw = core.std.Binarize(clip=Bright_Raw, threshold=SeuilO)
+        bright_raw = core.std.Binarize(
+            clip=bright_raw,
+            threshold=outline_threshold
+            )
     else:
-        White_Raw = RGBBinarize(clipRGB, SeuilI)
-        Bright_Raw = RGBBinarize(clipRGB, SeuilO)
+        white_raw = binarize_RGB(clip_RGB, inline_threshold)
+        bright_raw = binarize_RGB(clip_RGB, outline_threshold)
 
-    Bright_Out = core.std.Lut2(clipa=Bright_Raw, clipb=Rect, function=lambda x,y: min(x,y))
+    bright_out = core.std.Lut2(
+        clipa=bright_raw,
+        clipb=rect,
+        function=lambda x, y: min(x, y)
+        )
 
-    Bright_Not = core.misc.Hysteresis(clipa=Bright_Out, clipb=Bright_Raw)
-    Bright_Not = core.std.Invert(Bright_Not)
+    bright_not = core.misc.Hysteresis(clipa=bright_out, clipb=bright_raw)
+    bright_not = core.std.Invert(bright_not)
 
-    White_Txt = core.std.MaskedMerge(Blank, White_Raw, Bright_Not)
+    white_txt = core.std.MaskedMerge(blank, white_raw, bright_not)
 
-    White_Lb = haf.mt_inpand_multi(
-        src=White_Txt, sw=int(e), sh=int(e), mode="ellipse")
-    White_Lb = haf.mt_expand_multi(
-        src=White_Lb, sw=int(e), sh=int(e), mode="ellipse")
+    white_lb = haf.mt_inpand_multi(
+        src=white_txt, sw=int(e), sh=int(e), mode="ellipse")
+    white_lb = haf.mt_expand_multi(
+        src=white_lb, sw=int(e), sh=int(e), mode="ellipse")
 
-    White_Ub = haf.mt_inpand_multi(
-        src=White_Txt, sw=int(5*e), sh=int(5*e), mode="ellipse")
-    White_Ub = haf.mt_expand_multi(
-        src=White_Ub, sw=int(3*e), sh=int(3*e), mode="ellipse")
-    White_Ub = core.std.Invert(White_Ub)
+    white_ub = haf.mt_inpand_multi(
+        src=white_txt, sw=int(5*e), sh=int(5*e), mode="ellipse")
+    white_ub = haf.mt_expand_multi(
+        src=white_ub, sw=int(3*e), sh=int(3*e), mode="ellipse")
+    white_ub = core.std.Invert(white_ub)
 
-    White = core.std.MaskedMerge(Blank, White_Lb, White_Ub)
-    White = core.misc.Hysteresis(clipa=White, clipb=White_Txt)
+    white = core.std.MaskedMerge(blank, white_lb, white_ub)
+    white = core.misc.Hysteresis(clipa=white, clipb=white_txt)
 
-    ClipCleaning = core.std.MaskedMerge(Blank, White_Raw, White)
-    ClipCleaning = core.std.Median(clip=ClipCleaning)
+    clip_cleaning = core.std.MaskedMerge(blank, white_raw, white)
+    clip_cleaning = core.std.Median(clip=clip_cleaning)
 
-    return ClipCleaning
+    return clip_cleaning
 
 
-def SceneLog(n, f, clip, log):
+def scene_log(n, f, clip, log):
     if f.props._SceneChangeNext == 1 or f.props._SceneChangePrev == 1:
         open(log, "a").write(str(n)+" "+str(f.props._SceneChangePrev) +
                              " "+str(f.props._SceneChangeNext)+"\n")
     return clip
 
 
-Clip = core.ffms2.Source(source=FichierSource)
-if type(SeuilI) is int and type(SeuilO) is int:
+Clip = core.ffms2.Source(source=source_file)
+if isinstance(inline_threshold, int) and isinstance(outline_threshold, int):
     Clip = core.std.ShufflePlanes(clips=Clip, planes=0, colorfamily=vs.GRAY)
 
-if Supersampling < 0:
+if supersampling_factor < 0:
     if Clip.width/Clip.height > 16/9:
         TargetRes = 1920
         CurrentRes = Clip.width
     else:
         TargetRes = 1080
         CurrentRes = Clip.height
-    if ModeU == 'znedi3':
+    if upscale_mode == 'znedi3':
         Ss = TargetRes/CurrentRes/1.125
     else:
         Ss = TargetRes/CurrentRes
-elif Supersampling == 0:
+elif supersampling_factor == 0:
     Ss = 1
 else:
-    Ss = Supersampling
+    Ss = supersampling_factor
 
-if ModeU == 'znedi3' and Ss != 1:
+if upscale_mode == 'znedi3' and Ss != 1:
     if Ss-int(Ss) > 0:
         Ss = int(Ss/2)*2+2
     else:
         Ss = int(Ss/2)*2
-    if Supersampling < 0:
+    if supersampling_factor < 0:
         Ssbis = TargetRes/(CurrentRes*Ss)
     else:
-        Ssbis = Supersampling/Ss
+        Ssbis = supersampling_factor/Ss
 
-HauteurCropBox = HauteurCropBox+DimensionCropBox[1]
-if HauteurCropBoxAlt >= 0:
-    HauteurCropBoxAlt = HauteurCropBoxAlt+DimensionCropBox[1]
+crop_box_height = crop_box_height+crop_box_dimension[1]
+if crop_box_height_alt >= 0:
+    crop_box_height_alt = crop_box_height_alt+crop_box_dimension[1]
 
-ClipResized = Resizing(
-    Clip, DimensionCropBox[0], DimensionCropBox[1], HauteurCropBox)
+clip_resized = resizing(
+    Clip, crop_box_dimension[0], crop_box_dimension[1], crop_box_height)
 
-Blackclip = core.std.BlankClip(width=int(
-    ClipResized.width-20), height=int(ClipResized.height-20), format=vs.GRAY8, color=0)
-Rect = core.std.AddBorders(clip=Blackclip, left=10,
+black_clip = core.std.BlankClip(
+    width=int(
+        clip_resized.width-20), height=int(
+            clip_resized.height-20
+            ),
+    format=vs.GRAY8,
+    color=0
+    )
+rect = core.std.AddBorders(clip=black_clip, left=10,
                            right=10, top=10, bottom=10, color=255)
-Blank = core.std.BlankClip(ClipResized, format=vs.GRAY8)
+blank = core.std.BlankClip(clip_resized, format=vs.GRAY8)
 
-ClipCleaned = Cleaning(ClipResized, ExpandRatio)
+clip_cleaned = cleaning(clip_resized, expand_ratio)
 
 open("SceneChanges.log", "w").write("0 1 0\n")
-ClipCleanedSC = core.std.CropAbs(clip=ClipCleaned, width=int(ClipCleaned.width/2.7), height=int(
-    ClipCleaned.height/2.7), left=int(ClipCleaned.width*(1-1/2.7)/2), top=int(ClipCleaned.height/2))
-ClipCleanedSC = core.misc.SCDetect(clip=ClipCleanedSC, threshold=SeuilSCD)
-ClipCleaned = core.std.FrameEval(ClipCleaned, functools.partial(
-    SceneLog, clip=ClipCleaned, log="SceneChanges.log"), prop_src=ClipCleanedSC)
+clip_cleaned_sc = core.std.CropAbs(
+    clip=clip_cleaned,
+    width=int(clip_cleaned.width/2.7),
+    height=int(clip_cleaned.height/2.7),
+    left=int(clip_cleaned.width*(1-1/2.7)/2),
+    top=int(clip_cleaned.height/2)
+    )
+clip_cleaned_sc = core.misc.SCDetect(
+    clip=clip_cleaned_sc,
+    threshold=SCD_threshold
+    )
+clip_cleaned = core.std.FrameEval(
+    clip_cleaned,
+    functools.partial(
+        scene_log,
+        clip=clip_cleaned,
+        log="SceneChanges.log"
+        ),
+    prop_src=clip_cleaned_sc
+    )
 
-if HauteurCropBoxAlt >= 0:
-    ClipResizedAlt = Resizing(
-        Clip, DimensionCropBox[0], DimensionCropBox[1], HauteurCropBoxAlt)
+if crop_box_height_alt >= 0:
+    clip_resized_alt = resizing(
+        Clip,
+        crop_box_dimension[0],
+        crop_box_dimension[1],
+        crop_box_height_alt
+        )
 
-    ClipCleanedAlt = Cleaning(ClipResizedAlt, ExpandRatio)
+    clip_cleaned_alt = cleaning(clip_resized_alt, expand_ratio)
 
     open("SceneChangesAlt.log", "w").write("0 1 0\n")
-    ClipCleanedAltSC = core.std.CropAbs(clip=ClipCleanedAlt, width=int(ClipCleanedAlt.width/2.7), height=int(
-        ClipCleanedAlt.height/2.7), left=int(ClipCleanedAlt.width*(1-1/2.7)/2), top=int(ClipCleanedAlt.height*(1/2-1/2.7)))
-    ClipCleanedAltSC = core.misc.SCDetect(
-        clip=ClipCleanedAltSC, threshold=SeuilSCD)
-    ClipCleanedAlt = core.std.FrameEval(ClipCleanedAlt, functools.partial(
-        SceneLog, clip=ClipCleanedAlt, log="SceneChangesAlt.log"), prop_src=ClipCleanedAltSC)
+    clip_cleaned_alt_sc = core.std.CropAbs(
+        clip=clip_cleaned_alt,
+        width=int(clip_cleaned_alt.width/2.7),
+        height=int(clip_cleaned_alt.height/2.7),
+        left=int(clip_cleaned_alt.width*(1-1/2.7)/2),
+        top=int(clip_cleaned_alt.height*(1/2-1/2.7))
+        )
+    clip_cleaned_alt_sc = core.misc.SCDetect(
+        clip=clip_cleaned_alt_sc, threshold=SCD_threshold)
+    clip_cleaned_alt = core.std.FrameEval(
+        clip_cleaned_alt,
+        functools.partial(
+            scene_log,
+            clip=clip_cleaned_alt,
+            log="SceneChangesAlt.log"
+            ),
+        prop_src=clip_cleaned_alt_sc
+        )
 
-    Clip = core.std.StackVertical([ClipCleanedAlt, ClipCleaned])
+    Clip = core.std.StackVertical([clip_cleaned_alt, clip_cleaned])
 
 else:
     if os.path.exists("SceneChangesAlt.log"):
         os.remove("SceneChangesAlt.log")
-    Clip = ClipCleaned
+    Clip = clip_cleaned
 
 Clip.set_output()

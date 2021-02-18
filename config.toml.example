@@ -1,30 +1,30 @@
 
-FichierSource = 'Video.mp4'
+source_file = 'Video.mp4'
 [crop]
 # Taille en largeur et hauteur de la CropBox délimitant les sous-titres à OCR.
-DimensionCropBox = [844,72]
+crop_box_dimension = [844,72]
 # Hauteur de la CropBox délimitant les sous-titres à OCR.
-HauteurCropBox = 2
+crop_box_height = 2
 # Hauteur de la CropBox Alternative, utile pour l'OCR des indications. 
 # Double le temps de traitement. Mettre à -1 pour désactiver.
-HauteurCropBoxAlt = -1
+crop_box_height_alt = -1
 [upscale]
 # Facteur de supersampling (multiplication de la résolution de la vidéo). 
 # Mettre à -1 pour calculer le facteur automatiquement.
-Supersampling = -1
+supersampling_factor = -1
 # EXPERIMENTAL ! Facteur Expand/Inpand. La valeur 1 est adaptée pour un Supersampling automatique (1080p). 
 # Calcul typique de la valeur : ExpandRatio="RésolutionFinale"/1080.
-ExpandRatio = 1
+expand_ratio = 1
 # Contrôle la méthode d'Upscale.
-ModeU = 'znedi3' # 'sinc' (2 taps, plus rapide), 'znedi3' (plus lent) ou 'waifu2x' (beaucoup plus lent)
-[seuil]
+upscale_mode = 'znedi3' # 'sinc' (2 taps, plus rapide), 'znedi3' (plus lent) ou 'waifu2x' (beaucoup plus lent)
+[threshold]
 # 'L' pour Luma, 'R' pour Rouge, 'B' pour Bleu ou 'G' pour Vert. Seuil à analyser.
-ModeS='L'
+threshold_mode = 'L'
 # Seuil délimitant les sous-titres. Mettre à -1 pour chercher le seuil à l'aide de VapourSynth Editor. 
-Seuil=-1 
+threshold = -1 
 # Seuil délimitant les sous-titres. Cette valeur correspond à la luminosité minimale de l'intérieur (Inline).
-SeuilI = 230
+inline_threshold = 230
 # Seuil délimitant les sous-titres. Cette valeur correspond à la luminosité maximale de l'extérieur (Outline).
-SeuilO = 30
+outline_threshold = 30
 # Un seuil trop bas augmente le nombre de faux positifs, un seuil trop haut ne permet pas de détecter tous les sous-titres.
-SeuilSCD = 0.07
+SCD_threshold = 0.07

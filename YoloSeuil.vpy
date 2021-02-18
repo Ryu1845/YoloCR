@@ -4,52 +4,57 @@ import vapoursynth as vs
 core = vs.get_core()
 config_path = 'config.toml'
 config = toml.load(config_path)
-FichierSource = config['FichierSource']
-DimensionCropBox = config['crop']['DimensionCropBox']
-HauteurCropBox = config['crop']['HauteurCropBox']
-Supersampling = config['upscale']['Supersampling']
-ModeU = config['upscale']['ModeU']
-ModeS = config['seuil']['ModeS']
-Seuil = config['seuil']['Seuil']
-if ModeU == 'znedi3':
+source_file = config['source_file']
+crop_box_dimension = config['crop']['crop_box_dimension']
+crop_box_height = config['crop']['crop_box_height']
+supersampling_factor = config['upscale']['supersampling_factor']
+upscale_mode = config['upscale']['upscale_mode']
+threshold_mode = config['threshold']['threshold_mode']
+threshold = config['threshold']['threshold']
+if upscale_mode == 'znedi3':
     import edi_rpow2 as edi
 
-Clip = core.ffms2.Source(source=FichierSource)
-Clip = core.std.CropAbs(clip=Clip, width=DimensionCropBox[0], height=DimensionCropBox[1], left=int(
-    (Clip.width-DimensionCropBox[0])/2), top=Clip.height-HauteurCropBox-DimensionCropBox[1])
+Clip = core.ffms2.Source(source=source_file)
+Clip = core.std.CropAbs(
+    clip=Clip,
+    width=crop_box_dimension[0],
+    height=crop_box_dimension[1],
+    left=int((Clip.width-crop_box_dimension[0])/2),
+    top=Clip.height-crop_box_height-crop_box_dimension[1]
+    )
 
-if ModeS == 'L':
+if threshold_mode == 'L':
     Clip = core.std.ShufflePlanes(clips=Clip, planes=0, colorfamily=vs.GRAY)
 
-if Supersampling < 0:
+if supersampling_factor < 0:
     if Clip.width/Clip.height > 16/9:
-        TargetRes = 1920
-        CurrentRes = Clip.width
+        target_res = 1920
+        current_res = Clip.width
     else:
-        TargetRes = 1080
-        CurrentRes = Clip.height
-    if ModeU == 'znedi3':
-        Ss = TargetRes/CurrentRes/1.125
+        target_res = 1080
+        current_res = Clip.height
+    if upscale_mode == 'znedi3':
+        Ss = target_res/current_res/1.125
     else:
-        Ss = TargetRes/CurrentRes
-elif Supersampling == 0:
+        Ss = target_res/current_res
+elif supersampling_factor == 0:
     Ss = 1
 else:
-    Ss = Supersampling
+    Ss = supersampling_factor
 
-if ModeU == 'znedi3' and Ss != 1:
+if upscale_mode == 'znedi3' and Ss != 1:
     if Ss-int(Ss) > 0:
         Ss = int(Ss/2)*2+2
     else:
         Ss = int(Ss/2)*2
-    if Supersampling < 0:
-        Ssbis = TargetRes/(CurrentRes*Ss)
+    if supersampling_factor < 0:
+        Ssbis = target_res/(current_res*Ss)
     else:
-        Ssbis = Supersampling/Ss
+        Ssbis = supersampling_factor/Ss
 
 if Ss != 1:
-    if ModeU == 'znedi3' or ModeU == 'waifu2x':
-        if ModeU == 'znedi3':
+    if upscale_mode in ('znedi3', 'waifu2x'):
+        if upscale_mode == 'znedi3':
             Clip = edi.znedi3_rpow2(clip=Clip, rfactor=Ss)
         else:
             Clip = core.fmtc.bitdepth(clip=Clip, bits=32)
@@ -68,14 +73,14 @@ if Ss != 1:
 elif Clip.format.bits_per_sample != 8:
     Clip = core.fmtc.bitdepth(clip=Clip, bits=8)
 
-if ModeS == 'R' or ModeS == 'G' or ModeS == 'B':
+if threshold_mode in ('R', 'G', 'B'):
     Clip = core.fmtc.resample(clip=Clip, css="444")
     Clip = core.fmtc.matrix(clip=Clip, mat="709", col_fam=vs.RGB)
     Clip = core.fmtc.bitdepth(clip=Clip, bits=8)
-    if ModeS == 'R':
+    if threshold_mode == 'R':
         Clip = core.std.ShufflePlanes(
             clips=Clip, planes=0, colorfamily=vs.GRAY)
-    elif ModeS == 'G':
+    elif threshold_mode == 'G':
         Clip = core.std.ShufflePlanes(
             clips=Clip, planes=1, colorfamily=vs.GRAY)
     else:
@@ -88,10 +93,10 @@ if ModeS == 'R' or ModeS == 'G' or ModeS == 'B':
         return fout
     Clip = core.std.ModifyFrame(clip=Clip, clips=Clip, selector=remove_matrix)
 
-if Seuil >= 0:
-    Clip = core.std.Binarize(clip=Clip, threshold=Seuil)
-Crop = core.std.CropAbs(clip=Clip, width=Clip.width-20,
+if threshold >= 0:
+    Clip = core.std.Binarize(clip=Clip, threshold=threshold)
+crop = core.std.CropAbs(clip=Clip, width=Clip.width-20,
                         height=Clip.height-20, left=10, top=10)
-Rect = core.std.AddBorders(
-    clip=Crop, left=10, right=10, top=10, bottom=10, color=255)
-Rect.set_output()
+rect = core.std.AddBorders(
+    clip=crop, left=10, right=10, top=10, bottom=10, color=255)
+rect.set_output()
