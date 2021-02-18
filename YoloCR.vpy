@@ -138,15 +138,15 @@ if isinstance(inline_threshold, int) and isinstance(outline_threshold, int):
 
 if supersampling_factor < 0:
     if Clip.width/Clip.height > 16/9:
-        TargetRes = 1920
-        CurrentRes = Clip.width
+        target_res = 1920
+        current_res = Clip.width
     else:
-        TargetRes = 1080
-        CurrentRes = Clip.height
+        target_res = 1080
+        current_res = Clip.height
     if upscale_mode == 'znedi3':
-        Ss = TargetRes/CurrentRes/1.125
+        Ss = target_res/current_res/1.125
     else:
-        Ss = TargetRes/CurrentRes
+        Ss = target_res/current_res
 elif supersampling_factor == 0:
     Ss = 1
 else:
@@ -158,7 +158,7 @@ if upscale_mode == 'znedi3' and Ss != 1:
     else:
         Ss = int(Ss/2)*2
     if supersampling_factor < 0:
-        Ssbis = TargetRes/(CurrentRes*Ss)
+        Ssbis = target_res/(current_res*Ss)
     else:
         Ssbis = supersampling_factor/Ss
 
