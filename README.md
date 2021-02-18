@@ -1,6 +1,6 @@
 This is a fork of the original one linked just below
 # [YoloCR](https://bitbucket.org/YuriZero/yolocr/src)
-I cleaned the vpy so they use a config file and are __somewhat__ pep8 compliant and as such more readable
+I cleaned the vpy so they use a config file and are __somewhat__ pep8 compliant and as such more readable.
 There's also a PKGBUILD, don't try to use it, it doesn't work
 ## For noobs
 Install the requirements with the Ubuntu 20.04 (Focal Fossa) installation script.
@@ -69,58 +69,58 @@ Global Requirements for all the OS.
 
 ## How to use?
 
-### Help for determining the parameters for the `YoloCR.vpy` file
+### Help for determining the parameters for the config file
 
 #### Determine the Resize parameters.
 
 Resize is very helpful to locate the subtitles.
 
-1. open `YoloResize.vpy` in Vapoursynth Editor.
-2. Change this value:
-	* `FichierSource` is the path of the video to OCR.
-	* `DimensionCropbox` allows you to limit the OCR zone.
-	* `HauteurCropBox` allows you to define the height of the Cropbox's bottom border.
+1. open the config file in a text editor
+2. open `YoloResize.vpy` in Vapoursynth Editor.
+3. Change these values in the config:
+	* `source_file` is the path of the video to OCR.
+	* `crop_box_dimension` allows you to limit the OCR zone.
+	* `crop_box_height` allows you to define the height of the Cropbox's bottom border.
 
 > Note that theses two parameters have to be adjusted before upscale.
 
-You can then change `Supersampling` parameter to -1 and verify that your subtitles aren't eated by the white borderline by using **F5**.
+You can then change `supersampling_factor` parameter to -1 and verify that your subtitles aren't eated by the white borderline by using **F5**.
 
 #### Determine the threshold of the subtitles
 
-It's to improve the OCR-process and the subtitles detection.
+This part is made to improve the OCR process and the subtitles detection.
 
 1. Open `YoloSeuil.vpy` in Vapoursynth editor.
-2. Report `FichierSource`, `DimensionCropBox` and `HauteurCropBox` you have defined in the `Resize` file.
-3. Choose the fitting ModeS. 'L' if you want to define a white or black threshold, succesively 'R', 'G' and 'B' otherwise.
-4. Adjust the Threshold with the help of the "Color Panel" found in the **F5** window.
+2. Choose the fitting threshold_mode. 'L' if you want to define a white or black threshold, succesively 'R', 'G' and 'B' otherwise.
+3. Adjust the Threshold with the help of the "Color Panel" found in the **F5** window.
 
-You must to do this two times if you are using ModeS=L:
+You must to do this two times if you are using threshold_mode="L":
 
 * in the first case, the Inline threshold will be the minimum.
 * in the second case, the Outline threshold will be the maximum.
 
-You can then change `Seuil` paremeter to the values previously found.
+You can then change `threshold` paremeter to the values previously found.
 
 * in the first case, the subtitles must remain completely visible. The highest the value, the better.
 * in the second case, the Outline must remain completely black. The lowest the value, the better.
 
 ### Filter the video
 
-1. Edit the first lines in `YoloCR.vpy` thanks to the two previos steps (and the previous file `YoloSeuil.vpy`).
-	* SeuilI = the inline threshold value (decrease it if it improves the clarity of the letters)
-	* SeuilO = the outline threshold value (increase it if some letters got erased)
+1. Edit `inline_threshold` and `outline_threshold` thanks to the two previous steps
+	* `inline_threshold` = the inline threshold value (decrease it if it improves the clarity of the letters)
+	* `outline_threshold` = the outline threshold value (increase it if some letters got erased)
  
-2. Then filter it: `vspipe -y YoloCR.vpy - | ffmpeg -i - -c:v mpeg4 -qscale:v 3 -y nameOftheVideoOutput.mp4`
+2. Then filter it: `vspipe -y YoloCR.vpy - | ffmpeg -i - -c:v mpeg4 -qscale:v 3 -y name_of_the_video_output.mp4`
 
-> Be careful: your must use a different name for your `FichierSource` in the previous files and `nameOftheVideoOutput.mp4` for the output of the ffmpeg command.
+> Be careful: your must use a different name for your `source_file` in the previous files and `name_of_the_video_output.mp4` for the output of the ffmpeg command.
 
 You now have an OCR-isable video and scenechange informations.
 
 ### OCR the video
 
-Then you can OCR the video: `./YoloCR.sh nameOftheVideoOutput.mp4`
+Then you can OCR the video: `./YoloCR.sh name_of_the_video_output.mp4`
 
-> The `nameOftheVideoOutput.mp4` must be the same than the output of the ffmpeg command.
+> The `name_of_the_video_output.mp4` must be the same than the output of the ffmpeg command.
 
 > You can use `YoloTime.sh` instead of `YoloCR.sh` if you only want the Timing of the subtitles.
 
@@ -130,9 +130,9 @@ Then you can OCR the video: `./YoloCR.sh nameOftheVideoOutput.mp4`
 
 1. Make sure that sxiv isn't installed.
 2. Make sure that YoloCR directory includes the video files you want to OCR and only theses.
-3. Comment the first line of YoloCR.vpy. ("FichierSource" becomes "#FichierSource".)
+3. Comment the first line of YoloCR.vpy. ("source_file" becomes "#source_file".)
 4. Move to the YoloCR directory and use this bash command:
-	* `for file in *.mp4; do filef="${file%.*}_filtered.mp4"; vspipe -y --arg FichierSource="$file" YoloCR.vpy - | ffmpeg -i - -c:v mpeg4 -qscale:v 3 -y "$filef"; ./YoloCR.sh "$filef"; done`
+	* `for file in *.mp4; do filef="${file%.*}_filtered.mp4"; vspipe -y --arg source_file="$file" YoloCR.vpy - | ffmpeg -i - -c:v mpeg4 -qscale:v 3 -y "$filef"; ./YoloCR.sh "$filef"; done`
 
 > "*.mp4" means that all files having the mp4 extension will be processed. Read about bash regex if you want more flexibility.
 
