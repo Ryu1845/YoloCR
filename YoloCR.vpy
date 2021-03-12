@@ -97,7 +97,7 @@ def cleaning(clip, e):
     bright_out = core.std.Lut2(
         clipa=bright_raw,
         clipb=rect,
-        function=lambda x, y: min(x, y)
+        function=min
         )
 
     bright_not = core.misc.Hysteresis(clipa=bright_out, clipb=bright_raw)
