@@ -4,6 +4,7 @@ import os
 import havsfunc as haf
 import toml
 import vapoursynth as vs
+from utils import *
 
 core = vs.get_core()
 config_path = 'config.toml'
@@ -85,6 +86,20 @@ def resizing(
 
 def binarize_RGB(clip: vs.VideoNode, threshold: list) -> vs.VideoNode:
     """
+    If you're reading this and know exactly what this does
+    make an issue on github please
+
+    Parameters
+    ----------
+    clip:
+        The input clip
+    threshold:
+        The threshold color in [R,G,B]
+
+    Returns
+    -------
+    vs.VideoNode
+        The binarized clip
     """
     R = core.std.ShufflePlanes(clips=clip, planes=0, colorfamily=vs.GRAY)
     G = core.std.ShufflePlanes(clips=clip, planes=1, colorfamily=vs.GRAY)
