@@ -61,7 +61,7 @@ def resample(clip):
             clip = core.std.ShufflePlanes(
                 clips=clip, planes=2, colorfamily=vs.GRAY)
 
-        def remove_matrix(n, f):
+        def remove_matrix(_, f):
             fout = f.copy()
             del fout.props._Matrix
             return fout

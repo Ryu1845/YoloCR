@@ -1,3 +1,5 @@
+# TODO fix the position of the crop box
+
 import toml
 import vapoursynth as vs
 
