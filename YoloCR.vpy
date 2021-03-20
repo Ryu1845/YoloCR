@@ -1,10 +1,10 @@
+"""Output white on black video of the subtitles."""
 import functools
 import os
 
 import havsfunc as haf
 import toml
 import vapoursynth as vs
-from utils import *
 
 core = vs.get_core()
 config_path = "config.toml"
@@ -31,7 +31,7 @@ def resizing(
     factor_bis: int,
 ) -> vs.VideoNode:
     """
-    Crop and supersample the crop box
+    Crop and supersample the crop box.
 
     Parameters
     ----------
@@ -86,8 +86,12 @@ def resizing(
 
 def binarize_RGB(clip: vs.VideoNode, threshold: list) -> vs.VideoNode:
     """
+    I don't know what this does.
+
+    Notes
+    -----
     If you're reading this and know exactly what this does
-    make an issue on github please
+    make an issue on github please.
 
     Parameters
     ----------
@@ -120,7 +124,7 @@ def binarize_RGB(clip: vs.VideoNode, threshold: list) -> vs.VideoNode:
 
 def cleaning(clip: vs.VideoNode, e: int) -> vs.VideoNode:
     """
-    Cleans the clip for OCR
+    Clean the clip for OCR.
 
     Parameters
     ----------
@@ -196,7 +200,7 @@ def cleaning(clip: vs.VideoNode, e: int) -> vs.VideoNode:
 
 def scene_log(n: int, f: vs.VideoFrame, clip: vs.VideoNode, log: str) -> vs.VideoNode:
     """
-    Logs scene changes to a file
+    Log scene changes to a file.
 
     Notes
     -----
@@ -229,6 +233,7 @@ def scene_log(n: int, f: vs.VideoFrame, clip: vs.VideoNode, log: str) -> vs.Vide
 
 
 def main():
+    """Do the thing."""
     clip = core.ffms2.Source(source=SOURCE_FILE)
     if isinstance(INLINE_THRESHOLD, int) and isinstance(OUTLINE_THRESHOLD, int):
         clip = core.std.ShufflePlanes(clips=clip, planes=0, colorfamily=vs.GRAY)
