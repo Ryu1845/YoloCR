@@ -4,5 +4,6 @@ TessResult/
 scene_changes.log
 Timecodes.txt
 config.toml
+.pdm.toml
 *.srt
 *.mp4
