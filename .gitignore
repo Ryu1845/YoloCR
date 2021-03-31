@@ -1,9 +1,10 @@
-ScreensFiltrés/
+filtered_scsht/
 tessdata/
 TessResult/
 scene_changes.log
-Timecodes.txt
+timecodes.txt
 config.toml
 .pdm.toml
+.plan/
 *.srt
 *.mp4
