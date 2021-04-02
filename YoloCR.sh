@@ -1,4 +1,5 @@
 #!/bin/bash
+# TODO port to python because bash is such a pain
 ##
 convert_secs() {
     secs=$(echo $1 | cut -d. -f1)
@@ -116,13 +117,13 @@ generate_timecodes() {
             bc -l\
         )
     awk -v fps=$FPS \
-    '{if ($3 == 0) {
-            var=sprintf ("%.4f", $1/fps)
-            print substr(var, 0, length(var)-1)
-        } else if ($2 == 0) {
-            var=sprintf ("%.4f", ($1+1)/fps)
-            print substr(var, 0, length(var)-1)
-        }}' scene_changes.log |
+   '{if ($3 == 0) {
+        var=sprintf ("%.4f", $1/fps)
+        print substr(var, 0, length(var)-1)
+    } else if ($2 == 0) {
+        var=sprintf ("%.4f", ($1+1)/fps)
+        print substr(var, 0, length(var)-1)
+    }}' scene_changes.log |
     sort -n > timecodes.txt &
     if $has_alt; then
         awk -v fps=$FPS \
@@ -146,13 +147,10 @@ generate_scsht() {
             Alt=Alt
         fi
     fi
-    if file scene_changes.log | grep CRLF 1>/dev/null; then
-        CRLFtoLF="tr -d '\015' |"
-    fi
     nline_timecodes=$(wc -l < timecodes.txt)
     seq 1 2 $(($nline_timecodes-1)) |
     parallel $popt \
-    'odd=$(sed "{}q;d" timecodes.txt)
+       'odd=$(sed "{}q;d" timecodes.txt)
         even=$(sed "$(({}+1))q;d" timecodes.txt)
         c=$(echo "if ($even-$odd-0.003>2/'$FPS') x=($even+$odd)/2 else x=$odd; if (x<1) print 0; x" | bc -l)
         ffmpeg \
@@ -174,16 +172,16 @@ generate_scsht() {
                 -i "$FilteredVideo" \
                 -vframes 1 \
                 -filter:v crop=h=ih/2:y=0 \
-                filtered_scsht/$(convert_secs $odd)-$(convert_secs $even)_Alt.jpg
+                filtered_scsht/"$(convert_secs $odd)"-"$(convert_secs $even)"_Alt.jpg
         done
     fi
     wait
-    cd filtered_scsht
+    cd filtered_scsht || exit
 
     # Delete black frames
     ffmpeg \
         -loglevel error \
-        -i $(ls | head -1) \
+        -i "$(ls | head -1)" \
         -filter:v colorchannelmixer=rr=0:gg=0:bb=0 \
         -pix_fmt yuvj420p \
         black_frame.jpg
@@ -220,7 +218,7 @@ ocr_tesseract() {
         if [ -f ../tessdata/$lang.traineddata ]; then
             tessdata="--tessdata-dir ../tessdata"
         fi
-        if tesseract $(ls *.jpg | head -1) - $tessdata -l $lang --oem 0 1>/dev/null 2>&1;then
+        if tesseract "$(ls *.jpg | head -1)" - $tessdata -l $lang --oem 0 1>/dev/null 2>&1;then
             echo "$msg Legacy."
             oem="--oem 0"
         else
@@ -234,7 +232,7 @@ ocr_tesseract() {
     fi
     ls *.jpg |
     parallel $popt 'OMP_THREAD_LIMIT=1 tesseract {} ../TessResult/{/.} '$tessdata' -l '$lang' '$oem' '$psm' 6 hocr 2>/dev/null'
-    cd ../TessResult
+    cd ../TessResult || exit
     if (( $TessVersionNum1 < 4 )) && (( $TessVersionNum2 < 3 )); then
         for file in *.html; do
             mv "$file" "${file%.html}.hocr"
@@ -255,7 +253,7 @@ ocr_tesseract() {
                 if [ $mode = GUI ];then
                     sxiv "../filtered_scsht/${file%.hocr}.jpg" & SXIVPID=$!
                     if [ "$OSTYPE" = "linux-gnu" ]; then
-                        while [ $(xdotool getactivewindow) = $Active ]; do
+                        while [ "$(xdotool getactivewindow)" = $Active ]; do
                             sleep 0.1
                         done
                         xdotool windowactivate $Active
@@ -311,9 +309,8 @@ final_check() {
 
 
 ocr() {
-    if [ $(wc -c < $1) = 0 ]; then
-        OMP_THREAD_LIMIT=1
-        tesseract ../filtered_scsht/${1%.*}.jpg ${1%.*} $tessdata -l $lang $oem $psm 6 2>/dev/null
+    if [ "$(wc -c < $1)" = 0 ]; then
+        OMP_THREAD_LIMIT=1 tesseract ../filtered_scsht/${1%.*}.jpg ${1%.*} $tessdata -l $lang $oem $psm 6 2>/dev/null
         if (( $(wc -c < $1) > 0 )); then
             echo "" >> $1
         else
@@ -334,10 +331,9 @@ export -f ocr
 
 
 ocr_legacy() {
-    if [ $(wc -c < $1) = 0 ]; then
-        OMP_THREAD_LIMIT=1
-        tesseract ../filtered_scsht/${1%.*}.jpg ${1%.*} -l '$lang' '$oem' '$psm' 6 2>/dev/null
-        if [ $(wc -c < $1) = 0 ]; then
+    if [ "$(wc -c < $1)" = 0 ]; then
+        OMP_THREAD_LIMIT=1 tesseract ../filtered_scsht/${1%.*}.jpg ${1%.*} -l '$lang' '$oem' '$psm' 6 2>/dev/null
+        if [ "$(wc -c < "$1")" = 0 ]; then
             rm $1
         fi
     else
@@ -355,7 +351,7 @@ replace_quotes() {
                 iconv -f WINDOWS-1252 -t UTF-8 >> $file.tmp
                 mv $file.tmp $file
             fi
-            if [ $(grep -o \" $file | wc -l) = 1 ];then
+            if [ "$(grep -o \" $file | wc -l)" = 1 ];then
                 sed -e 's/"\. /â€¦ /g' -e 's/"\.$/â€¦/g' $inplace $file # Correction éventuelle
                 sed -e 's/^"/« /' -e 's/"$/ »/' $inplace $file
             else
@@ -506,7 +502,7 @@ main() {
     convert_ocr
 
     ## Conversion des tags "ItAlIk" en balises italiques SubRip
-    [ $lang = fra ] && echo "Conversion des tags "ItAlIk" en balises italiques SubRip" || echo "Converting "ItAlIk" tags into SubRip italics tags"
+    [ $lang = fra ] && echo "Conversion des tags \"ItAlIk\" en balises italiques SubRip" || echo "Converting \"ItAlIk\" tags into SubRip italics tags"
     convert_italics
 
     ## Corrections OCR et normalisation
