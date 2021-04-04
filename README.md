@@ -1,5 +1,8 @@
 This is a fork of the original one linked just below
 # [YoloCR](https://bitbucket.org/YuriZero/yolocr/src)
+
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/f0a7a983688a4bfd920cc4d15562d350)](https://app.codacy.com/gh/Ryu1845/YoloCR?utm_source=github.com&utm_medium=referral&utm_content=Ryu1845/YoloCR&utm_campaign=Badge_Grade_Settings)
+
 I cleaned the vpy so they use a config file and are __somewhat__ pep8 compliant and as such more readable.
 There's also a PKGBUILD, don't try to use it, it doesn't work
 ## For noobs
