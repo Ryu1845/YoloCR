@@ -64,12 +64,12 @@ init() {
     else
         popt="--no-notice --eta -j $(nproc)"
     fi
-    TessVersionNum=$(tesseract -v 2>&1 | head -1 | cut -d' ' -f2)
+    tess_version_num=$(tesseract -v 2>&1 | head -1 | cut -d' ' -f2)
     if [ "$OSTYPE" = "cygwin" ]; then
-        TessVersionNum=$(echo $TessVersionNum | tr -d '\015')
+        tess_version_num=$(echo $tess_version_num | tr -d '\015')
     fi
-    TessVersionNum1=$(echo $TessVersionNum | cut -d. -f1)
-    TessVersionNum2=$(echo $TessVersionNum | cut -d. -f2)
+    tess_version_num1=$(echo $tess_version_num | cut -d. -f1)
+    tess_version_num2=$(echo $tess_version_num | cut -d. -f2)
 
     # Check if GUI or CLI
     if hash sxiv 2>/dev/null; then
@@ -80,7 +80,7 @@ init() {
     fi
     [ $lang = fra ] && echo -e "Utilisation de YoloCR en mode $mode.\nPrélude." || echo -e "Using YoloCR in $mode mode.\nPrelude."
 
-    FilteredVideo=$1
+    filtered_video=$1
 
     if [[ "$OSTYPE" = *"linux"* || "$OSTYPE" = "cygwin" ]]; then
         inplace="-i"
@@ -92,10 +92,10 @@ init() {
     else
         mkdir filtered_scsht
     fi
-    if [ -d TessResult ];then
-        rm TessResult/*.hocr TessResult/*.txt 2>/dev/null
+    if [ -d tess_result ];then
+        rm tess_result/*.hocr tess_result/*.txt 2>/dev/null
     else
-        mkdir TessResult
+        mkdir tess_result
     fi
     if [ -f scene_changes_alt.log ]; then
         has_alt=true
@@ -108,7 +108,7 @@ init() {
 
 generate_timecodes() {
     FPS=$(\
-            ffprobe "$FilteredVideo" \
+            ffprobe "$filtered_video" \
                 -v 0 \
                 -select_streams v \
                 -print_format flat \
@@ -156,7 +156,7 @@ generate_scsht() {
         ffmpeg \
             -loglevel error \
             -ss "${c}"\
-            -i '\"$FilteredVideo\"' \
+            -i '\"$filtered_video\"' \
             -vframes 1 \
             '$crop' \
             filtered_scsht/$(convert_secs "$odd")-$(convert_secs "$even").jpg' &
@@ -169,7 +169,7 @@ generate_scsht() {
             ffmpeg \
                 -loglevel error \
                 -ss "${c}" \
-                -i "$FilteredVideo" \
+                -i "$filtered_video" \
                 -vframes 1 \
                 -filter:v crop=h=ih/2:y=0 \
                 filtered_scsht/"$(convert_secs $odd)"-"$(convert_secs $even)"_Alt.jpg
@@ -213,7 +213,7 @@ ocr_select() {
 
 
 ocr_tesseract() {
-    if (( $TessVersionNum1 >= 4 ));then
+    if (( $tess_version_num1 >= 4 ));then
         psm="--psm"
         if [ -f ../tessdata/$lang.traineddata ]; then
             tessdata="--tessdata-dir ../tessdata"
@@ -231,9 +231,9 @@ ocr_tesseract() {
         psm="-psm"
     fi
     ls *.jpg |
-    parallel $popt 'OMP_THREAD_LIMIT=1 tesseract {} ../TessResult/{/.} '$tessdata' -l '$lang' '$oem' '$psm' 6 hocr 2>/dev/null'
-    cd ../TessResult || exit
-    if (( $TessVersionNum1 < 4 )) && (( $TessVersionNum2 < 3 )); then
+    parallel $popt 'OMP_THREAD_LIMIT=1 tesseract {} ../tess_result/{/.} '$tessdata' -l '$lang' '$oem' '$psm' 6 hocr 2>/dev/null'
+    cd ../tess_result || exit
+    if (( $tess_version_num1 < 4 )) && (( $tess_version_num2 < 3 )); then
         for file in *.html; do
             mv "$file" "${file%.html}.hocr"
         done
@@ -291,7 +291,7 @@ final_check() {
 ## ajout des retours Ã  la ligne si besoin,
 ## workaround bug "sous-titres vides" et suppresion de ceux restant
     [ $lang = fra ] && echo "Traitement des faux positifs et Suppression des sous-titres vides." || echo "Treat false positives and Delete empty subtitles."
-    if (( $TessVersionNum1 >= 4 || $TessVersionNum2 >= 3 ));then
+    if (( $tess_version_num1 >= 4 || $tess_version_num2 >= 3 ));then
         ls *.txt |
         parallel $popt ocr {}
 
@@ -344,7 +344,7 @@ export -f ocr_legacy
 
 
 replace_quotes() {
-    for file in TessResult/*.txt; do
+    for file in tess_result/*.txt; do
         if grep -q \" $file; then
             if [ $OCRType = FineReader ]; then
                 cat $file |
@@ -371,10 +371,10 @@ replace_quotes() {
 
 
 convert_ocr() {
-    rm "${FilteredVideo%.mp4}.srt" "${FilteredVideo%.mp4}_Alt.srt" 2>/dev/null
+    rm "${filtered_video%.mp4}.srt" "${filtered_video%.mp4}_Alt.srt" 2>/dev/null
     i=0
     j=0
-    for file in TessResult/*.txt; do 
+    for file in tess_result/*.txt; do 
         if [[ $file != *_Alt.txt ]];then
             i=$(($i + 1)); k=$i; Alt=""
         else
@@ -472,10 +472,10 @@ main() {
     ## OCR d'un dossier avec Tesseract
     if [ $OCRType = Tesseract ]; then
         if [ $lang = fra ];then
-            echo "OCR du dossier filtered_scsht avec Tesseract v${TessVersionNum}."
+            echo "OCR du dossier filtered_scsht avec Tesseract v${tess_version_num}."
             msg="Utilisation du moteur"
         else
-            echo "OCR of the filtered_scsht directory with Tesseract v${TessVersionNum}."
+            echo "OCR of the filtered_scsht directory with Tesseract v${tess_version_num}."
             msg="Using engine"
         fi
         ocr_tesseract
@@ -484,9 +484,9 @@ main() {
     ## OCR d'un dossier avec FineReader
     if [ $OCRType = FineReader ]; then
         if [ $lang = fra ];then
-            echo "Une fois l'OCR par FineReader effectué, placez les fichiers dans le dossier TessResult et appuyez sur la touche de votre choix."
+            echo "Une fois l'OCR par FineReader effectué, placez les fichiers dans le dossier tess_result et appuyez sur la touche de votre choix."
         else
-            echo "When you're done with FineReader's OCR, put the files in the TessResult direcory and press the key of your choice."
+            echo "When you're done with FineReader's OCR, put the files in the tess_result direcory and press the key of your choice."
         fi
         read answer
         case $answer in * ) ;; esac
@@ -511,7 +511,7 @@ main() {
 
     ## Final
     for SRT in $(printf OCR%s.srt\\n "" $Alt); do
-        sed -e 's/_t/ --> /' -e 's/_v/,/g' -e 's/_dp/:/g' $SRT > "${FilteredVideo%.*}${SRT#*OCR}"
+        sed -e 's/_t/ --> /' -e 's/_v/,/g' -e 's/_dp/:/g' $SRT > "${filtered_video%.*}${SRT#*OCR}"
         rm $SRT $SRT.bk 2>/dev/null
     done
     wait
