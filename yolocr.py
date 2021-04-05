@@ -5,15 +5,6 @@ import os
 import shutil
 
 
-def convert_secs(rough_time: str) -> None:
-    secs = int(rough_time.split(".")[0])
-    h = secs // 3600
-    m = (secs % 3600) // 60
-    s = secs % 60
-    ms = int(rough_time.split(".")[1])
-    print(f"{h:02}{m:02}{s:02}{ms:03}")
-
-
 logging.basicConfig(level=logging.DEBUG)
 try:
     LANG = sys.argv[2]
@@ -55,3 +46,15 @@ has_alt = os.path.exists("scene_changes_alt.log")
 if LANG == "fra":
     logging.info("Utilisation de YoloCR en mode CLI.")
     print("Prélude")
+else:
+    logging.info("Using YoloCR in CLI mode.")
+    print("Prelude")
+
+
+def convert_secs(rough_time: str) -> None:
+    secs = int(rough_time.split(".")[0])
+    h = secs // 3600
+    m = (secs % 3600) // 60
+    s = secs % 60
+    ms = int(rough_time.split(".")[1])
+    print(f"{h:02}{m:02}{s:02}{ms:03}")
