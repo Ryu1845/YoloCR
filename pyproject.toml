@@ -1,6 +1,6 @@
 [project]
 name = "YoloCR"
-version = "1.0.1"
+version = "1.1.0"
 description = "YoloCR is a convenient OCR toolkit"
 authors = [
     {name = "Ryu1845", email = "ryu@tpgjbo.xyz"},
