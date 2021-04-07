@@ -14,7 +14,9 @@ from tqdm import tqdm
 text_maker = html2text.HTML2Text()
 text_maker.unicode_snob = True
 # TODO format logging
-logging.basicConfig(level=logging.DEBUG)
+# TODO use f-string instead of lazy
+logging.basicConfig(format="\n%(message)s\n", level=logging.INFO)
+logging.debug("Logging in DEBUG")
 
 try:
     _tess_ver_proc = subprocess.check_output(["tesseract", "-v"])
@@ -73,7 +75,7 @@ def convert_secs(rough_time: str) -> str:
     m = (secs % 3600) // 60
     s = secs % 60
     ms = int(rough_time.split(".")[1])
-    time_cvtd = f"{h:02}h{m:02}m{s:02}s{ms:03}ms"
+    time_cvtd = f"{h:02}h{m:02}m{s:02}s{ms:03}"
     return time_cvtd
 
 
@@ -172,8 +174,8 @@ async def gen_scsht(queue: asyncio.Queue) -> None:
         bar_format="{l_bar}{bar}|ETA:{remaining}, {rate_fmt}{postfix}",
     )
     while not queue.empty():
-        frame_time = await queue.get()
-        image = f"filtered_scsht/{convert_secs(str(frame_time))}.jpg"
+        odd, even, frame_time = await queue.get()
+        image = f"filtered_scsht/{convert_secs(str(even))}-{convert_secs(str(odd))}.jpg"
         cmd = [
             "ffmpeg",
             "-ss",
@@ -213,7 +215,7 @@ async def generate_scsht(fps: float) -> None:
             frame_time = odd
         if frame_time < 1:
             frame_time = 0
-        frame_times.append(frame_time)
+        frame_times.append((odd, even, frame_time))
     logging.debug(len(frame_times))
     queues = await get_workload(frame_times)
     tasks = [asyncio.create_task(gen_scsht(queue)) for queue in queues]
@@ -362,6 +364,64 @@ def check():
                 logging.debug("%s already deleted", txt_file)
 
 
+def convert_ocr():
+    logging.info("Converting OCR to srt")
+    sub_filename = FILTERED_VIDEO.replace(".mp4", "")
+    os.chdir("..")
+    try:
+        os.remove(sub_filename + ".srt")
+        os.remove(sub_filename + "_alt.srt")
+    except FileNotFoundError:
+        logging.debug("srt files didn't exist before")
+
+    os.chdir("./tess_result")
+    i = 0
+    j = 0
+    list_sub = os.listdir()
+    list_sub.sort()
+    for file in list_sub:
+        if ".txt" in file:
+            if "_Alt" not in file:
+                i += 1
+                k = i
+                alt = ""
+            else:
+                j += 1
+                k = j
+                alt = "_alt"
+            with open(file, "r") as file_io:
+                lines = file_io.readlines()
+            with open(f"../{sub_filename}{alt}.srt", "a") as ocr_io:
+                ocr_io.write(str(k) + "\n")
+                sub_time = os.path.basename(file)
+                sub_time = re.sub("[hm]", ":", sub_time)
+                sub_time = re.sub("s", ",", sub_time)
+                sub_time = re.sub("-", " --> ", sub_time)
+                sub_time = re.sub(".jpg.txt", "", sub_time)
+                ocr_io.write(sub_time + "\n")
+                ocr_io.writelines(lines)
+                ocr_io.write("\n\n")
+
+    os.chdir("..")
+    lines_new = list()
+    with open(f"{sub_filename}.srt", "r") as ocr_io:
+        lines = ocr_io.readlines()
+        for line in lines:
+            line = re.sub(r"   ", "", line)
+            lines_new.append(line)
+    with open(f"{sub_filename}.srt", "w") as ocr_io:
+        ocr_io.writelines(lines_new)
+    if HAS_ALT:
+        lines_new = list()
+        with open(f"{sub_filename}_alt.srt", "r") as ocr_io:
+            lines = ocr_io.readlines()
+            for line in lines:
+                line = re.sub(r"   ", "", line)
+                lines_new.append(line)
+        with open(f"{sub_filename}_alt.srt", "w") as ocr_io:
+            ocr_io.writelines(lines_new)
+
+
 async def main():
     fps = generate_timecodes()
     await generate_scsht(fps)
@@ -369,6 +429,7 @@ async def main():
     await ocr_tesseract()
     italics_verification()
     check()
+    convert_ocr()
 
 
 if __name__ == "__main__":
