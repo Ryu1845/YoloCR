@@ -1,16 +1,27 @@
 import asyncio
 import logging
-from itertools import islice
+from itertools import islice, accumulate
 import os
 import re
 import shutil
 import subprocess
 import sys
 
-import pytesseract
+import html2text
+from PIL import Image, ImageOps
 from tqdm import tqdm
 
+text_maker = html2text.HTML2Text()
+text_maker.unicode_snob = True
+# TODO format logging
 logging.basicConfig(level=logging.DEBUG)
+
+try:
+    _tess_ver_proc = subprocess.check_output(["tesseract", "-v"])
+except FileNotFoundError:
+    raise ProcessLookupError("Tesseract not found, please install")
+TESS_VER_NUM = re.findall(r"\d+\.\d+\.\d+", str(_tess_ver_proc))[0]
+logging.debug("Using Tesseract version %s", TESS_VER_NUM)
 try:
     LANG = sys.argv[2]
 except IndexError:
@@ -67,7 +78,7 @@ def convert_secs(rough_time: str) -> str:
 
 
 def generate_timecodes() -> float:
-    logging.info("generating timecodes")
+    logging.info("Generating Timecodes")
     args = [
         "ffprobe",
         FILTERED_VIDEO,
@@ -115,26 +126,54 @@ def generate_timecodes() -> float:
     return fps
 
 
-def get_workload(frame_times: list) -> list:
+async def get_workload(tasks: list) -> list:
     cpu_count = len(os.sched_getaffinity(0))
     logging.debug("CPU count: %d", cpu_count)
-    frames_per_cpu = len(frame_times) // cpu_count
+    frames_per_cpu = len(tasks) // cpu_count
     logging.debug("Number of frames per thread: %d", frames_per_cpu)
     split_workload = [
-        list(islice(iter(frame_times), nb_frame))
-        for nb_frame in [frames_per_cpu] * cpu_count
+        list(islice(iter(tasks), nb_frame)) for nb_frame in [frames_per_cpu] * cpu_count
     ]
-    rest = len(frame_times) % cpu_count
-    split_workload[cpu_count - 1] += frame_times[-rest:]
+    lengths_to_split = [frames_per_cpu] * cpu_count
+    split_workload = [
+        tasks[x - y : x] for x, y in zip(accumulate(lengths_to_split), lengths_to_split)
+    ]
+    rest = len(tasks) % cpu_count
+    if rest != 0:
+        split_workload[cpu_count - 1] += tasks[-rest:]
     logging.debug([len(sub) for sub in split_workload])
-    return split_workload
+    logging.debug(
+        [
+            "unique" if len(set(sub)) == len(sub) else "not unique"
+            for sub in split_workload
+        ]
+    )
+    prev_sub: list = list()
+    for sub in split_workload:
+        if sub == prev_sub:
+            logging.debug("not unique")
+        prev_sub = sub
+
+    queues = []
+    for workload in split_workload:
+        queue: asyncio.Queue = asyncio.Queue()
+        for frame in workload:
+            await queue.put(frame)
+        queues.append(queue)
+    return queues
 
 
 async def gen_scsht(queue: asyncio.Queue) -> None:
     total = queue.qsize()
-    pbar = tqdm(total=total)
+    pbar = tqdm(
+        total=total,
+        unit="f",
+        colour="#00ff00",
+        bar_format="{l_bar}{bar}|ETA:{remaining}, {rate_fmt}{postfix}",
+    )
     while not queue.empty():
         frame_time = await queue.get()
+        image = f"filtered_scsht/{convert_secs(str(frame_time))}.jpg"
         cmd = [
             "ffmpeg",
             "-ss",
@@ -143,15 +182,15 @@ async def gen_scsht(queue: asyncio.Queue) -> None:
             FILTERED_VIDEO,
             "-vframes",
             "1",
-            "-y",
             "-loglevel",
-            "quiet",
-            f"filtered_scsht/{convert_secs(str(frame_time))}.jpg",
+            "error",
+            image,
         ]
         proc = await asyncio.create_subprocess_exec(*cmd)
         await proc.wait()
         queue.task_done()
         pbar.update()
+    await queue.join()
     pbar.close()
 
 
@@ -175,20 +214,13 @@ async def generate_scsht(fps: float) -> None:
         if frame_time < 1:
             frame_time = 0
         frame_times.append(frame_time)
-
-    queues = []
-    split_workload = get_workload(frame_times)
-    for workload in split_workload:
-        queue: asyncio.Queue = asyncio.Queue()
-        for frame in workload:
-            await queue.put(frame)
-        queues.append(queue)
-
+    logging.debug(len(frame_times))
+    queues = await get_workload(frame_times)
     tasks = [asyncio.create_task(gen_scsht(queue)) for queue in queues]
     await asyncio.gather(*tasks)
 
 
-async def delete_black_frames() -> None:
+def delete_black_frames() -> None:
     os.chdir("filtered_scsht")
     cmd = [
         "ffmpeg",
@@ -202,18 +234,141 @@ async def delete_black_frames() -> None:
         "yuvj420p",
         "black_frame.jpg",
     ]
-    proc = await asyncio.create_subprocess_exec(*cmd)
-    await proc.wait()
+    proc = subprocess.Popen(cmd)
+    proc.communicate()
     black_frame_size = os.path.getsize("black_frame.jpg")
     for file in os.listdir():
         if os.path.getsize(file) == black_frame_size:
             os.remove(file)
 
 
+async def ocr_tesseract():
+    tess_data = []
+    if os.path.exists(f"../tessdata/{LANG}.traineddata"):
+        tess_data = ["--tessdata-dir", "../tessdata"]
+    logging.info("Using LSTM engine")
+
+    print("\n")
+    logging.info("Negating images to Black over White")
+    negate_images(os.listdir())
+
+    logging.info("Images OCR")
+    os.environ["OMP_THREAD_LIMIT"] = "1"
+    queues = await get_workload(os.listdir())
+    tasks = [asyncio.create_task(ocr(queue, tess_data)) for queue in queues]
+    await asyncio.gather(*tasks)
+    os.chdir("../tess_result")
+
+    for file in os.listdir():
+        with open(file, "r") as file_io:
+            lines = file_io.readlines()
+        html = "".join(lines)
+        txt = text_maker.handle(html).strip()
+        with open(file.replace(".hocr", ".txt"), "w") as file_io:
+            file_io.write(txt)
+
+
+def negate_images(images: list):
+    pbar = tqdm(
+        total=len(images),
+        unit="f",
+        colour="#ffff00",
+        bar_format="{l_bar}{bar}|ETA:{remaining}, {rate_fmt}{postfix}",
+    )
+    for image in images:
+        img = Image.open(image)
+        img = ImageOps.invert(img)
+        img.save(image)
+        pbar.update()
+    pbar.close()
+
+
+async def ocr(queue, tess_data):
+    total = queue.qsize()
+    pbar = tqdm(
+        total=total,
+        unit="f",
+        colour="#00ffff",
+        bar_format="{l_bar}{bar}|ETA:{remaining}, {rate_fmt}{postfix}",
+    )
+    while not queue.empty():
+        frame = await queue.get()
+        cmd = (
+            ["tesseract", frame, f"../tess_result/{frame.split('/')[-1]}"]
+            + tess_data
+            + ["-l", LANG, "--psm", "6", "hocr"]
+        )
+        proc = await asyncio.create_subprocess_exec(
+            *cmd, stdout=asyncio.subprocess.DEVNULL, stderr=asyncio.subprocess.DEVNULL
+        )
+        await proc.wait()
+        queue.task_done()
+        pbar.update()
+    await queue.join()
+    pbar.close()
+
+
+def italics_verification():
+    logging.info(
+        "Vérification de l'OCR italique"
+        if LANG == "fra"
+        else "Verifying the italics OCR"
+    )
+    for file in tqdm(
+        os.listdir(),
+        bar_format="{l_bar}{bar}|ETA:{remaining}, {rate_fmt}{postfix}",
+        colour="#0000ff",
+    ):
+        if ".txt" in file:
+            lines_i = list()
+            with open(file, "r") as file_io:
+                lines = file_io.readlines()
+                for line in lines:
+                    for idx, _ in enumerate(re.findall("_", line)):
+                        if idx % 2:
+                            line = re.sub("_", "</i>", line)
+                        else:
+                            line = re.sub("_", "<i>", line)
+                    lines_i.append(line)
+            with open(file, "w") as file_io:
+                file_io.writelines(lines_i)
+
+
+def check():
+    logging.info(
+        "Traitement des faux positifs et Suppression des sous-titres vides."
+        if LANG == "fra"
+        else "Treating false positives and Deleting empty subtitles."
+    )
+    # reversing list so it checks txt before hocr and doesn't try to open a deleted file
+    for file in os.listdir()[::-1]:
+        with open(file, "r") as file_io:
+            lines = file_io.readlines()
+            confidences = list()
+            for line in lines:
+                confidence = re.findall(r"x_wconf \d+", line)
+                if len(confidence) > 0:
+                    confidence = int(re.findall(r"\d+", confidence[0])[0])
+                    confidences.append(confidence)
+            final_confidence = (
+                sum(confidences) / len(confidences) if len(confidences) > 0 else 100
+            )
+        if not lines or final_confidence < 55:
+            txt_file = file.replace(".hocr", ".txt")
+            try:
+                logging.debug("deleting %s, confidence %d", txt_file, final_confidence)
+                os.remove(txt_file)
+            except FileNotFoundError:
+                logging.debug("%s already deleted", txt_file)
+
+
 async def main():
     fps = generate_timecodes()
     await generate_scsht(fps)
-    await delete_black_frames()
+    delete_black_frames()
+    await ocr_tesseract()
+    italics_verification()
+    check()
 
 
 if __name__ == "__main__":

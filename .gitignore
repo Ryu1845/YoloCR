@@ -1,6 +1,6 @@
 filtered_scsht/
 tessdata/
-TessResult/
+tess_result/
 scene_changes.log
 timecodes.txt
 config.toml
