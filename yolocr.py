@@ -1,3 +1,5 @@
+"OCR part of the YoloCR toolkit"
+# TODO make the functions more agnostic
 import asyncio
 import logging
 from itertools import islice, accumulate
@@ -70,6 +72,16 @@ else:
 
 
 def convert_secs(rough_time: str) -> str:
+    """
+    Convert seconds to human readable time
+    Parameters
+    ----------
+    rough_time:
+        time you want to convert in seconds
+    Returns
+    -------
+    human readable time
+    """
     secs = int(rough_time.split(".")[0])
     h = secs // 3600
     m = (secs % 3600) // 60
@@ -80,6 +92,12 @@ def convert_secs(rough_time: str) -> str:
 
 
 def generate_timecodes() -> float:
+    """
+    Generate timecodes from the scene changes frame values
+    Returns
+    -------
+    framerate of the video
+    """
     logging.info("Generating Timecodes")
     args = [
         "ffprobe",
@@ -129,6 +147,16 @@ def generate_timecodes() -> float:
 
 
 async def get_workload(tasks: list) -> list:
+    """
+    Generate a list of queues for async work based on a list of elements
+    Parameter
+    ---------
+    tasks:
+        list of element to divide in queues
+    Returns
+    -------
+    asyncio queues for the workloads
+    """
     cpu_count = len(os.sched_getaffinity(0))
     logging.debug("CPU count: %d", cpu_count)
     frames_per_cpu = len(tasks) // cpu_count
@@ -166,6 +194,13 @@ async def get_workload(tasks: list) -> list:
 
 
 async def gen_scsht(queue: asyncio.Queue) -> None:
+    """
+    Screenshot a list of timecode asynchronously
+    Parameters
+    ----------
+    queue:
+        list of timecodes assigned to this thread
+    """
     total = queue.qsize()
     pbar = tqdm(
         total=total,
@@ -197,6 +232,13 @@ async def gen_scsht(queue: asyncio.Queue) -> None:
 
 
 async def generate_scsht(fps: float) -> None:
+    """
+    Generate screenshots based on a file containing the timecodes
+    Parameters
+    ----------
+    fps:
+        framerate of the video
+    """
     # TODO ALT
     logging.info("Generating Screenshots")
     with open("timecodes.txt", "r") as timecodes_io:
@@ -223,6 +265,9 @@ async def generate_scsht(fps: float) -> None:
 
 
 def delete_black_frames() -> None:
+    """
+    Delete black frames that would have been created in the process of generating the screenshots
+    """
     os.chdir("filtered_scsht")
     cmd = [
         "ffmpeg",
@@ -244,7 +289,11 @@ def delete_black_frames() -> None:
             os.remove(file)
 
 
-async def ocr_tesseract():
+async def ocr_tesseract() -> None:
+    """
+    Use Optical Character Recognition of Google's Tesseract
+    to generate text from a directory of images
+    """
     tess_data = []
     if os.path.exists(f"../tessdata/{LANG}.traineddata"):
         tess_data = ["--tessdata-dir", "../tessdata"]
@@ -270,7 +319,15 @@ async def ocr_tesseract():
             file_io.write(txt)
 
 
-def negate_images(images: list):
+def negate_images(images: list) -> None:
+    """
+    Invert colors of a list of images
+    Parameters
+    ----------
+    images:
+        list of images to invert
+    """
+    # TODO use tqdm properly
     pbar = tqdm(
         total=len(images),
         unit="f",
@@ -285,7 +342,16 @@ def negate_images(images: list):
     pbar.close()
 
 
-async def ocr(queue, tess_data):
+async def ocr(queue: asyncio.Queue, tess_data: list) -> None:
+    """
+    Asynchronously OCR a queue of images
+    Parameters
+    ----------
+    queue:
+        queue containing the images to OCR
+    tess_data:
+        options for tessdata in tesseract
+    """
     total = queue.qsize()
     pbar = tqdm(
         total=total,
@@ -310,7 +376,10 @@ async def ocr(queue, tess_data):
     pbar.close()
 
 
-def italics_verification():
+def italics_verification() -> None:
+    """
+    Convert Markdown italics to HTML italics
+    """
     logging.info(
         "Vérification de l'OCR italique"
         if LANG == "fra"
@@ -336,7 +405,10 @@ def italics_verification():
                 file_io.writelines(lines_i)
 
 
-def check():
+def check() -> None:
+    """
+    Delete false and empty subtitles
+    """
     logging.info(
         "Traitement des faux positifs et Suppression des sous-titres vides."
         if LANG == "fra"
@@ -350,8 +422,8 @@ def check():
             for line in lines:
                 confidence = re.findall(r"x_wconf \d+", line)
                 if len(confidence) > 0:
-                    confidence = int(re.findall(r"\d+", confidence[0])[0])
-                    confidences.append(confidence)
+                    confidence_int = int(re.findall(r"\d+", confidence[0])[0])
+                    confidences.append(confidence_int)
             final_confidence = (
                 sum(confidences) / len(confidences) if len(confidences) > 0 else 100
             )
@@ -364,7 +436,10 @@ def check():
                 logging.debug("%s already deleted", txt_file)
 
 
-def convert_ocr():
+def convert_ocr() -> None:
+    """
+    Assemble the different text files into an SRT subtitle file
+    """
     logging.info("Converting OCR to srt")
     sub_filename = FILTERED_VIDEO.replace(".mp4", "")
     os.chdir("..")
@@ -422,7 +497,7 @@ def convert_ocr():
             ocr_io.writelines(lines_new)
 
 
-async def main():
+async def main() -> None:
     fps = generate_timecodes()
     await generate_scsht(fps)
     delete_black_frames()
