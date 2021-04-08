@@ -1,12 +1,12 @@
 "OCR part of the YoloCR toolkit"
 import asyncio
 import logging
-from itertools import islice, accumulate
 import os
 import re
 import shutil
 import subprocess
 import sys
+from itertools import accumulate
 
 import html2text
 from PIL import Image, ImageOps
@@ -156,9 +156,6 @@ async def get_workload(tasks: list) -> list:
     logging.debug(f"CPU count: {cpu_count}")
     frames_per_cpu = len(tasks) // cpu_count
     logging.debug(f"Number of frames per thread: {frames_per_cpu}")
-    split_workload = [
-        list(islice(iter(tasks), nb_frame)) for nb_frame in [frames_per_cpu] * cpu_count
-    ]
     lengths_to_split = [frames_per_cpu] * cpu_count
     split_workload = [
         tasks[x - y : x] for x, y in zip(accumulate(lengths_to_split), lengths_to_split)
