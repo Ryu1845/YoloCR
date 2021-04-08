@@ -1,5 +1,4 @@
 "OCR part of the YoloCR toolkit"
-# TODO make the functions more agnostic
 import asyncio
 import logging
 from itertools import islice, accumulate
@@ -15,8 +14,6 @@ from tqdm import tqdm
 
 text_maker = html2text.HTML2Text()
 text_maker.unicode_snob = True
-
-# TODO use f-string instead of lazy
 logging.basicConfig(format="\n%(message)s\n", level=logging.INFO)
 logging.debug("Logging in DEBUG")
 
@@ -91,9 +88,21 @@ def convert_secs(rough_time: str) -> str:
     return time_cvtd
 
 
-def generate_timecodes() -> float:
+def generate_timecodes(
+    scn_chglog: str = "scene_changes.log",
+    video: str = FILTERED_VIDEO,
+    timecode_pth: str = "timecodes.txt",
+) -> float:
     """
     Generate timecodes from the scene changes frame values
+    Parameters
+    ----------
+    scn_chglog:
+        path of scene changelog
+    video:
+        path of the video you want to generate the timecodes of
+    timecode_pth:
+        the path you want the timecodes to be saved in
     Returns
     -------
     framerate of the video
@@ -101,7 +110,7 @@ def generate_timecodes() -> float:
     logging.info("Generating Timecodes")
     args = [
         "ffprobe",
-        FILTERED_VIDEO,
+        video,
         "-v",
         "0",
         "-select_streams",
@@ -116,7 +125,7 @@ def generate_timecodes() -> float:
     fps = int(output_digits[1]) / int(output_digits[2])
     logging.info(f"The video framerate is {fps}")
 
-    with open("scene_changes.log", "r") as scene_changes_io:
+    with open(scn_chglog, "r") as scene_changes_io:
         timecodes = []
         frames = scene_changes_io.readlines()
         for line in frames:
@@ -125,24 +134,10 @@ def generate_timecodes() -> float:
             elif int(line.split(" ")[1]) == 0:
                 timecodes.append(f"{float(line.split(' ')[0])/fps:.4f}"[:-1])
 
-    with open("timecodes.txt", "w") as timecodes_io:
+    with open(timecode_pth, "w") as timecodes_io:
         timecodes.sort(key=float)
         for frame_time in timecodes:
             timecodes_io.write(f"{frame_time}\n")
-
-    if HAS_ALT:
-        with open("scene_changes_alt.log", "r") as scene_changes_io:
-            timecodes = []
-            frames = scene_changes_io.readlines()
-            for line in frames:
-                if int(line.split(" ")[2]) == 0:
-                    timecodes.append(f"{float(line.split(' ')[0])/fps:.4f}"[:-1])
-                elif int(line.split(" ")[1]) == 0:
-                    timecodes.append(f"{float(line.split(' ')[0])/fps:.4f}"[:-1])
-        with open("timecodes_alt.txt", "w") as timecodes_io:
-            timecodes.sort(key=float)
-            for frame_time in timecodes:
-                timecodes_io.write(f"{frame_time}\n")
     return fps
 
 
@@ -193,13 +188,19 @@ async def get_workload(tasks: list) -> list:
     return queues
 
 
-async def gen_scsht(queue: asyncio.Queue) -> None:
+async def gen_scsht(
+    queue: asyncio.Queue, video: str = FILTERED_VIDEO, scsht_pth: str = "filtered_scsht"
+) -> None:
     """
     Screenshot a list of timecode asynchronously
     Parameters
     ----------
     queue:
         list of timecodes assigned to this thread
+    video:
+        path of the video to screenshot
+    scsht_pth:
+        path to save the screenshots in
     """
     total = queue.qsize()
     pbar = tqdm(
@@ -210,13 +211,13 @@ async def gen_scsht(queue: asyncio.Queue) -> None:
     )
     while not queue.empty():
         odd, even, frame_time = await queue.get()
-        image = f"filtered_scsht/{convert_secs(str(even))}-{convert_secs(str(odd))}.jpg"
+        image = f"{scsht_pth}/{convert_secs(str(even))}-{convert_secs(str(odd))}.jpg"
         cmd = [
             "ffmpeg",
             "-ss",
             str(frame_time),
             "-i",
-            FILTERED_VIDEO,
+            video,
             "-vframes",
             "1",
             "-loglevel",
@@ -231,7 +232,7 @@ async def gen_scsht(queue: asyncio.Queue) -> None:
     pbar.close()
 
 
-async def generate_scsht(fps: float) -> None:
+async def generate_scsht(fps: float, video: str = FILTERED_VIDEO) -> None:
     """
     Generate screenshots based on a file containing the timecodes
     Parameters
@@ -260,15 +261,15 @@ async def generate_scsht(fps: float) -> None:
         frame_times.append((odd, even, frame_time))
     logging.debug(len(frame_times))
     queues = await get_workload(frame_times)
-    tasks = [asyncio.create_task(gen_scsht(queue)) for queue in queues]
+    tasks = [asyncio.create_task(gen_scsht(queue, video=video)) for queue in queues]
     await asyncio.gather(*tasks)
 
 
-def delete_black_frames() -> None:
+def delete_black_frames(scsht_pth: str = "filtered_scsht") -> None:
     """
     Delete black frames that would have been created in the process of generating the screenshots
     """
-    os.chdir("filtered_scsht")
+    os.chdir(scsht_pth)
     cmd = [
         "ffmpeg",
         "-loglevel",
@@ -289,17 +290,18 @@ def delete_black_frames() -> None:
             os.remove(file)
 
 
-async def ocr_tesseract() -> None:
+async def ocr_tesseract(
+    tess_data_pth: str = "../tessdata", tess_result_pth: str = "../tess_result"
+) -> None:
     """
     Use Optical Character Recognition of Google's Tesseract
     to generate text from a directory of images
     """
     tess_data = []
-    if os.path.exists(f"../tessdata/{LANG}.traineddata"):
-        tess_data = ["--tessdata-dir", "../tessdata"]
+    if os.path.exists(f"{tess_data_pth}/{LANG}.traineddata"):
+        tess_data = ["--tessdata-dir", tess_data_pth]
     logging.info("Using LSTM engine")
 
-    print("\n")
     logging.info("Negating images to Black over White")
     negate_images(os.listdir())
 
@@ -308,7 +310,7 @@ async def ocr_tesseract() -> None:
     queues = await get_workload(os.listdir())
     tasks = [asyncio.create_task(ocr(queue, tess_data)) for queue in queues]
     await asyncio.gather(*tasks)
-    os.chdir("../tess_result")
+    os.chdir(tess_result_pth)
 
     for file in os.listdir():
         with open(file, "r") as file_io:
@@ -327,22 +329,18 @@ def negate_images(images: list) -> None:
     images:
         list of images to invert
     """
-    # TODO use tqdm properly
-    pbar = tqdm(
-        total=len(images),
-        unit="f",
-        colour="#ffff00",
-        bar_format="{l_bar}{bar}|ETA:{remaining}, {rate_fmt}{postfix}",
-    )
     for image in images:
         img = Image.open(image)
         img = ImageOps.invert(img)
         img.save(image)
-        pbar.update()
-    pbar.close()
 
 
-async def ocr(queue: asyncio.Queue, tess_data: list) -> None:
+async def ocr(
+    queue: asyncio.Queue,
+    tess_data: list,
+    tess_result_pth: str = "../tess_result",
+    lang: str = LANG,
+) -> None:
     """
     Asynchronously OCR a queue of images
     Parameters
@@ -362,9 +360,9 @@ async def ocr(queue: asyncio.Queue, tess_data: list) -> None:
     while not queue.empty():
         frame = await queue.get()
         cmd = (
-            ["tesseract", frame, f"../tess_result/{frame.split('/')[-1]}"]
+            ["tesseract", frame, f"{tess_result_pth}/{frame.split('/')[-1]}"]
             + tess_data
-            + ["-l", LANG, "--psm", "6", "hocr"]
+            + ["-l", lang, "--psm", "6", "hocr"]
         )
         proc = await asyncio.create_subprocess_exec(
             *cmd, stdout=asyncio.subprocess.DEVNULL, stderr=asyncio.subprocess.DEVNULL
@@ -376,13 +374,13 @@ async def ocr(queue: asyncio.Queue, tess_data: list) -> None:
     pbar.close()
 
 
-def italics_verification() -> None:
+def italics_verification(lang: str = LANG) -> None:
     """
     Convert Markdown italics to HTML italics
     """
     logging.info(
         "Vérification de l'OCR italique"
-        if LANG == "fra"
+        if lang == "fra"
         else "Verifying the italics OCR"
     )
     for file in tqdm(
@@ -405,13 +403,13 @@ def italics_verification() -> None:
                 file_io.writelines(lines_i)
 
 
-def check() -> None:
+def check(lang: str = LANG) -> None:
     """
     Delete false and empty subtitles
     """
     logging.info(
         "Traitement des faux positifs et Suppression des sous-titres vides."
-        if LANG == "fra"
+        if lang == "fra"
         else "Treating false positives and Deleting empty subtitles."
     )
     # reversing list so it checks txt before hocr and doesn't try to open a deleted file
@@ -438,37 +436,31 @@ def check() -> None:
                 logging.debug(f"Cannot delete {txt_file}, it's already deleted")
 
 
-def convert_ocr() -> None:
+def convert_ocr(
+    sub_filename: str = FILTERED_VIDEO.removesuffix(".mp4"),
+    tess_result_pth: str = "./tess_result",
+) -> None:
     """
     Assemble the different text files into an SRT subtitle file
     """
     logging.info("Converting OCR to srt")
-    sub_filename = FILTERED_VIDEO.replace(".mp4", "")
     os.chdir("..")
     try:
         os.remove(sub_filename + ".srt")
-        os.remove(sub_filename + "_alt.srt")
     except FileNotFoundError:
         logging.debug("subtitle files didn't exist before")
 
-    os.chdir("./tess_result")
+    os.chdir(tess_result_pth)
     i = 0
-    j = 0
     list_sub = os.listdir()
     list_sub.sort()
     for file in list_sub:
         if ".txt" in file:
-            if "_Alt" not in file:
-                i += 1
-                k = i
-                alt = ""
-            else:
-                j += 1
-                k = j
-                alt = "_alt"
+            i += 1
+            k = i
             with open(file, "r") as file_io:
                 lines = file_io.readlines()
-            with open(f"../{sub_filename}{alt}.srt", "a") as ocr_io:
+            with open(f"../{sub_filename}.srt", "a") as ocr_io:
                 ocr_io.write(str(k) + "\n")
                 sub_time = os.path.basename(file)
                 sub_time = re.sub("[hm]", ":", sub_time)
@@ -488,25 +480,22 @@ def convert_ocr() -> None:
             lines_new.append(line)
     with open(f"{sub_filename}.srt", "w") as ocr_io:
         ocr_io.writelines(lines_new)
-    if HAS_ALT:
-        lines_new = list()
-        with open(f"{sub_filename}_alt.srt", "r") as ocr_io:
-            lines = ocr_io.readlines()
-            for line in lines:
-                line = re.sub(r"   ", "", line)
-                lines_new.append(line)
-        with open(f"{sub_filename}_alt.srt", "w") as ocr_io:
-            ocr_io.writelines(lines_new)
 
 
 async def main() -> None:
     fps = generate_timecodes()
+    if HAS_ALT:
+        generate_timecodes(
+            scn_chglog="scene_changes_alt.log", timecode_pth="timecodes_alt.txt"
+        )
     await generate_scsht(fps)
     delete_black_frames()
     await ocr_tesseract()
     italics_verification()
     check()
     convert_ocr()
+    if HAS_ALT:
+        convert_ocr(sub_filename=FILTERED_VIDEO.replace(".mp4", "_alt"))
 
 
 if __name__ == "__main__":
