@@ -15,7 +15,7 @@ from tqdm import tqdm
 
 text_maker = html2text.HTML2Text()
 text_maker.unicode_snob = True
-# TODO format logging
+
 # TODO use f-string instead of lazy
 logging.basicConfig(format="\n%(message)s\n", level=logging.INFO)
 logging.debug("Logging in DEBUG")
@@ -25,7 +25,7 @@ try:
 except FileNotFoundError:
     raise ProcessLookupError("Tesseract not found, please install")
 TESS_VER_NUM = re.findall(r"\d+\.\d+\.\d+", str(_tess_ver_proc))[0]
-logging.debug("Using Tesseract version %s", TESS_VER_NUM)
+logging.debug(f"Using Tesseract version {TESS_VER_NUM}")
 try:
     LANG = sys.argv[2]
 except IndexError:
@@ -114,7 +114,7 @@ def generate_timecodes() -> float:
     output_ffprobe = subprocess.check_output(args)
     output_digits = re.findall(r"\d+", str(output_ffprobe))
     fps = int(output_digits[1]) / int(output_digits[2])
-    logging.info("FPS is %f", fps)
+    logging.info(f"The video framerate is {fps}")
 
     with open("scene_changes.log", "r") as scene_changes_io:
         timecodes = []
@@ -158,9 +158,9 @@ async def get_workload(tasks: list) -> list:
     asyncio queues for the workloads
     """
     cpu_count = len(os.sched_getaffinity(0))
-    logging.debug("CPU count: %d", cpu_count)
+    logging.debug(f"CPU count: {cpu_count}")
     frames_per_cpu = len(tasks) // cpu_count
-    logging.debug("Number of frames per thread: %d", frames_per_cpu)
+    logging.debug(f"Number of frames per thread: {frames_per_cpu}")
     split_workload = [
         list(islice(iter(tasks), nb_frame)) for nb_frame in [frames_per_cpu] * cpu_count
     ]
@@ -430,10 +430,12 @@ def check() -> None:
         if not lines or final_confidence < 55:
             txt_file = file.replace(".hocr", ".txt")
             try:
-                logging.debug("deleting %s, confidence %d", txt_file, final_confidence)
+                logging.debug(
+                    f"Deleting {txt_file}, tesseract confidence {final_confidence}"
+                )
                 os.remove(txt_file)
             except FileNotFoundError:
-                logging.debug("%s already deleted", txt_file)
+                logging.debug(f"Cannot delete {txt_file}, it's already deleted")
 
 
 def convert_ocr() -> None:
@@ -447,7 +449,7 @@ def convert_ocr() -> None:
         os.remove(sub_filename + ".srt")
         os.remove(sub_filename + "_alt.srt")
     except FileNotFoundError:
-        logging.debug("srt files didn't exist before")
+        logging.debug("subtitle files didn't exist before")
 
     os.chdir("./tess_result")
     i = 0
