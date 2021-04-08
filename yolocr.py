@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 "OCR part of the YoloCR toolkit"
 import asyncio
 import logging
