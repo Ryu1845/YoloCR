@@ -15,7 +15,7 @@ from tqdm import tqdm
 
 text_maker = html2text.HTML2Text()
 text_maker.unicode_snob = True
-logging.basicConfig(format="\n%(message)s\n", level=logging.INFO)
+logging.basicConfig(format="\n%(message)s\n", level=logging.DEBUG)
 logging.debug("Logging in DEBUG")
 
 try:
@@ -314,7 +314,10 @@ async def ocr_tesseract(
         with open(file, "r") as file_io:
             lines = file_io.readlines()
         html = "".join(lines)
-        txt = text_maker.handle(html).strip()
+        html_w_nwlines = re.sub(
+            "<span class='ocr_line", "<br><span class='ocr_line", html
+        )
+        txt = text_maker.handle(html_w_nwlines).strip()
         with open(file.replace(".hocr", ".txt"), "w") as file_io:
             file_io.write(txt)
 
@@ -362,6 +365,7 @@ async def ocr(
             + tess_data
             + ["-l", lang, "--psm", "6", "hocr"]
         )
+        # logging.debug(" ".join(cmd))
         proc = await asyncio.create_subprocess_exec(
             *cmd, stdout=asyncio.subprocess.DEVNULL, stderr=asyncio.subprocess.DEVNULL
         )
@@ -411,7 +415,10 @@ def check(lang: str = LANG) -> None:
         else "Treating false positives and Deleting empty subtitles."
     )
     # reversing list so it checks txt before hocr and doesn't try to open a deleted file
-    for file in os.listdir()[::-1]:
+    listdir = os.listdir()
+    listdir.sort()
+    listdir = listdir[::-1]
+    for file in listdir:
         with open(file, "r") as file_io:
             lines = file_io.readlines()
             confidences = list()
