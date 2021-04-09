@@ -15,7 +15,7 @@ from tqdm import tqdm
 
 text_maker = html2text.HTML2Text()
 text_maker.unicode_snob = True
-logging.basicConfig(format="\n%(message)s\n", level=logging.DEBUG)
+logging.basicConfig(format="%(message)s\n", level=logging.DEBUG)
 logging.debug("Logging in DEBUG")
 
 try:
@@ -69,7 +69,7 @@ else:
     print("Prelude")
 
 
-def convert_secs(rough_time: str) -> str:
+def convert_secs(rough_time: float) -> str:
     """
     Convert seconds to human readable time
     Parameters
@@ -80,12 +80,11 @@ def convert_secs(rough_time: str) -> str:
     -------
     human readable time
     """
-    secs = int(rough_time.split(".")[0])
-    h = secs // 3600
-    m = (secs % 3600) // 60
-    s = secs % 60
-    ms = int(rough_time.split(".")[1])
-    time_cvtd = f"{h:02}h{m:02}m{s:02}s{ms:03}"
+    h = rough_time // 3600
+    m = (rough_time % 3600) // 60
+    s = (rough_time % 60) // 1
+    ms = (rough_time % 1) * 1000
+    time_cvtd = f"{h:02.0f}h{m:02.0f}m{s:02.0f}s{ms:03.0f}"
     return time_cvtd
 
 
@@ -133,7 +132,7 @@ def generate_timecodes(
             if int(line.split(" ")[2]) == 0:
                 timecodes.append(f"{float(line.split(' ')[0])/fps:.4f}"[:-1])
             elif int(line.split(" ")[1]) == 0:
-                timecodes.append(f"{float(line.split(' ')[0])/fps:.4f}"[:-1])
+                timecodes.append(f"{(float(line.split(' ')[0])+1)/fps:.4f}"[:-1])
 
     with open(timecode_pth, "w") as timecodes_io:
         timecodes.sort(key=float)
@@ -208,8 +207,8 @@ async def gen_scsht(
         bar_format="{l_bar}{bar}|ETA:{remaining}, {rate_fmt}{postfix}",
     )
     while not queue.empty():
-        odd, even, frame_time = await queue.get()
-        image = f"{scsht_pth}/{convert_secs(str(even))}-{convert_secs(str(odd))}.jpg"
+        even, odd, frame_time = await queue.get()
+        image = f"{scsht_pth}/{convert_secs(even)}-{convert_secs(odd)}.jpg"
         cmd = [
             "ffmpeg",
             "-ss",
@@ -245,29 +244,32 @@ async def generate_scsht(fps: float, video: str = FILTERED_VIDEO) -> None:
         timecodes = [float(line) for line in timecodes_str]
 
     frame_times = []
-    for idx, even in enumerate(timecodes[::2]):
-        try:
-            odd: float = timecodes[idx * 2 + 1]
-        except IndexError:
-            break
-        if even - odd - 0.003 > 2 / fps:
-            frame_time = (even + odd) / 2
+    logging.debug(len(timecodes))
+    timecodes = list(set(timecodes))[1:]
+    timecodes.sort(key=float)
+    logging.debug(len(timecodes))
+    for idx, timecode in enumerate(timecodes):
+        if idx % 2 == 0:
+            even = timecode
         else:
-            frame_time = odd
-        if frame_time < 1:
-            frame_time = 0
-        frame_times.append((odd, even, frame_time))
+            odd = timecode
+            frame_time = f"{(even + odd) / 2:.3f}"
+            frame_times.append((even, odd, frame_time))
+    with open("frame_times.txt", "w") as frame_times_io:
+        frame_times_lines = list()
+        for frame in frame_times:
+            frame_times_lines.append(str(frame) + "\n")
+        frame_times_io.writelines(frame_times_lines)
     logging.debug(len(frame_times))
     queues = await get_workload(frame_times)
     tasks = [asyncio.create_task(gen_scsht(queue, video=video)) for queue in queues]
     await asyncio.gather(*tasks)
 
 
-def delete_black_frames(scsht_pth: str = "filtered_scsht") -> None:
+def delete_black_frames() -> None:
     """
     Delete black frames that would have been created in the process of generating the screenshots
     """
-    os.chdir(scsht_pth)
     cmd = [
         "ffmpeg",
         "-loglevel",
@@ -283,9 +285,12 @@ def delete_black_frames(scsht_pth: str = "filtered_scsht") -> None:
     proc = subprocess.Popen(cmd)
     proc.communicate()
     black_frame_size = os.path.getsize("black_frame.jpg")
+    prev = len(os.listdir())
     for file in os.listdir():
         if os.path.getsize(file) == black_frame_size:
             os.remove(file)
+    new = len(os.listdir())
+    logging.debug(f"deleted {prev - new}")
 
 
 async def ocr_tesseract(
@@ -385,11 +390,7 @@ def italics_verification(lang: str = LANG) -> None:
         if lang == "fra"
         else "Verifying the italics OCR"
     )
-    for file in tqdm(
-        os.listdir(),
-        bar_format="{l_bar}{bar}|ETA:{remaining}, {rate_fmt}{postfix}",
-        colour="#0000ff",
-    ):
+    for file in os.listdir():
         if ".txt" in file:
             lines_i = list()
             with open(file, "r") as file_io:
@@ -494,10 +495,11 @@ async def main() -> None:
             scn_chglog="scene_changes_alt.log", timecode_pth="timecodes_alt.txt"
         )
     await generate_scsht(fps)
+    os.chdir("filtered_scsht")
     delete_black_frames()
     await ocr_tesseract()
     italics_verification()
-    check()
+    # check() # actually makes too many false negative
     convert_ocr()
     if HAS_ALT:
         convert_ocr(sub_filename=FILTERED_VIDEO.replace(".mp4", "_alt"))
