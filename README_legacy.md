@@ -1,9 +1,8 @@
 # [YoloCR](https://bitbucket.org/YuriZero/yolocr/src)
 
-[![Codacy Badge](https://api.codacy.com/project/badge/Grade/f0a7a983688a4bfd920cc4d15562d350)](https://app.codacy.com/gh/Ryu1845/YoloCR?utm_source=github.com&utm_medium=referral&utm_content=Ryu1845/YoloCR&utm_campaign=Badge_Grade_Settings)
+This is a fork, for the original see the link in the title.
 
 I cleaned the vpy so they use a config file and are __somewhat__ pep8 compliant and as such more readable.
-This is a fork, for the original see the link in the title.
 There's also a PKGBUILD, don't try to use it, it doesn't work
 
 ## For noobs
@@ -32,9 +31,13 @@ Global Requirements for all the OS.
 
 ### Unix/Linux Requirements
 
-* Tesseract-OCR (>=4)
+* Tesseract-OCR (we recommend version 3.03+)
   * and install the data corresponding to the languages you want to OCR
-* Imagemagick
+  * Imagemagick is required if you use LSTM engine
+* links
+* sxiv (Simple X Image Viewer) (GUI mode only)
+* xdotool (Linux only, GUI mode only)
+* parallel (GNU Parallel)
 
 > *Note*: most of these package, with the exception of all the plugins for vapoursynth, are available as official package for your distro.
 > For Ubuntu 20.04, all the requirements can be installed with the YoloBuntuInstallation script : `sh YoloBuntuInstallation.sh eng-only`
@@ -45,11 +48,18 @@ Global Requirements for all the OS.
 * [Cygwin](https://www.cygwin.com/). During the install, activate:
   * bc
   * gnupg
+  * links
   * make
   * perl
   * wget
   * tesseract-ocr
   * tesseract-ocr-eng
+
+> You can use ABBYY FineReader instead of Tesseract.
+
+* Install `GNU Parallel` from the Cygwin terminal:
+  * `wget -O - pi.dk/3 | bash`
+  * `if [ -f ~/bin/parallel ]; then mv ~/bin/parallel /usr/local/bin/; fi`
 
 > *Note*: Cygwin terminal usage here → [https://help.ubuntu.com/community/UsingTheTerminal](https://help.ubuntu.com/community/UsingTheTerminal)
 > C drive path is "/cygdrive/c".
@@ -65,7 +75,7 @@ Global Requirements for all the OS.
 Resize is very helpful to locate the subtitles.
 
 1. open the config file in a text editor
-2. open `YoloResize.py` in Vapoursynth Editor.
+2. open `YoloResize.vpy` in Vapoursynth Editor.
 3. Change these values in the config:
    * `source_file` is the path of the video to OCR.
    * `crop_box_dimension` allows you to limit the OCR zone.
@@ -79,7 +89,7 @@ You can then change `supersampling_factor` parameter to -1 and verify that your 
 
 This part is made to improve the OCR process and the subtitles detection.
 
-1. Open `YoloSeuil.py` in Vapoursynth editor.
+1. Open `YoloSeuil.vpy` in Vapoursynth editor.
 2. Choose the fitting threshold_mode. 'L' if you want to define a white or black threshold, succesively 'R', 'G' and 'B' otherwise.
 3. Adjust the Threshold with the help of the "Color Panel" found in the **F5** window.
 
@@ -99,7 +109,7 @@ You can then change `threshold` paremeter to the values previously found.
    * `inline_threshold` = the inline threshold value (decrease it if it improves the clarity of the letters)
    * `outline_threshold` = the outline threshold value (increase it if some letters got erased)
 
-2. Then filter it: `vspipe -y YoloCR.py - | ffmpeg -i - -c:v mpeg4 -qscale:v 3 -y name_of_the_video_output.mp4`
+2. Then filter it: `vspipe -y YoloCR.vpy - | ffmpeg -i - -c:v mpeg4 -qscale:v 3 -y name_of_the_video_output.mp4`
 
 > Be careful: your must use a different name for your `source_file` in the previous files and `name_of_the_video_output.mp4` for the output of the ffmpeg command.
 
@@ -107,10 +117,10 @@ You now have an OCR-isable video and scenechange informations.
 
 ### OCR the video
 
-Then you can OCR the video: `./yolocr.py name_of_the_video_output.mp4`
+Then you can OCR the video: `./YoloCR.sh name_of_the_video_output.mp4`
 
 > The `name_of_the_video_output.mp4` must be the same than the output of the ffmpeg command.
-> You can use `YoloTime.sh` instead of `yolocr.py` if you only want the Timing of the subtitles.
+> You can use `YoloTime.sh` instead of `YoloCR.sh` if you only want the Timing of the subtitles.
 
 **Now it's Checking time :D**
 
@@ -118,16 +128,19 @@ Then you can OCR the video: `./yolocr.py name_of_the_video_output.mp4`
 
 1. Make sure that sxiv isn't installed.
 2. Make sure that YoloCR directory includes the video files you want to OCR and only theses.
-3. Comment the first line of YoloCR.py. ("source_file" becomes "#source_file".)
+3. Comment the first line of YoloCR.vpy. ("source_file" becomes "#source_file".)
 4. Move to the YoloCR directory and use this bash command:
-   * `for file in *.mp4; do filef="${file%.*}_filtered.mp4"; vspipe -y --arg source_file="$file" YoloCR.py - | ffmpeg -i - -c:v mpeg4 -qscale:v 3 -y "$filef"; ./yolocr.py "$filef"; done`
+   * `for file in *.mp4; do filef="${file%.*}_filtered.mp4"; vspipe -y --arg source_file="$file" YoloCR.vpy - | ffmpeg -i - -c:v mpeg4 -qscale:v 3 -y "$filef"; ./YoloCR.sh "$filef"; done`
 
 > "*.mp4" means that all files having the mp4 extension will be processed. Read about bash regex if you want more flexibility.
 
 ## Known bugs
 
-* Cygwin (Windows), when you run yolocr.py for the first time.
+* Tesseract's LSTM engine produce a lower quality OCR (such as a worse italics detection).
+  * Use Legacy engine [traineddata](https://github.com/tesseract-ocr/tessdata) instead.
+  * You can put these files inside YoloCR's tessdata directory.
+* Cygwin (Windows), when you run YoloCR.sh for the first time.
   * Signal SIGCHLD received, but no signal handler set.
   * YoloCR will run without errors the next times.
-* Babun (Windows), you will have errors when trying to run yolocr.py.
+* Babun (Windows), you will have errors when trying to run YoloCR.sh.
   * Use Cygwin instead.
