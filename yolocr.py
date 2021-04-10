@@ -24,49 +24,6 @@ except FileNotFoundError:
     raise ProcessLookupError("Tesseract not found, please install")
 TESS_VER_NUM = re.findall(r"\d+\.\d+\.\d+", str(_tess_ver_proc))[0]
 logging.debug(f"Using Tesseract version {TESS_VER_NUM}")
-try:
-    LANG = sys.argv[2]
-except IndexError:
-    logging.info("Language not defined. Defaulting to English")
-    LANG = "eng"
-
-try:
-    FILTERED_VIDEO = sys.argv[1]
-except IndexError:
-    if LANG == "fra":
-        raise IndexError(
-            f"""
-N'oubliez pas de mettre le nom de la Vidéo Filtrée en argument.
-Exemple : {sys.argv[0]} Vidéo_Filtrée.mp4 {LANG}
-            """
-        )
-    raise IndexError(
-        f"""
-Don't forget to put the name of the filtered video in the arguments
-Example : {sys.argv[0]} filtered_video.mp4 {LANG}
-        """
-    )
-
-try:
-    os.mkdir("filtered_scsht")
-except FileExistsError:
-    shutil.rmtree("filtered_scsht")
-    os.mkdir("filtered_scsht")
-
-try:
-    os.mkdir("tess_result")
-except FileExistsError:
-    shutil.rmtree("tess_result")
-    os.mkdir("tess_result")
-
-HAS_ALT = os.path.exists("scene_changes_alt.log")
-
-if LANG == "fra":
-    logging.info("Utilisation de YoloCR en mode CLI.")
-    print("Prélude")
-else:
-    logging.info("Using YoloCR in CLI mode.")
-    print("Prelude")
 
 
 def convert_secs(rough_time: float) -> str:
@@ -89,10 +46,10 @@ def convert_secs(rough_time: float) -> str:
 
 
 def generate_timecodes(
-    scn_chglog: str = "scene_changes.log",
-    video: str = FILTERED_VIDEO,
-    timecode_pth: str = "timecodes.txt",
-) -> float:
+    scn_chglog: str,
+    video: str,
+    timecode_pth: str,
+) -> None:
     """
     Generate timecodes from the scene changes frame values
     Parameters
@@ -103,9 +60,6 @@ def generate_timecodes(
         path of the video you want to generate the timecodes of
     timecode_pth:
         the path you want the timecodes to be saved in
-    Returns
-    -------
-    framerate of the video
     """
     logging.info("Generating Timecodes")
     args = [
@@ -138,7 +92,6 @@ def generate_timecodes(
         timecodes.sort(key=float)
         for frame_time in timecodes:
             timecodes_io.write(f"{frame_time}\n")
-    return fps
 
 
 async def get_workload(tasks: list) -> list:
@@ -186,7 +139,9 @@ async def get_workload(tasks: list) -> list:
 
 
 async def gen_scsht(
-    queue: asyncio.Queue, video: str = FILTERED_VIDEO, scsht_pth: str = "filtered_scsht"
+    queue: asyncio.Queue,
+    video: str,
+    scsht_pth: str,
 ) -> None:
     """
     Screenshot a list of timecode asynchronously
@@ -229,13 +184,9 @@ async def gen_scsht(
     pbar.close()
 
 
-async def generate_scsht(fps: float, video: str = FILTERED_VIDEO) -> None:
+async def generate_scsht(video: str, scsht_pth: str) -> None:
     """
     Generate screenshots based on a file containing the timecodes
-    Parameters
-    ----------
-    fps:
-        framerate of the video
     """
     # TODO ALT
     logging.info("Generating Screenshots")
@@ -262,14 +213,17 @@ async def generate_scsht(fps: float, video: str = FILTERED_VIDEO) -> None:
         frame_times_io.writelines(frame_times_lines)
     logging.debug(len(frame_times))
     queues = await get_workload(frame_times)
-    tasks = [asyncio.create_task(gen_scsht(queue, video=video)) for queue in queues]
+    tasks = [
+        asyncio.create_task(gen_scsht(queue, video, scsht_pth)) for queue in queues
+    ]
     await asyncio.gather(*tasks)
 
 
-def delete_black_frames() -> None:
+def delete_black_frames(path: str) -> None:
     """
-    Delete black frames that would have been created in the process of generating the screenshots
+    Delete black frames in a directory
     """
+    os.chdir(path)
     cmd = [
         "ffmpeg",
         "-loglevel",
@@ -291,27 +245,40 @@ def delete_black_frames() -> None:
             os.remove(file)
     new = len(os.listdir())
     logging.debug(f"deleted {prev - new}")
+    os.chdir("..")
 
 
 async def ocr_tesseract(
-    tess_data_pth: str = "../tessdata", tess_result_pth: str = "../tess_result"
+    scsht_pth: str,
+    tess_data_pth: str,
+    tess_result_pth: str,
+    lang: str,
 ) -> None:
     """
     Use Optical Character Recognition of Google's Tesseract
     to generate text from a directory of images
     """
     tess_data = []
-    if os.path.exists(f"{tess_data_pth}/{LANG}.traineddata"):
+    if os.path.exists(f"{tess_data_pth}/{lang}.traineddata"):
         tess_data = ["--tessdata-dir", tess_data_pth]
     logging.info("Using LSTM engine")
 
     logging.info("Negating images to Black over White")
+    os.chdir(scsht_pth)
     negate_images(os.listdir())
+    os.chdir("..")
 
     logging.info("Images OCR")
     os.environ["OMP_THREAD_LIMIT"] = "1"
-    queues = await get_workload(os.listdir())
-    tasks = [asyncio.create_task(ocr(queue, tess_data)) for queue in queues]
+    screenshots = [
+        f"{scsht_pth.removesuffix('/')}/{file}" for file in os.listdir(scsht_pth)
+    ]
+    logging.debug(screenshots)
+    queues = await get_workload(screenshots)
+    tasks = [
+        asyncio.create_task(ocr(queue, tess_data, tess_result_pth, lang))
+        for queue in queues
+    ]
     await asyncio.gather(*tasks)
     os.chdir(tess_result_pth)
 
@@ -325,6 +292,7 @@ async def ocr_tesseract(
         txt = text_maker.handle(html_w_nwlines).strip()
         with open(file.replace(".hocr", ".txt"), "w") as file_io:
             file_io.write(txt)
+    os.chdir("..")
 
 
 def negate_images(images: list) -> None:
@@ -344,8 +312,8 @@ def negate_images(images: list) -> None:
 async def ocr(
     queue: asyncio.Queue,
     tess_data: list,
-    tess_result_pth: str = "../tess_result",
-    lang: str = LANG,
+    tess_result_pth: str,
+    lang: str,
 ) -> None:
     """
     Asynchronously OCR a queue of images
@@ -381,7 +349,7 @@ async def ocr(
     pbar.close()
 
 
-def italics_verification(lang: str = LANG) -> None:
+def italics_verification(lang: str) -> None:
     """
     Convert Markdown italics to HTML italics
     """
@@ -406,7 +374,7 @@ def italics_verification(lang: str = LANG) -> None:
                 file_io.writelines(lines_i)
 
 
-def check(lang: str = LANG) -> None:
+def check(lang: str) -> None:
     """
     Delete false and empty subtitles
     """
@@ -443,14 +411,13 @@ def check(lang: str = LANG) -> None:
 
 
 def convert_ocr(
-    sub_filename: str = FILTERED_VIDEO.removesuffix(".mp4"),
-    tess_result_pth: str = "./tess_result",
+    sub_filename: str,
+    tess_result_pth: str,
 ) -> None:
     """
     Assemble the different text files into an SRT subtitle file
     """
     logging.info("Converting OCR to srt")
-    os.chdir("..")
     try:
         os.remove(sub_filename + ".srt")
     except FileNotFoundError:
@@ -488,22 +455,61 @@ def convert_ocr(
         ocr_io.writelines(lines_new)
 
 
-async def main() -> None:
-    fps = generate_timecodes()
-    if HAS_ALT:
-        generate_timecodes(
-            scn_chglog="scene_changes_alt.log", timecode_pth="timecodes_alt.txt"
-        )
-    await generate_scsht(fps)
-    os.chdir("filtered_scsht")
-    delete_black_frames()
-    await ocr_tesseract()
-    italics_verification()
-    # check() # actually makes too many false negative
-    convert_ocr()
-    if HAS_ALT:
-        convert_ocr(sub_filename=FILTERED_VIDEO.replace(".mp4", "_alt"))
+async def main(lang: str, filtered_video: str) -> None:
+    try:
+        os.mkdir("filtered_scsht")
+    except FileExistsError:
+        shutil.rmtree("filtered_scsht")
+        os.mkdir("filtered_scsht")
+
+    try:
+        os.mkdir("tess_result")
+    except FileExistsError:
+        shutil.rmtree("tess_result")
+        os.mkdir("tess_result")
+
+    has_alt = os.path.exists("scene_changes_alt.log")
+    generate_timecodes("scene_changes.log", filtered_video, "timecodes.txt")
+    if has_alt:
+        generate_timecodes("scene_changes_alt.log", filtered_video, "timecodes_alt.txt")
+    await generate_scsht(filtered_video, "filtered_scsht")
+    delete_black_frames("filtered_scsht")
+    await ocr_tesseract("filtered_scsht", "tessdata", "tess_result", lang)
+    italics_verification(lang)
+    # check(lang=lang) # actually makes too many false negative
+    convert_ocr(filtered_video.removesuffix(".mp4"), "tess_result")
+    if has_alt:
+        convert_ocr(filtered_video.replace(".mp4", "_alt"), "tess_result")
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    try:
+        lang = sys.argv[2]
+    except IndexError:
+        logging.info("Language not defined. Defaulting to English")
+        lang = "eng"
+
+    try:
+        filtered_video = sys.argv[1]
+    except IndexError:
+        if lang == "fra":
+            raise IndexError(
+                f"""
+    N'oubliez pas de mettre le nom de la Vidéo Filtrée en argument.
+    Exemple : {sys.argv[0]} Vidéo_Filtrée.mp4 {lang}
+                """
+            )
+        raise IndexError(
+            f"""
+    Don't forget to put the name of the filtered video in the arguments
+    Example : {sys.argv[0]} filtered_video.mp4 {lang}
+            """
+        )
+
+    if lang == "fra":
+        logging.info("Utilisation de YoloCR en mode CLI.")
+        print("Prélude")
+    else:
+        logging.info("Using YoloCR in CLI mode.")
+        print("Prelude")
+    asyncio.run(main(lang, filtered_video))
