@@ -1,8 +1,12 @@
+__pycache__
 filtered_scsht/
 tessdata/
 tess_result/
 scene_changes.log
 timecodes.txt
+frame_times.txt
+screenshot.png
+config.tmp.toml
 config.toml
 .pdm.toml
 .plan/

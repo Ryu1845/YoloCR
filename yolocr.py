@@ -15,7 +15,7 @@ from tqdm import tqdm
 
 text_maker = html2text.HTML2Text()
 text_maker.unicode_snob = True
-logging.basicConfig(format="%(message)s\n", level=logging.DEBUG)
+logging.basicConfig(format="%(message)s\n", level=logging.INFO)
 logging.debug("Logging in DEBUG")
 
 try:
@@ -191,8 +191,7 @@ async def generate_scsht(video: str, scsht_pth: str) -> None:
     # TODO ALT
     logging.info("Generating Screenshots")
     with open("timecodes.txt", "r") as timecodes_io:
-        timecodes_str = timecodes_io.readlines()
-        timecodes = [float(line) for line in timecodes_str]
+        timecodes = [float(line) for line in timecodes_io.readlines()]
 
     frame_times = []
     logging.debug(len(timecodes))
