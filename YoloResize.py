@@ -85,7 +85,7 @@ def main():
         left=int((clip_gray.width - crop_box.width) / 2),
     )
     clip_top = core.std.Crop(
-        clip=clip, bottom=int(HEIGHT_CROP_BOX * ss) + crop_box.height
+        clip=clip, bottom=int((HEIGHT_CROP_BOX - 25) * ss) + crop_box.height
     )
     clip_bottom = core.std.Crop(clip=clip, top=clip_top.height + crop_box.height)
 
