@@ -1,11 +1,10 @@
 "GUI for YoloCR"
 # TODO put preview in a separate page
 import asyncio
-import base64
-import io
 import os
 import subprocess
 
+import cv2
 import PySimpleGUIQt as sg
 import toml
 from PIL import Image, ImageDraw
@@ -32,53 +31,27 @@ def gen_scsht(video, frame_time):
     subprocess.run(cmd)
 
 
-def convert_to_bytes(file_or_bytes, height, crop_box, height_alt=-1, resize=None):
-    """
-    Will convert into bytes and optionally resize an image that is a file or a base64 bytes object.
-    Turns into  PNG format in the process so that can be displayed by tkinter
-    :param file_or_bytes: either a string filename or a bytes base64 image object
-    :type file_or_bytes:  (Union[str, bytes])
-    :param resize:  optional new size
-    :type resize: (Tuple[int, int] or None)
-    :return: (bytes) a byte-string object
-    :rtype: (bytes)
-    """
-    if isinstance(file_or_bytes, str):
-        img = Image.open(file_or_bytes)
-    else:
-        try:
-            img = Image.open(io.BytesIO(base64.b64decode(file_or_bytes)))
-        except Exception as e:
-            dataBytesIO = io.BytesIO(file_or_bytes)
-            img = Image.open(dataBytesIO)
+def convert_to_bytes(path, height, crop_box, height_alt=-1, resize=None):
+    img = cv2.imread(path)
+    h_img, w_img, _ = img.shape
 
-    w, h = img.size
-    shape = [
-        (w - crop_box[0]) / 2,
-        h - height,
-        (w + crop_box[0]) / 2,
-        h - height - crop_box[1],
-    ]
-    img1 = ImageDraw.Draw(img)
-    img1.rectangle(shape, outline="red", width=5)
+    start_pt = (int((w_img - crop_box[0]) / 2), h_img - height - crop_box[1])
+    end_pt = (int((w_img + crop_box[0]) / 2), h_img - height)
+    color = (255, 0, 0)
+    thickness = 5
+    image = cv2.rectangle(img, start_pt, end_pt, color, thickness=thickness)
+
     if height_alt != -1:
-        shape = [
-            (w - crop_box[0]) / 2,
-            h - height_alt,
-            (w + crop_box[0]) / 2,
-            h - height_alt - crop_box[1],
-        ]
-        img2 = ImageDraw.Draw(img)
-        img2.rectangle(shape, outline="red", width=5)
+        start_pt2 = (int((w_img - crop_box[0]) / 2), h_img - height_alt - crop_box[1])
+        end_pt2 = (int((w_img + crop_box[0]) / 2), h_img - height_alt)
+        image = cv2.rectangle(image, start_pt2, end_pt2, color, thickness=thickness)
 
     if resize:
-        new_width, new_height = resize
-        scale = min(new_height / h, new_width / w)
-        img = img.resize((int(w * scale), int(h * scale)), Image.ANTIALIAS)
-    bio = io.BytesIO()
-    img.save(bio, format="PNG")
-    del img
-    return bio.getvalue()
+        image = cv2.resize(image, resize)
+
+    _, im_buf_arr = cv2.imencode(".png", image)
+    byte_im = im_buf_arr.tobytes()
+    return byte_im
 
 
 def main(config):
@@ -253,11 +226,9 @@ def main(config):
         [sg.Checkbox("Preview", key="has_preview", enable_events=True)],
         [sg.Submit(), sg.Cancel()],
     ]
-
     preview_col = [
         [sg.Image(key="preview_image")],
     ]
-
     layout = [
         [
             sg.Column(settings_col, element_justification="c"),
@@ -275,10 +246,6 @@ def main(config):
         if event in (sg.WIN_CLOSED, "Cancel"):
             break
         if values["has_preview"]:
-            window["crop_box_width"].update(enable_events=False)
-            window["crop_box_height"].update(enable_events=False)
-            window["height_crop_box"].update(enable_events=False)
-            window["height_crop_box_alt"].update(enable_events=False)
             if not os.path.exists("screenshot.png"):
                 gen_scsht(values["source_file"], 12)
             if (
