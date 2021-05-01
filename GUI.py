@@ -65,6 +65,10 @@ def convert_to_bytes(path, height, crop_box, height_alt=-1, resize=None):
     return byte_im
 
 
+def preview_vp(video, time, crop_box, height_alt, resize=None):
+    pass
+
+
 def main(config):
     info = get_vid_info(config["source_file"])
     duration = float(info["format"]["duration"])
