@@ -246,26 +246,6 @@ def main(config):
             ],
         )
     ]
-    settings_col = [
-        source_file_row,
-        time_scsht_row,
-        [sg.Button("Generate Screenshot")],
-        crop_frame,
-        upscale_frame,
-        threshold_frame,
-        [sg.Checkbox("Preview", key="has_preview", enable_events=True)],
-        [sg.Button("Save Settings"), sg.Cancel()],
-    ]
-    preview_col = [
-        [sg.Image(key="preview_image")],
-    ]
-    # layout = [
-    #     [
-    #         sg.Column(settings_col, element_justification="c"),
-    #         sg.VSeperator(),
-    #         sg.Col(preview_col, element_justification="c"),
-    #     ]
-    # ]
     layout = [
         source_file_row,
         time_scsht_row,
@@ -286,7 +266,7 @@ def main(config):
             sg.T("30%", key="resize_factor_lbl"),
         ],
         [sg.Button("Save Settings"), sg.Cancel()],
-        [sg.Image(key="preview_image")],
+        [sg.Image(key="preview_image", data=bytes())],
     ]
 
     # Create the Window
