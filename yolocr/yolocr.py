@@ -133,12 +133,17 @@ def generate_scsht(video: str, scsht_pth: str, timecode_pth: str) -> None:
             frame_times.append((even, odd, frame_time))
     logging.debug(len(frame_times))
     with ThreadPoolExecutor() as executor:
-        list(tqdm(executor.map(
-            gen_scsht,
-            frame_times,
-            [video] * len(frame_times),
-            [scsht_pth] * len(frame_times),
-        ), total=len(frame_times)))
+        list(
+            tqdm(
+                executor.map(
+                    gen_scsht,
+                    frame_times,
+                    [video] * len(frame_times),
+                    [scsht_pth] * len(frame_times),
+                ),
+                total=len(frame_times),
+            )
+        )
 
 
 def delete_black_frames(path: str) -> None:
@@ -179,7 +184,10 @@ def ocr_tesseract(
     to generate text from a directory of images
     """
     if os.path.exists(f"{tess_data_pth}/{lang}.traineddata"):
-        os.environ["TESSDATA_PREFIX"] = os.path.abspath(tess_data_pth)
+        tess_data = os.path.abspath(tess_data_pth)
+    else:
+        tess_data = None
+
     logging.info("Using LSTM engine")
 
     logging.info("Negating images to Black over White")
@@ -193,12 +201,18 @@ def ocr_tesseract(
         f"{scsht_pth.removesuffix('/')}/{file}" for file in os.listdir(scsht_pth)
     ]
     with ThreadPoolExecutor() as executor:
-        list(tqdm(executor.map(
-            ocr,
-            screenshots,
-            [tess_result_pth] * len(screenshots),
-            [lang] * len(screenshots),
-        ), total=len(screenshots)))
+        list(
+            tqdm(
+                executor.map(
+                    ocr,
+                    screenshots,
+                    [tess_result_pth] * len(screenshots),
+                    [lang] * len(screenshots),
+                    [tess_data] * len(screenshots),
+                ),
+                total=len(screenshots),
+            )
+        )
 
 
 def negate_images(images: list) -> None:
@@ -219,6 +233,7 @@ def ocr(
     frame: str,
     tess_result_pth: str,
     lang: str,
+    tess_data: str,
 ) -> None:
     """
     Asynchronously OCR a queue of images
@@ -231,9 +246,16 @@ def ocr(
     """
     path = tess_result_pth + "/" + os.path.basename(frame).replace(".jpg", ".txt")
     with open(path, "w") as txt_io:
-        txt_io.write(
-            tesserocr.file_to_text(frame, psm=tesserocr.PSM.SINGLE_BLOCK, lang=lang)
-        )
+        if tess_data:
+            txt_io.write(
+                tesserocr.file_to_text(
+                    frame, psm=tesserocr.PSM.SINGLE_BLOCK, lang=lang, path=tess_data
+                )
+            )
+        else:
+            txt_io.write(
+                tesserocr.file_to_text(frame, psm=tesserocr.PSM.SINGLE_BLOCK, lang=lang)
+            )
 
 
 def italics_verification(lang: str) -> None:
