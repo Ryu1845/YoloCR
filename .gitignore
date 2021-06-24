@@ -8,3 +8,4 @@ config.toml
 .plan/
 *.srt
 *.mp4
+yolocr/__pycache__/

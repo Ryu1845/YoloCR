@@ -8,8 +8,9 @@ import vapoursynth as vs
 import edi_rpow2 as edi
 
 core = vs.get_core()
-config_path = "config.toml"
+config_path = os.path.abspath("../config.toml")
 config = toml.load(config_path)
+ROOT = os.path.dirname(config_path)
 
 
 class YoloCR:
@@ -220,7 +221,7 @@ class YoloCR:
 
         return clip_cleaning
 
-    def scene_log(
+    def _scene_log(
         self, n: int, f: vs.VideoFrame, clip: vs.VideoNode, log: str
     ) -> vs.VideoNode:
         """
@@ -304,7 +305,7 @@ class YoloCR:
 
         clip_cleaned = self.cleaning(clip_resized, self.expand_ratio)
 
-        with open("scene_changes.log", "w") as log_io:
+        with open(ROOT + "/data/scene_changes.log", "w") as log_io:
             log_io.write("0 1 0\n")
         clip_cleaned_sc = core.std.CropAbs(
             clip=clip_cleaned,
@@ -319,7 +320,7 @@ class YoloCR:
         clip_cleaned = core.std.FrameEval(
             clip_cleaned,
             functools.partial(
-                self.scene_log, clip=clip_cleaned, log="scene_changes.log"
+                self._scene_log, clip=clip_cleaned, log=ROOT + "/data/scene_changes.log"
             ),
             prop_src=clip_cleaned_sc,
         )
@@ -331,7 +332,7 @@ class YoloCR:
 
             clip_cleaned_alt = self.cleaning(clip_resized_alt, self.expand_ratio)
 
-            with open("scene_changes_alt.log", "w") as alt_log_io:
+            with open(ROOT + "/data/scene_changes_alt.log", "w") as alt_log_io:
                 alt_log_io.write("0 1 0\n")
             clip_cleaned_alt_sc = core.std.CropAbs(
                 clip=clip_cleaned_alt,
@@ -346,7 +347,9 @@ class YoloCR:
             clip_cleaned_alt = core.std.FrameEval(
                 clip_cleaned_alt,
                 functools.partial(
-                    self.scene_log, clip=clip_cleaned_alt, log="scene_changes_alt.log"
+                    self._scene_log,
+                    clip=clip_cleaned_alt,
+                    log=ROOT + "/data/scene_changes_alt.log",
                 ),
                 prop_src=clip_cleaned_alt_sc,
             )
@@ -354,8 +357,8 @@ class YoloCR:
             clip = core.std.StackVertical([clip_cleaned_alt, clip_cleaned])
 
         else:
-            if os.path.exists("scene_changes_alt.log"):
-                os.remove("scene_changes_alt.log")
+            if os.path.exists(ROOT + "/data/scene_changes_alt.log"):
+                os.remove(ROOT + "/data/scene_changes_alt.log")
             clip = clip_cleaned
 
         clip.set_output()
