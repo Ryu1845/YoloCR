@@ -13,6 +13,7 @@ from helpers import convert_secs, In_dir
 import html2text
 from PIL import Image, ImageOps
 from tqdm import tqdm
+import tesserocr
 
 text_maker = html2text.HTML2Text()
 text_maker.unicode_snob = True
@@ -234,9 +235,8 @@ async def ocr_tesseract(
     Use Optical Character Recognition of Google's Tesseract
     to generate text from a directory of images
     """
-    tess_data = []
     if os.path.exists(f"{tess_data_pth}/{lang}.traineddata"):
-        tess_data = ["--tessdata-dir", tess_data_pth]
+        os.environ["TESSDATA_PREFIX"] = os.path.abspath(tess_data_pth)
     logging.info("Using LSTM engine")
 
     logging.info("Negating images to Black over White")
@@ -251,23 +251,20 @@ async def ocr_tesseract(
     ]
     logging.debug(screenshots)
     queues = await get_workload(screenshots)
-    tasks = [
-        asyncio.create_task(ocr(queue, tess_data, tess_result_pth, lang))
-        for queue in queues
-    ]
+    tasks = [asyncio.create_task(ocr(queue, tess_result_pth, lang)) for queue in queues]
     await asyncio.gather(*tasks)
 
-    with In_dir(tess_result_pth):
-        for file in os.listdir():
-            with open(file, "r") as file_io:
-                lines = file_io.readlines()
-            html = "".join(lines)
-            html_w_nwlines = re.sub(
-                "<span class='ocr_line", "<br><span class='ocr_line", html
-            )
-            txt = text_maker.handle(html_w_nwlines).strip()
-            with open(file.replace(".hocr", ".txt"), "w") as file_io:
-                file_io.write(txt)
+    # with In_dir(tess_result_pth):
+    # for file in os.listdir():
+    # with open(file, "r") as file_io:
+    # lines = file_io.readlines()
+    # html = "".join(lines)
+    # html_w_nwlines = re.sub(
+    # "<span class='ocr_line", "<br><span class='ocr_line", html
+    # )
+    # txt = text_maker.handle(html_w_nwlines).strip()
+    # with open(file.replace(".hocr", ".txt"), "w") as file_io:
+    # file_io.write(txt)
 
 
 def negate_images(images: list) -> None:
@@ -286,7 +283,6 @@ def negate_images(images: list) -> None:
 
 async def ocr(
     queue: asyncio.Queue,
-    tess_data: list,
     tess_result_pth: str,
     lang: str,
 ) -> None:
@@ -308,16 +304,11 @@ async def ocr(
     )
     while not queue.empty():
         frame = await queue.get()
-        cmd = (
-            ["tesseract", frame, f"{tess_result_pth}/{frame.split('/')[-1]}"]
-            + tess_data
-            + ["-l", lang, "--psm", "6", "hocr"]
-        )
-        # logging.debug(" ".join(cmd))
-        proc = await asyncio.create_subprocess_exec(
-            *cmd, stdout=asyncio.subprocess.DEVNULL, stderr=asyncio.subprocess.DEVNULL
-        )
-        await proc.wait()
+        path = tess_result_pth + "/" + os.path.basename(frame).replace(".jpg", ".txt")
+        with open(path, "w") as txt_io:
+            txt_io.write(
+                tesserocr.file_to_text(frame, psm=tesserocr.PSM.SINGLE_BLOCK, lang=lang)
+            )
         queue.task_done()
         pbar.update()
     await queue.join()
@@ -414,7 +405,7 @@ def convert_ocr(
                     sub_time = re.sub("[hm]", ":", sub_time)
                     sub_time = re.sub("s", ",", sub_time)
                     sub_time = re.sub("-", " --> ", sub_time)
-                    sub_time = re.sub(".jpg.txt", "", sub_time)
+                    sub_time = re.sub(".txt", "", sub_time)
                     ocr_io.write(sub_time + "\n")
                     ocr_io.writelines(lines)
                     ocr_io.write("\n\n")
