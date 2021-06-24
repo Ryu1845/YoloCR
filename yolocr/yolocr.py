@@ -27,11 +27,6 @@ TESS_VER_NUM = re.findall(r"\d+\.\d+\.\d+", str(_tess_ver_proc))[0]
 logging.debug(f"Using Tesseract version {TESS_VER_NUM}")
 
 
-class YoloCR:
-    def __init__(self):
-        pass
-
-
 def generate_timecodes(
     scn_chglog: str,
     video: str,

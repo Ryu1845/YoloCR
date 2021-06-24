@@ -5,6 +5,8 @@ scene_changes.log
 timecodes.txt
 config.toml
 .pdm.toml
+pdm.lock
+__pypackages__/
 .plan/
 *.srt
 *.mp4
