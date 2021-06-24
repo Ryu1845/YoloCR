@@ -1,13 +1,12 @@
 #!/usr/bin/env python3
 "OCR part of the YoloCR toolkit"
-import asyncio
 import logging
 import os
+from concurrent.futures import ThreadPoolExecutor
 import re
 import shutil
 import subprocess
 import sys
-from itertools import accumulate
 
 from helpers import convert_secs, In_dir
 import html2text
@@ -17,7 +16,7 @@ import tesserocr
 
 text_maker = html2text.HTML2Text()
 text_maker.unicode_snob = True
-logging.basicConfig(format="%(message)s\n", level=logging.DEBUG)
+logging.basicConfig(format="%(message)s\n", level=logging.INFO)
 logging.debug("Logging in DEBUG")
 
 try:
@@ -77,52 +76,8 @@ def generate_timecodes(
             timecodes_io.write(f"{frame_time}\n")
 
 
-async def get_workload(tasks: list) -> list:
-    """
-    Generate a list of queues for async work based on a list of elements
-    Parameter
-    ---------
-    tasks:
-        list of element to divide in queues
-    Returns
-    -------
-    asyncio queues for the workloads
-    """
-    cpu_count = len(os.sched_getaffinity(0))
-    logging.debug(f"CPU count: {cpu_count}")
-    frames_per_cpu = len(tasks) // cpu_count
-    logging.debug(f"Number of frames per thread: {frames_per_cpu}")
-    lengths_to_split = [frames_per_cpu] * cpu_count
-    split_workload = [
-        tasks[x - y : x] for x, y in zip(accumulate(lengths_to_split), lengths_to_split)
-    ]
-    rest = len(tasks) % cpu_count
-    if rest != 0:
-        split_workload[cpu_count - 1] += tasks[-rest:]
-    logging.debug([len(sub) for sub in split_workload])
-    logging.debug(
-        [
-            "unique" if len(set(sub)) == len(sub) else "not unique"
-            for sub in split_workload
-        ]
-    )
-    prev_sub: list = list()
-    for sub in split_workload:
-        if sub == prev_sub:
-            logging.debug("not unique")
-        prev_sub = sub
-
-    queues = []
-    for workload in split_workload:
-        queue: asyncio.Queue = asyncio.Queue()
-        for frame in workload:
-            await queue.put(frame)
-        queues.append(queue)
-    return queues
-
-
-async def gen_scsht(
-    queue: asyncio.Queue,
+def gen_scsht(
+    frame_time: tuple,
     video: str,
     scsht_pth: str,
 ) -> None:
@@ -137,37 +92,24 @@ async def gen_scsht(
     scsht_pth:
         path to save the screenshots in
     """
-    total = queue.qsize()
-    pbar = tqdm(
-        total=total,
-        unit="f",
-        colour="#00ff00",
-        bar_format="{l_bar}{bar}|ETA:{remaining}, {rate_fmt}{postfix}",
-    )
-    while not queue.empty():
-        even, odd, frame_time = await queue.get()
-        image = f"{scsht_pth}/{convert_secs(even)}-{convert_secs(odd)}.jpg"
-        cmd = [
-            "ffmpeg",
-            "-ss",
-            str(frame_time),
-            "-i",
-            video,
-            "-vframes",
-            "1",
-            "-loglevel",
-            "error",
-            image,
-        ]
-        proc = await asyncio.create_subprocess_exec(*cmd)
-        await proc.wait()
-        queue.task_done()
-        pbar.update()
-    await queue.join()
-    pbar.close()
+    even, odd, frame_time = frame_time
+    image = f"{scsht_pth}/{convert_secs(even)}-{convert_secs(odd)}.jpg"
+    cmd = [
+        "ffmpeg",
+        "-ss",
+        str(frame_time),
+        "-i",
+        video,
+        "-vframes",
+        "1",
+        "-loglevel",
+        "error",
+        image,
+    ]
+    _ = subprocess.run(cmd)
 
 
-async def generate_scsht(video: str, scsht_pth: str, timecode_pth: str) -> None:
+def generate_scsht(video: str, scsht_pth: str, timecode_pth: str) -> None:
     """
     Generate screenshots based on a file containing the timecodes
     """
@@ -190,11 +132,13 @@ async def generate_scsht(video: str, scsht_pth: str, timecode_pth: str) -> None:
             frame_time = f"{(even + odd) / 2:.3f}"
             frame_times.append((even, odd, frame_time))
     logging.debug(len(frame_times))
-    queues = await get_workload(frame_times)
-    tasks = [
-        asyncio.create_task(gen_scsht(queue, video, scsht_pth)) for queue in queues
-    ]
-    await asyncio.gather(*tasks)
+    with ThreadPoolExecutor() as executor:
+        list(tqdm(executor.map(
+            gen_scsht,
+            frame_times,
+            [video] * len(frame_times),
+            [scsht_pth] * len(frame_times),
+        ), total=len(frame_times)))
 
 
 def delete_black_frames(path: str) -> None:
@@ -214,8 +158,7 @@ def delete_black_frames(path: str) -> None:
             "yuvj420p",
             "black_frame.jpg",
         ]
-        proc = subprocess.Popen(cmd)
-        proc.communicate()
+        _ = subprocess.run(cmd)
         black_frame_size = os.path.getsize("black_frame.jpg")
         prev = len(os.listdir())
         for file in os.listdir():
@@ -225,7 +168,7 @@ def delete_black_frames(path: str) -> None:
         logging.debug(f"deleted {prev - new}")
 
 
-async def ocr_tesseract(
+def ocr_tesseract(
     scsht_pth: str,
     tess_data_pth: str,
     tess_result_pth: str,
@@ -249,22 +192,13 @@ async def ocr_tesseract(
     screenshots = [
         f"{scsht_pth.removesuffix('/')}/{file}" for file in os.listdir(scsht_pth)
     ]
-    logging.debug(screenshots)
-    queues = await get_workload(screenshots)
-    tasks = [asyncio.create_task(ocr(queue, tess_result_pth, lang)) for queue in queues]
-    await asyncio.gather(*tasks)
-
-    # with In_dir(tess_result_pth):
-    # for file in os.listdir():
-    # with open(file, "r") as file_io:
-    # lines = file_io.readlines()
-    # html = "".join(lines)
-    # html_w_nwlines = re.sub(
-    # "<span class='ocr_line", "<br><span class='ocr_line", html
-    # )
-    # txt = text_maker.handle(html_w_nwlines).strip()
-    # with open(file.replace(".hocr", ".txt"), "w") as file_io:
-    # file_io.write(txt)
+    with ThreadPoolExecutor() as executor:
+        list(tqdm(executor.map(
+            ocr,
+            screenshots,
+            [tess_result_pth] * len(screenshots),
+            [lang] * len(screenshots),
+        ), total=len(screenshots)))
 
 
 def negate_images(images: list) -> None:
@@ -281,8 +215,8 @@ def negate_images(images: list) -> None:
         img.save(image)
 
 
-async def ocr(
-    queue: asyncio.Queue,
+def ocr(
+    frame: str,
     tess_result_pth: str,
     lang: str,
 ) -> None:
@@ -295,24 +229,11 @@ async def ocr(
     tess_data:
         options for tessdata in tesseract
     """
-    total = queue.qsize()
-    pbar = tqdm(
-        total=total,
-        unit="f",
-        colour="#00ffff",
-        bar_format="{l_bar}{bar}|ETA:{remaining}, {rate_fmt}{postfix}",
-    )
-    while not queue.empty():
-        frame = await queue.get()
-        path = tess_result_pth + "/" + os.path.basename(frame).replace(".jpg", ".txt")
-        with open(path, "w") as txt_io:
-            txt_io.write(
-                tesserocr.file_to_text(frame, psm=tesserocr.PSM.SINGLE_BLOCK, lang=lang)
-            )
-        queue.task_done()
-        pbar.update()
-    await queue.join()
-    pbar.close()
+    path = tess_result_pth + "/" + os.path.basename(frame).replace(".jpg", ".txt")
+    with open(path, "w") as txt_io:
+        txt_io.write(
+            tesserocr.file_to_text(frame, psm=tesserocr.PSM.SINGLE_BLOCK, lang=lang)
+        )
 
 
 def italics_verification(lang: str) -> None:
@@ -420,7 +341,7 @@ def convert_ocr(
         ocr_io.writelines(lines_new)
 
 
-async def main(lang: str, filtered_video: str) -> None:
+def main(lang: str, filtered_video: str) -> None:
     try:
         os.mkdir("data/filtered_scsht")
     except FileExistsError:
@@ -439,11 +360,9 @@ async def main(lang: str, filtered_video: str) -> None:
         generate_timecodes(
             "data/scene_changes_alt.log", filtered_video, "data/timecodes_alt.txt"
         )
-    await generate_scsht(filtered_video, "data/filtered_scsht", "data/timecodes.txt")
+    generate_scsht(filtered_video, "data/filtered_scsht", "data/timecodes.txt")
     delete_black_frames("data/filtered_scsht")
-    await ocr_tesseract(
-        "data/filtered_scsht", "data/tessdata", "data/tess_result", lang
-    )
+    ocr_tesseract("data/filtered_scsht", "data/tessdata", "data/tess_result", lang)
     italics_verification(lang)
     # check(lang=lang) # actually makes too many false negative
     convert_ocr(filtered_video.removesuffix(".mp4"), "data/tess_result")
@@ -481,4 +400,4 @@ if __name__ == "__main__":
     else:
         logging.info("Using YoloCR in CLI mode.")
         print("Prelude")
-    asyncio.run(main(lang, filtered_video))
+    main(lang, filtered_video)
