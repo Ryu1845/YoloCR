@@ -30,8 +30,7 @@ logging.debug(f"Using Tesseract version {TESS_VER_NUM}")
 def generate_timecodes(
     scn_chglog: str,
     video: str,
-    timecode_pth: str,
-) -> None:
+) -> list:
     """
     Generate timecodes from the scene changes frame values
     Parameters
@@ -64,16 +63,15 @@ def generate_timecodes(
     with open(scn_chglog, "r") as scene_changes_io:
         timecodes = []
         frames = scene_changes_io.readlines()
+        # TODO treat numbers properly
         for line in frames:
             if int(line.split(" ")[2]) == 0:
-                timecodes.append(f"{float(line.split(' ')[0])/fps:.4f}"[:-1])
+                timecodes.append(float(f"{float(line.split(' ')[0])/fps:.4f}"[:-1]))
             elif int(line.split(" ")[1]) == 0:
-                timecodes.append(f"{(float(line.split(' ')[0])+1)/fps:.4f}"[:-1])
+                timecodes.append(float(f"{(float(line.split(' ')[0])+1)/fps:.4f}"[:-1]))
 
-    with open(timecode_pth, "w") as timecodes_io:
-        timecodes.sort(key=float)
-        for frame_time in timecodes:
-            timecodes_io.write(f"{frame_time}\n")
+    timecodes.sort(key=float)
+    return timecodes
 
 
 def gen_scsht(
@@ -109,15 +107,12 @@ def gen_scsht(
     _ = subprocess.run(cmd)
 
 
-def generate_scsht(video: str, scsht_pth: str, timecode_pth: str) -> None:
+def generate_scsht(video: str, scsht_pth: str, timecodes: list) -> None:
     """
     Generate screenshots based on a file containing the timecodes
     """
     # TODO ALT
     logging.info("Generating Screenshots")
-    with open(timecode_pth, "r") as timecodes_io:
-        timecodes_str = timecodes_io.readlines()
-        timecodes = [float(line) for line in timecodes_str]
 
     frame_times = []
     logging.debug(len(timecodes))
@@ -377,12 +372,11 @@ def main(lang: str, filtered_video: str) -> None:
         os.mkdir("data/tess_result")
 
     has_alt = os.path.exists("data/scene_changes_alt.log")
-    generate_timecodes("data/scene_changes.log", filtered_video, "data/timecodes.txt")
+    timecodes = generate_timecodes("data/scene_changes.log", filtered_video)
     if has_alt:
-        generate_timecodes(
-            "data/scene_changes_alt.log", filtered_video, "data/timecodes_alt.txt"
-        )
-    generate_scsht(filtered_video, "data/filtered_scsht", "data/timecodes.txt")
+        timecodes_alt = generate_timecodes("data/scene_changes_alt.log", filtered_video)
+        generate_scsht(filtered_video, 'data/filtered_scsht', timecodes_alt)
+    generate_scsht(filtered_video, "data/filtered_scsht", timecodes)
     delete_black_frames("data/filtered_scsht")
     ocr_tesseract("data/filtered_scsht", "data/tessdata", "data/tess_result", lang)
     italics_verification(lang)
