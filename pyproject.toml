@@ -1,0 +1,18 @@
+[tool.poetry]
+name = "yolocr"
+version = "1.0.0"
+description = "YoloCR is a convenient OCR toolkit"
+authors = ["Ryu18 <ryu@tpgjbo.xyz>"]
+license = "GPLv2"
+
+[tool.poetry.dependencies]
+python = "^3.9"
+tesserocr = "^2.5.2"
+tqdm = "^4.61.1"
+Pillow = "^8.2.0"
+
+[tool.poetry.dev-dependencies]
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"

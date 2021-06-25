@@ -9,12 +9,9 @@ import subprocess
 import sys
 
 from helpers import convert_secs, In_dir, negate_images
-import html2text
 from tqdm import tqdm
 import tesserocr
 
-text_maker = html2text.HTML2Text()
-text_maker.unicode_snob = True
 logging.basicConfig(format="%(message)s\n", level=logging.INFO)
 logging.debug("Logging in DEBUG")
 
