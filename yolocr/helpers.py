@@ -1,4 +1,5 @@
 import os
+from PIL import Image, ImageOps
 
 
 class In_dir:
@@ -11,6 +12,20 @@ class In_dir:
 
     def __exit__(self, exc_type, exc_value, exc_traceback):
         os.chdir(self.old_path)
+
+
+def negate_images(images: list) -> None:
+    """
+    Invert colors of a list of images
+    Parameters
+    ----------
+    images:
+        list of images to invert
+    """
+    for image in images:
+        img = Image.open(image)
+        img = ImageOps.invert(img)
+        img.save(image)
 
 
 def convert_secs(rough_time: float) -> str:

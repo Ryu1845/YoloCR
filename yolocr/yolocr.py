@@ -8,9 +8,8 @@ import shutil
 import subprocess
 import sys
 
-from helpers import convert_secs, In_dir
+from helpers import convert_secs, In_dir, negate_images
 import html2text
-from PIL import Image, ImageOps
 from tqdm import tqdm
 import tesserocr
 
@@ -38,9 +37,6 @@ def generate_timecodes(
     scn_chglog:
         path of scene changelog
     video:
-        path of the video you want to generate the timecodes of
-    timecode_pth:
-        the path you want the timecodes to be saved in
     """
     logging.info("Generating Timecodes")
     args = [
@@ -83,8 +79,8 @@ def gen_scsht(
     Screenshot a list of timecode asynchronously
     Parameters
     ----------
-    queue:
-        list of timecodes assigned to this thread
+    frame_time:
+        frame time of the frame you want to screenshot
     video:
         path of the video to screenshot
     scsht_pth:
@@ -107,9 +103,17 @@ def gen_scsht(
     _ = subprocess.run(cmd)
 
 
-def generate_scsht(video: str, scsht_pth: str, timecodes: list) -> None:
+def gen_frame_times(timecodes: list) -> list:
     """
-    Generate screenshots based on a file containing the timecodes
+    Generate a list of tuples of frame_times based on the timecodes
+    Parameters
+    ----------
+    timecodes:
+        the list of scene changes timecodes
+    Returns
+    -------
+    frame_times:
+        list of tuples for the OCR
     """
     # TODO ALT
     logging.info("Generating Screenshots")
@@ -127,23 +131,16 @@ def generate_scsht(video: str, scsht_pth: str, timecodes: list) -> None:
             frame_time = f"{(even + odd) / 2:.3f}"
             frame_times.append((even, odd, frame_time))
     logging.debug(len(frame_times))
-    with ThreadPoolExecutor() as executor:
-        list(
-            tqdm(
-                executor.map(
-                    gen_scsht,
-                    frame_times,
-                    [video] * len(frame_times),
-                    [scsht_pth] * len(frame_times),
-                ),
-                total=len(frame_times),
-            )
-        )
+    return frame_times
 
 
 def delete_black_frames(path: str) -> None:
     """
     Delete black frames in a directory
+    Parameters
+    ----------
+    path:
+        directory to delete the frames from
     """
     with In_dir(path):
         cmd = [
@@ -168,62 +165,6 @@ def delete_black_frames(path: str) -> None:
         logging.debug(f"deleted {prev - new}")
 
 
-def ocr_tesseract(
-    scsht_pth: str,
-    tess_data_pth: str,
-    tess_result_pth: str,
-    lang: str,
-) -> None:
-    """
-    Use Optical Character Recognition of Google's Tesseract
-    to generate text from a directory of images
-    """
-    if os.path.exists(f"{tess_data_pth}/{lang}.traineddata"):
-        tess_data = os.path.abspath(tess_data_pth)
-    else:
-        tess_data = None
-
-    logging.info("Using LSTM engine")
-
-    logging.info("Negating images to Black over White")
-
-    with In_dir(scsht_pth):
-        negate_images(os.listdir())
-
-    logging.info("Images OCR")
-    os.environ["OMP_THREAD_LIMIT"] = "1"
-    screenshots = [
-        f"{scsht_pth.removesuffix('/')}/{file}" for file in os.listdir(scsht_pth)
-    ]
-    with ThreadPoolExecutor() as executor:
-        list(
-            tqdm(
-                executor.map(
-                    ocr,
-                    screenshots,
-                    [tess_result_pth] * len(screenshots),
-                    [lang] * len(screenshots),
-                    [tess_data] * len(screenshots),
-                ),
-                total=len(screenshots),
-            )
-        )
-
-
-def negate_images(images: list) -> None:
-    """
-    Invert colors of a list of images
-    Parameters
-    ----------
-    images:
-        list of images to invert
-    """
-    for image in images:
-        img = Image.open(image)
-        img = ImageOps.invert(img)
-        img.save(image)
-
-
 def ocr(
     frame: str,
     tess_result_pth: str,
@@ -231,13 +172,17 @@ def ocr(
     tess_data: str,
 ) -> None:
     """
-    Asynchronously OCR a queue of images
+    Perform OCR on an image
     Parameters
     ----------
-    queue:
-        queue containing the images to OCR
+    frame:
+        path of the frame to ocr
+    tess_result_pth:
+        path of the results
+    lang:
+        language of the text
     tess_data:
-        options for tessdata in tesseract
+        tessdata path for tesseract
     """
     path = tess_result_pth + "/" + os.path.basename(frame).replace(".jpg", ".txt")
     with open(path, "w") as txt_io:
@@ -256,6 +201,10 @@ def ocr(
 def italics_verification(lang: str) -> None:
     """
     Convert Markdown italics to HTML italics
+    Parameters
+    ----------
+    lang:
+        language of the OCR
     """
     logging.info(
         "Vérification de l'OCR italique"
@@ -281,6 +230,10 @@ def italics_verification(lang: str) -> None:
 def check(lang: str) -> None:
     """
     Delete false and empty subtitles
+    Parameters
+    ----------
+    lang:
+        language of the OCR
     """
     logging.info(
         "Traitement des faux positifs et Suppression des sous-titres vides."
@@ -320,6 +273,12 @@ def convert_ocr(
 ) -> None:
     """
     Assemble the different text files into an SRT subtitle file
+    Parameters
+    ----------
+    sub_filename:
+        name of the final file
+    tess_result_pth:
+        path of the results of the OCR
     """
     logging.info("Converting OCR to srt")
     try:
@@ -359,31 +318,98 @@ def convert_ocr(
 
 
 def main(lang: str, filtered_video: str) -> None:
+    """
+    Execute the process
+    Parameters
+    ----------
+    lang:
+        language of the OCR
+    filtered_video:
+        video to OCR
+    """
+    scsht_pth = 'data/filtered_scsht'
+    tess_result_pth = 'data/tess_result'
+    tess_data_pth = 'data/tessdata'
     try:
-        os.mkdir("data/filtered_scsht")
+        os.mkdir(scsht_pth)
     except FileExistsError:
-        shutil.rmtree("data/filtered_scsht")
-        os.mkdir("data/filtered_scsht")
+        shutil.rmtree(scsht_pth)
+        os.mkdir(scsht_pth)
 
     try:
-        os.mkdir("data/tess_result")
+        os.mkdir(tess_result_pth)
     except FileExistsError:
-        shutil.rmtree("data/tess_result")
-        os.mkdir("data/tess_result")
+        shutil.rmtree(tess_result_pth)
+        os.mkdir(tess_result_pth)
 
     has_alt = os.path.exists("data/scene_changes_alt.log")
     timecodes = generate_timecodes("data/scene_changes.log", filtered_video)
     if has_alt:
         timecodes_alt = generate_timecodes("data/scene_changes_alt.log", filtered_video)
-        generate_scsht(filtered_video, 'data/filtered_scsht', timecodes_alt)
-    generate_scsht(filtered_video, "data/filtered_scsht", timecodes)
-    delete_black_frames("data/filtered_scsht")
-    ocr_tesseract("data/filtered_scsht", "data/tessdata", "data/tess_result", lang)
+        gen_frame_times(timecodes_alt)
+        frame_times = gen_frame_times(timecodes_alt)
+        with ThreadPoolExecutor() as executor:
+            list(
+                tqdm(
+                    executor.map(
+                        gen_scsht,
+                        frame_times,
+                        [filtered_video] * len(frame_times),
+                        [scsht_pth] * len(frame_times),
+                    ),
+                    total=len(frame_times),
+                )
+            )
+    frame_times = gen_frame_times(timecodes)
+    with ThreadPoolExecutor() as executor:
+        list(
+            tqdm(
+                executor.map(
+                    gen_scsht,
+                    frame_times,
+                    [filtered_video] * len(frame_times),
+                    [scsht_pth] * len(frame_times),
+                ),
+                total=len(frame_times),
+            )
+        )
+
+    delete_black_frames(scsht_pth)
+    if os.path.exists(f"{tess_data_pth}/{lang}.traineddata"):
+        tess_data = os.path.abspath(tess_data_pth)
+    else:
+        tess_data = None
+
+    logging.info("Using LSTM engine")
+
+    logging.info("Negating images to Black over White")
+
+    with In_dir(scsht_pth):
+        negate_images(os.listdir())
+
+    logging.info("Images OCR")
+    os.environ["OMP_THREAD_LIMIT"] = "1"
+    screenshots = [
+        os.path.join(scsht_pth, file) for file in os.listdir(scsht_pth)
+    ]
+    with ThreadPoolExecutor() as executor:
+        list(
+            tqdm(
+                executor.map(
+                    ocr,
+                    screenshots,
+                    [tess_result_pth] * len(screenshots),
+                    [lang] * len(screenshots),
+                    [tess_data] * len(screenshots),
+                ),
+                total=len(screenshots),
+            )
+        )
     italics_verification(lang)
     # check(lang=lang) # actually makes too many false negative
-    convert_ocr(filtered_video.removesuffix(".mp4"), "data/tess_result")
+    convert_ocr(filtered_video.removesuffix(".mp4"), tess_result_pth)
     if has_alt:
-        convert_ocr(filtered_video.replace(".mp4", "_alt"), "data/tess_result")
+        convert_ocr(filtered_video.replace(".mp4", "_alt"), tess_result_pth)
 
 
 if __name__ == "__main__":
