@@ -1,4 +1,7 @@
-import click
+try:
+    import click
+except ImportError:
+    print('Click not found\nYou can install it using : pip install click')
 import yolocr
 import subprocess
 import sys
@@ -6,6 +9,10 @@ import locale
 
 LOCALE, _ = locale.getlocale()
 help_strings = {
+    'sf': {
+        'en': 'Source file',
+        'fr': 'Fichier source'
+    },
     'cbh': {        # crop_box_height
         'en': 'Height of the crop_box',
         'fr': 'Hauteur de la CropBox délimitant les sous-titres à OCR.'
@@ -83,22 +90,63 @@ def install(package):
     help=help_strings['sf']['fr'] if 'fr' in LOCALE else help_strings['sf']['en']
 )
 @click.option(
-    '--crop_box_dimension',
+    '--crop-box-dimension',
     '--cbd',
+    nargs=2,
     help=help_strings['cbd']['fr'] if 'fr' in LOCALE else help_strings['cbd']['en']
 )
 @click.option(
-    '--crop_box_height',
+    '--crop-box-height',
     '--cbh',
     help=help_strings['cbh']['fr'] if 'fr' in LOCALE else help_strings['cbh']['en']
 )
 @click.option(
-    '--crop_box_height_alt',
+    '--crop-box-height-alt',
     '--cbha',
     help=help_strings['cbha']['fr'] if 'fr' in LOCALE else help_strings['cbha']['en']
 )
 @click.option(
-    '--lang',
+    '--supersampling-factor',
+    '--ssf',
+    help=help_strings['ssf']['fr'] if 'fr' in LOCALE else help_strings['ssf']['en']
+)
+@click.option(
+    '--expand-ratio',
+    '--xpnd',
+    help=help_strings['xpnd']['fr'] if 'fr' in LOCALE else help_strings['xpnd']['en']
+)
+@click.option(
+    '--upscale-mode',
+    '--umode',
+    help=help_strings['umode']['fr'] if 'fr' in LOCALE else help_strings['umode']['en']
+)
+@click.option(
+    '--threshold-mode',
+    '--tmode',
+    help=help_strings['tmode']['fr'] if 'fr' in LOCALE else help_strings['tmode']['en']
+)
+@click.option(
+    '--threshold',
+    '-t',
+    help=help_strings['thresh']['fr'] if 'fr' in LOCALE else help_strings['thresh']['en']
+)
+@click.option(
+    '--inline-threshold',
+    '--ithresh',
+    help=help_strings['ithresh']['fr'] if 'fr' in LOCALE else help_strings['ithresh']['en']
+)
+@click.option(
+    '--outline-threshold',
+    '--othresh',
+    help=help_strings['othresh']['fr'] if 'fr' in LOCALE else help_strings['othresh']['en']
+)
+@click.option(
+    '--SCD-threshold',
+    '--scdt',
+    help=help_strings['scdt']['fr'] if 'fr' in LOCALE else help_strings['scdt']['en']
+)
+@click.option(
+    '--language',
     '-l',
     default='eng',
     help='Language to perform the OCR in'
@@ -106,7 +154,16 @@ def install(package):
 def main(
     source_file: str,
     crop_box_height: int,
-    crop_box_dimension: str,
+    crop_box_height_alt: int,
+    supersampling_factor: float,
+    expand_ratio: float,
+    upscale_mode: str,
+    threshold_mode: str,
+    threshold: float,
+    inline_threshold: int,
+    outline_threshold: int,
+    scd_threshold: float,
+    crop_box_dimension: tuple,
     language: str
 ):
     """CLI for the yolocr toolkit"""
@@ -116,6 +173,21 @@ def main(
         click.echo('Missing dependencies\nInstalling…')
         for package in ('toml', 'tesserocr', 'PIL', 'toml'):
             install(package)
+
+    args = locals()
+    config = toml.load('config.toml')
+    for key in config:
+        if key in args and args[key]:
+            config.update({key: args[key]})
+        try:
+            for key2 in config[key]:
+                if key2 in args and args[key2]:
+                    config[key].update({key2: args[key2]})
+        except KeyError:
+            continue
+    with open('config.toml', 'w') as config_io:
+        toml.dump(config, config_io)
+
     proc = subprocess.Popen(
         ['vspipe', 'yolocr/YoloCR.py', '-y', '-'],
         stdout=subprocess.PIPE
