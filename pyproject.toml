@@ -10,6 +10,7 @@ python = "^3.9"
 tesserocr = "^2.5.2"
 tqdm = "^4.61.1"
 Pillow = "^8.2.0"
+toml = "^0.10.2"
 
 [tool.poetry.dev-dependencies]
 
