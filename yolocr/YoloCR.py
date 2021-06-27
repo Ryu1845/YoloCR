@@ -250,10 +250,17 @@ class YoloCR:
             The same clip as the input
         """
         if f.props["_SceneChangeNext"] == 1 or f.props["_SceneChangePrev"] == 1:
-            with open(log, "a") as log_io:
-                scene_change_prev = f.props["_SceneChangePrev"]
-                scene_change_next = f.props["_SceneChangeNext"]
-                log_io.write(f"{n} {scene_change_prev} {scene_change_next}\n")
+            try:
+                with open(log, "a") as log_io:
+                    scene_change_prev = f.props["_SceneChangePrev"]
+                    scene_change_next = f.props["_SceneChangeNext"]
+                    log_io.write(f"{n} {scene_change_prev} {scene_change_next}\n")
+            except FileNotFoundError:
+                os.mkdir(os.path.dirname(log))
+                with open(log, "a") as log_io:
+                    scene_change_prev = f.props["_SceneChangePrev"]
+                    scene_change_next = f.props["_SceneChangeNext"]
+                    log_io.write(f"{n} {scene_change_prev} {scene_change_next}\n")
         return clip
 
     def main(self):
