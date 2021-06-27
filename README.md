@@ -99,7 +99,7 @@ You can then change `threshold` paremeter to the values previously found.
    * `inline_threshold` = the inline threshold value (decrease it if it improves the clarity of the letters)
    * `outline_threshold` = the outline threshold value (increase it if some letters got erased)
 
-2. Then filter it: `vspipe -y YoloCR.py - | ffmpeg -i - -c:v mpeg4 -qscale:v 3 -y name_of_the_video_output.mp4`
+2. Then filter it: `vspipe -y yolocr/YoloCR.py - | ffmpeg -i - -c:v mpeg4 -qscale:v 3 -y name_of_the_video_output.mp4`
 
 > Be careful: your must use a different name for your `source_file` in the previous files and `name_of_the_video_output.mp4` for the output of the ffmpeg command.
 
@@ -107,10 +107,10 @@ You now have an OCR-isable video and scenechange informations.
 
 ### OCR the video
 
-Then you can OCR the video: `./yolocr.py name_of_the_video_output.mp4`
+Then you can OCR the video: `./yolocr/yolocr.py name_of_the_video_output.mp4`
 
 > The `name_of_the_video_output.mp4` must be the same than the output of the ffmpeg command.
-> You can use `YoloTime.sh` instead of `yolocr.py` if you only want the Timing of the subtitles.
+> You can use `YoloTime.sh` instead of `yolocr.py` if you only want the Timing of the subtitles. **NOT SUPPORTED ANYMORE**
 
 **Now it's Checking time :D**
 
