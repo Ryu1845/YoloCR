@@ -286,11 +286,11 @@ class YoloCR:
                 ss = int(ss / 2) * 2 + 2
             else:
                 ss = int(ss / 2) * 2
-            ssbis = (
-                target_res / (current_res * ss)
-                if self.ss_factor < 0
-                else self.ss_factor / ss
-            )
+        ssbis = (
+            target_res / (current_res * ss)
+            if self.ss_factor < 0
+            else self.ss_factor / ss
+        )
 
         crop_box_height = self.height_crop_box + self.crop_box_dimensions[1]
         height_crop_box_alt = (

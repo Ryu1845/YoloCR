@@ -78,12 +78,37 @@ def install(package):
 
 @click.command()
 @click.option(
-    '--language',
+    '--source-file',
+    '-f',
+    help=help_strings['sf']['fr'] if 'fr' in LOCALE else help_strings['sf']['en']
+)
+@click.option(
+    '--crop_box_dimension',
+    '--cbd',
+    help=help_strings['cbd']['fr'] if 'fr' in LOCALE else help_strings['cbd']['en']
+)
+@click.option(
+    '--crop_box_height',
+    '--cbh',
+    help=help_strings['cbh']['fr'] if 'fr' in LOCALE else help_strings['cbh']['en']
+)
+@click.option(
+    '--crop_box_height_alt',
+    '--cbha',
+    help=help_strings['cbha']['fr'] if 'fr' in LOCALE else help_strings['cbha']['en']
+)
+@click.option(
+    '--lang',
     '-l',
     default='eng',
     help='Language to perform the OCR in'
 )
-def main(language: str):
+def main(
+    source_file: str,
+    crop_box_height: int,
+    crop_box_dimension: str,
+    language: str
+):
     """CLI for the yolocr toolkit"""
     try:
         import tqdm, PIL, tesserocr, toml
