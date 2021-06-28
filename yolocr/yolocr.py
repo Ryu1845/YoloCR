@@ -324,9 +324,9 @@ def main(lang: str, filtered_video: str) -> None:
     filtered_video:
         video to OCR
     """
-    scsht_pth = 'data/filtered_scsht'
-    tess_result_pth = 'data/tess_result'
-    tess_data_pth = 'data/tessdata'
+    scsht_pth = "data/filtered_scsht"
+    tess_result_pth = "data/tess_result"
+    tess_data_pth = "data/tessdata"
     try:
         os.mkdir(scsht_pth)
     except FileExistsError:
@@ -386,9 +386,7 @@ def main(lang: str, filtered_video: str) -> None:
 
     logging.info("Images OCR")
     os.environ["OMP_THREAD_LIMIT"] = "1"
-    screenshots = [
-        os.path.join(scsht_pth, file) for file in os.listdir(scsht_pth)
-    ]
+    screenshots = [os.path.join(scsht_pth, file) for file in os.listdir(scsht_pth)]
     with ThreadPoolExecutor() as executor:
         list(
             tqdm(

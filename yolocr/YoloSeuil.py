@@ -90,10 +90,10 @@ def main():
             ss = int(ss / 2) * 2 + 2
         else:
             ss = int(ss / 2) * 2
-        if SS_FACTOR < 0:
-            ssbis = target_res / (current_res * ss)
-        else:
-            ssbis = SS_FACTOR / ss
+    if SS_FACTOR < 0:
+        ssbis = target_res / (current_res * ss)
+    else:
+        ssbis = SS_FACTOR / ss
 
     if ss != 1:
         clip = resize(clip, ss, ssbis)
