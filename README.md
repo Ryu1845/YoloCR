@@ -80,10 +80,10 @@ You can then change `supersampling_factor` parameter to -1 and verify that your 
 This part is made to improve the OCR process and the subtitles detection.
 
 1. Open `YoloSeuil.py` in Vapoursynth editor.
-2. Choose the fitting threshold_mode. 'L' if you want to define a white or black threshold, succesively 'R', 'G' and 'B' otherwise.
+2. Choose the fitting threshold\_mode. 'L' if you want to define a white or black threshold, succesively 'R', 'G' and 'B' otherwise.
 3. Adjust the Threshold with the help of the "Color Panel" found in the **F5** window.
 
-You must to do this two times if you are using threshold_mode="L":
+You must to do this two times if you are using threshold\_mode="L":
 
 * in the first case, the Inline threshold will be the minimum.
 * in the second case, the Outline threshold will be the maximum.
@@ -93,41 +93,23 @@ You can then change `threshold` paremeter to the values previously found.
 * in the first case, the subtitles must remain completely visible. The highest the value, the better.
 * in the second case, the Outline must remain completely black. The lowest the value, the better.
 
-### Filter the video
+### Filter the video + OCR
 
 1. Edit `inline_threshold` and `outline_threshold` thanks to the two previous steps
    * `inline_threshold` = the inline threshold value (decrease it if it improves the clarity of the letters)
    * `outline_threshold` = the outline threshold value (increase it if some letters got erased)
 
-2. Then filter it: `vspipe -y yolocr/YoloCR.py - | ffmpeg -i - -c:v mpeg4 -qscale:v 3 -y name_of_the_video_output.mp4`
+2. Then filter it: `vspipe -y yolocr/YoloCR.py . -p`
 
-> Be careful: your must use a different name for your `source_file` in the previous files and `name_of_the_video_output.mp4` for the output of the ffmpeg command.
-
-You now have an OCR-isable video and scenechange informations.
-
-### OCR the video
-
-Then you can OCR the video: `./yolocr/yolocr.py name_of_the_video_output.mp4`
-
-> The `name_of_the_video_output.mp4` must be the same than the output of the ffmpeg command.
+> You can use `yolocr/yolocr-cli.py` to set the values while also executing the script
 > You can use `YoloTime.sh` instead of `yolocr.py` if you only want the Timing of the subtitles. **NOT SUPPORTED ANYMORE**
 
 **Now it's Checking time :D**
 
 ## Serial use of YoloCR
 
-1. Make sure that sxiv isn't installed.
-2. Make sure that YoloCR directory includes the video files you want to OCR and only theses.
-3. Comment the first line of YoloCR.py. ("source_file" becomes "#source_file".)
-4. Move to the YoloCR directory and use this bash command:
-   * `for file in *.mp4; do filef="${file%.*}_filtered.mp4"; vspipe -y --arg source_file="$file" YoloCR.py - | ffmpeg -i - -c:v mpeg4 -qscale:v 3 -y "$filef"; ./yolocr.py "$filef"; done`
+1. Make sure that the directory you're in includes the video files you want to OCR and only theses.
+2. Move to the YoloCR directory and use this bash command:
+   * `for file in *.mp4; do ./yolocr/yolocr-cli.py -f "$file" -l eng; done`
 
-> "*.mp4" means that all files having the mp4 extension will be processed. Read about bash regex if you want more flexibility.
-
-## Known bugs
-
-* Cygwin (Windows), when you run yolocr.py for the first time.
-  * Signal SIGCHLD received, but no signal handler set.
-  * YoloCR will run without errors the next times.
-* Babun (Windows), you will have errors when trying to run yolocr.py.
-  * Use Cygwin instead.
+> "*.mp4" means that all files having the mp4 extension will be processed. You can change eng for the language you want. Read about bash regex if you want more flexibility.

@@ -197,27 +197,7 @@ def main(
     with open("config.toml", "w") as config_io:
         toml.dump(config, config_io)
 
-    proc = subprocess.Popen(
-        ["vspipe", "yolocr/YoloCR.py", "-y", "-"], stdout=subprocess.PIPE
-    )
-    proc = subprocess.Popen(
-        [
-            "ffmpeg",
-            "-i",
-            "-",
-            "-c:v",
-            "mpeg4",
-            "-qscale:v",
-            "3",
-            "-y",
-            "-f",
-            "m4v",
-            "data/filtered.mp4",
-        ],
-        stdin=proc.stdout,
-    )
-    proc.wait()
-    yolocr.main(language, "data/filtered.mp4")
+    subprocess.run(["vspipe", "yolocr/YoloCR.py", ".", "-p"])
 
 
 if __name__ == "__main__":

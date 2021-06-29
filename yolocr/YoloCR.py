@@ -6,11 +6,20 @@ import havsfunc as haf
 import toml
 import vapoursynth as vs
 import edi_rpow2 as edi
+from PIL import Image, ImageOps
+import tesserocr
+import numpy as np
 
 core = vs.get_core()
 config_path = os.path.abspath("../config.toml")
 config = toml.load(config_path)
 ROOT = os.path.dirname(config_path)
+
+
+def convert(seconds):
+    minutes, sec = divmod(seconds, 60)
+    hour, minutes = divmod(minutes, 60)
+    return f"{int(hour):02d}:{int(minutes):02d}:{sec:06.3f}".replace(".", ",")
 
 
 class YoloCR:
@@ -24,7 +33,8 @@ class YoloCR:
         self.upscale_mode = config["upscale"]["upscale_mode"]
         self.inline_threshold = config["threshold"]["inline_threshold"]
         self.outline_threshold = config["threshold"]["outline_threshold"]
-        self.scd_threshold = config["threshold"]["SCD_threshold"]
+        self.scd_threshold = config["threshold"]["scd_threshold"]
+        self.sub_count = 0
 
     def resizing(
         self,
@@ -221,8 +231,8 @@ class YoloCR:
 
         return clip_cleaning
 
-    def _scene_log(
-        self, n: int, f: vs.VideoFrame, clip: vs.VideoNode, log: str
+    def write_subs(
+        self, n: int, f: vs.VideoFrame, clip: vs.VideoNode, sub: str
     ) -> vs.VideoNode:
         """
         Log scene changes to a file.
@@ -241,8 +251,8 @@ class YoloCR:
             The frame properties
         clip:
             The input clip
-        log:
-            The log file
+        sub:
+            The sub filename
 
         Returns
         -------
@@ -250,17 +260,45 @@ class YoloCR:
             The same clip as the input
         """
         if f.props["_SceneChangeNext"] == 1 or f.props["_SceneChangePrev"] == 1:
-            try:
-                with open(log, "a") as log_io:
-                    scene_change_prev = f.props["_SceneChangePrev"]
-                    scene_change_next = f.props["_SceneChangeNext"]
-                    log_io.write(f"{n} {scene_change_prev} {scene_change_next}\n")
-            except FileNotFoundError:
-                os.mkdir(os.path.dirname(log))
-                with open(log, "a") as log_io:
-                    scene_change_prev = f.props["_SceneChangePrev"]
-                    scene_change_next = f.props["_SceneChangeNext"]
-                    log_io.write(f"{n} {scene_change_prev} {scene_change_next}\n")
+            img = Image.fromarray(np.array(f.get_read_array(0), copy=False))
+            if not img.getextrema() == (0, 0):
+                if f.props["_SceneChangePrev"] == 1:
+                    frame_time = convert((n * clip.fps_den / clip.fps_num))
+                    img = ImageOps.invert(img)
+                    self.sub_count += 1
+                    self.frame_num = n
+                    ocr_out = tesserocr.image_to_text(
+                        img,
+                        lang="fra",
+                        psm=tesserocr.PSM.SINGLE_BLOCK,
+                        path="data/tessdata",
+                    )
+                    with open(sub, "a") as sub_io:
+                        sub_io.write(
+                            f"""
+{self.sub_count}
+{frame_time} -->
+{ocr_out}
+"""
+                        )
+                elif f.props["_SceneChangeNext"] == 1:
+                    frame_time = convert(((n + 1) * clip.fps_den / clip.fps_num))
+                    with open(sub, "r") as sub_io:
+                        lines = sub_io.readlines()
+                    with open(sub, "w") as sub_io:
+                        for idx, line in enumerate(lines):
+                            if (
+                                line.strip() == str(self.sub_count)
+                                and self.frame_num < n
+                            ):
+                                times = lines[idx + 1].strip()
+                                lines[idx + 1] = f"{times} {frame_time}\n"
+                            elif line.strip() == str(self.sub_count - 1):
+                                times = lines[idx + 1].strip()
+                                lines[idx + 1] = f"{times} {frame_time}\n"
+
+                        sub_io.writelines(lines)
+
         return clip
 
     def main(self):
@@ -312,23 +350,15 @@ class YoloCR:
 
         clip_cleaned = self.cleaning(clip_resized, self.expand_ratio)
 
-        with open(ROOT + "/data/scene_changes.log", "w") as log_io:
-            log_io.write("0 1 0\n")
-        clip_cleaned_sc = core.std.CropAbs(
-            clip=clip_cleaned,
-            width=int(clip_cleaned.width / 2.7),
-            height=int(clip_cleaned.height / 2.7),
-            left=int(clip_cleaned.width * (1 - 1 / 2.7) / 2),
-            top=int(clip_cleaned.height / 2),
-        )
         clip_cleaned_sc = core.misc.SCDetect(
-            clip=clip_cleaned_sc, threshold=self.scd_threshold
+            clip=clip_cleaned, threshold=self.scd_threshold
         )
+        sub_path = os.path.join(ROOT, os.path.basename(self.source_file) + ".srt")
+        if os.path.exists(sub_path):
+            os.remove(sub_path)
         clip_cleaned = core.std.FrameEval(
             clip_cleaned,
-            functools.partial(
-                self._scene_log, clip=clip_cleaned, log=ROOT + "/data/scene_changes.log"
-            ),
+            functools.partial(self.write_subs, clip=clip_cleaned, sub=sub_path),
             prop_src=clip_cleaned_sc,
         )
 
@@ -339,24 +369,17 @@ class YoloCR:
 
             clip_cleaned_alt = self.cleaning(clip_resized_alt, self.expand_ratio)
 
-            with open(ROOT + "/data/scene_changes_alt.log", "w") as alt_log_io:
-                alt_log_io.write("0 1 0\n")
-            clip_cleaned_alt_sc = core.std.CropAbs(
-                clip=clip_cleaned_alt,
-                width=int(clip_cleaned_alt.width / 2.7),
-                height=int(clip_cleaned_alt.height / 2.7),
-                left=int(clip_cleaned_alt.width * (1 - 1 / 2.7) / 2),
-                top=int(clip_cleaned_alt.height * (1 / 2 - 1 / 2.7)),
-            )
             clip_cleaned_alt_sc = core.misc.SCDetect(
-                clip=clip_cleaned_alt_sc, threshold=self.scd_threshold
+                clip=clip_cleaned_alt, threshold=self.scd_threshold
             )
             clip_cleaned_alt = core.std.FrameEval(
                 clip_cleaned_alt,
                 functools.partial(
-                    self._scene_log,
+                    self.write_subs,
                     clip=clip_cleaned_alt,
-                    log=ROOT + "/data/scene_changes_alt.log",
+                    sub=os.path.join(
+                        ROOT, os.path.basename(self.source_file) + "_alt.srt"
+                    ),
                 ),
                 prop_src=clip_cleaned_alt_sc,
             )
@@ -364,8 +387,6 @@ class YoloCR:
             clip = core.std.StackVertical([clip_cleaned_alt, clip_cleaned])
 
         else:
-            if os.path.exists(ROOT + "/data/scene_changes_alt.log"):
-                os.remove(ROOT + "/data/scene_changes_alt.log")
             clip = clip_cleaned
 
         clip.set_output()

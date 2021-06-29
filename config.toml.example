@@ -43,4 +43,4 @@ inline_threshold = 230
 outline_threshold = 30
 # Un seuil trop bas augmente le nombre de faux positifs, un seuil trop haut ne permet pas de détecter tous les sous-titres.
 # Setting this threshold too low increases de number of false positives, too high and it won't detect all of the subtitles. 
-SCD_threshold = 0.07
+scd_threshold = 0.07
