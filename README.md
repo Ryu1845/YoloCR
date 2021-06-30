@@ -18,6 +18,7 @@ Global Requirements for all the OS.
 ### Global Requirements
 
 *   ffmpeg
+
 *   Vapoursynth R36+
     *   plugins for Vapoursynth:
         *   [FFMS2](https://github.com/FFMS/ffms2)
@@ -26,14 +27,17 @@ Global Requirements for all the OS.
         *   *optional*: [edi_rpow2](http://forum.doom9.org/showthread.php?t=172652), requires [znedi3](https://github.com/sekrit-twc/znedi3)
         *   *very optional*: [Waifu2x-w2xc](http://forum.doom9.org/showthread.php?t=172390)
     *   note:
+
         *   Vapoursynth plugins (.so on Unix, .dll on Windows) should be placed inside one of theses directories: <http://www.vapoursynth.com/doc/autoloading.html>
         *   Vapoursynth scripts (.py) should be placed inside the "site-packages" directory of your Python3 installation.
+
     *   [Vapoursynth Editor](https://bitbucket.org/mystery_keeper/vapoursynth-editor)
 
 ### Unix/Linux Requirements
 
 *   Tesseract-OCR (>=4)
     *   and install the data corresponding to the languages you want to OCR
+
 *   Imagemagick
 
 > *Note*: most of these package, with the exception of all the plugins for vapoursynth, are available as official package for your distro.
@@ -56,7 +60,7 @@ Global Requirements for all the OS.
 > Scripts have to be used within Cygwin terminal.
 > If you use Windows 10, you can install BashOnWindows instead of Cygwin.
 
-## How to use?
+## How to use
 
 ### Help for determining the parameters for the config file
 
@@ -65,7 +69,9 @@ Global Requirements for all the OS.
 Resize is very helpful to locate the subtitles.
 
 1.  open the config file in a text editor
+
 2.  open `YoloResize.py` in Vapoursynth Editor.
+
 3.  Change these values in the config:
     *   `source_file` is the path of the video to OCR.
     *   `crop_box_dimension` allows you to limit the OCR zone.
@@ -109,6 +115,7 @@ You can then change `threshold` paremeter to the values previously found.
 ## Serial use of YoloCR
 
 1.  Make sure that the directory you're in includes the video files you want to OCR and only theses.
+
 2.  Move to the YoloCR directory and use this bash command:
     *   `for file in *.mp4; do ./yolocr/yolocr-cli.py -f "$file" -l eng; done`
 
