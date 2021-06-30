@@ -4,7 +4,7 @@ import toml
 import vapoursynth as vs
 
 core = vs.get_core()
-config_path = "config.toml"
+config_path = "../config.toml"
 config = toml.load(config_path)
 SOURCE_FILE = config["source_file"]
 CROP_BOX_DIMENSIONS = config["crop"]["crop_box_dimension"]

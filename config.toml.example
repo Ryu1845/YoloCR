@@ -40,7 +40,7 @@ threshold = -1
 inline_threshold = 230
 # Seuil délimitant les sous-titres. Cette valeur correspond à la luminosité maximale de l'extérieur (Outline).
 # Threshold delimiting the subtitles. This value matches the maximale brightness of the outline
-outline_threshold = 30
+outline_threshold = 65
 # Un seuil trop bas augmente le nombre de faux positifs, un seuil trop haut ne permet pas de détecter tous les sous-titres.
 # Setting this threshold too low increases de number of false positives, too high and it won't detect all of the subtitles. 
-scd_threshold = 0.07
+scd_threshold = 0.005
