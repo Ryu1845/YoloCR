@@ -293,7 +293,10 @@ class YoloCR:
                             ):
                                 times = lines[idx + 1].strip()
                                 lines[idx + 1] = f"{times} {frame_time}\n"
-                            elif line.strip() == str(self.sub_count - 1) and self.frame_num > n:
+                            elif (
+                                line.strip() == str(self.sub_count - 1)
+                                and self.frame_num > n
+                            ):
                                 times = lines[idx + 1].strip()
                                 lines[idx + 1] = f"{times} {frame_time}\n"
 

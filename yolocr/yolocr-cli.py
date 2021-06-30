@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
-"CLI for the YoloCR toolkit"
+"""CLI for the YoloCR toolkit"""
 try:
     import click
 except ImportError:
     print("Click not found\nYou can install it using : pip install click")
-import yolocr
 import subprocess
 import sys
 import locale
@@ -175,9 +174,9 @@ def main(
     crop_box_dimension: tuple,
     language: str,
 ):
-    """CLI for the yolocr toolkit"""
+    """CLI for the yolocr toolkit."""
     try:
-        import tqdm, PIL, tesserocr, toml
+        import PIL, tesserocr, toml
     except ImportError:
         click.echo("Missing dependencies\nInstalling…")
         for package in ("toml", "tesserocr", "PIL", "toml"):
