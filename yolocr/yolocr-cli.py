@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""CLI for the YoloCR toolkit"""
+"""CLI for the YoloCR toolkit."""
 try:
     import click
 except ImportError:
