@@ -12,6 +12,7 @@ tqdm = "^4.61.1"
 Pillow = "^8.2.0"
 toml = "^0.10.2"
 click = "^8.0.1"
+opencv-python-headless = "^4.5.2"
 
 [tool.poetry.dev-dependencies]
 
