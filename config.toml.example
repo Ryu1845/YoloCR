@@ -1,5 +1,8 @@
 
 source_file = 'Video.mp4'
+# Language three letter code(i.e. eng for English)
+# Code à trois lettre de la langue(fra pour Français)
+language = 'fra'
 [crop]
 # Taille en largeur et hauteur de la CropBox délimitant les sous-titres à OCR.
 # Size of the crop_box [width, height]

@@ -34,6 +34,7 @@ class YoloCR:
         self.inline_threshold = config["threshold"]["inline_threshold"]
         self.outline_threshold = config["threshold"]["outline_threshold"]
         self.scd_threshold = config["threshold"]["scd_threshold"]
+        self.language = config["language"]
         self.sub_count = 0
 
     def resizing(
@@ -267,10 +268,9 @@ class YoloCR:
                     img = ImageOps.invert(img)
                     self.sub_count += 1
                     self.frame_num = n
-                    # TODO use use config for language
                     ocr_out = tesserocr.image_to_text(
                         img,
-                        lang="fra",
+                        lang=self.language,
                         psm=tesserocr.PSM.SINGLE_BLOCK,
                         path="data/tessdata",
                     )

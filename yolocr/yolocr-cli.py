@@ -74,6 +74,10 @@ Cette valeur correspond à la luminosité maximale de l'extérieur (Outline)."""
         "en": """Threshold delimiting the subtitles.
 This value matches the maximale brightness of the outline""",
     },
+    "lang": {
+        "en": "Language three letter code(i.e. eng for English)",
+        "fr": "Code à trois lettre de la langue(fra pour Français)",
+    },
 }
 
 
