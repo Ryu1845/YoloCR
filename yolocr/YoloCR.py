@@ -36,6 +36,10 @@ class YoloCR:
         self.scd_threshold = config["threshold"]["scd_threshold"]
         self.language = config["language"]
         self.sub_count = 0
+        if os.path.exists(f'data/tessdata/{self.language}.traineddata'):
+            self.tessdata = 'data/tessdata'
+        else:
+            self.tessdata, _ = tesserocr.get_languages()
 
     def resizing(
         self,
@@ -272,7 +276,7 @@ class YoloCR:
                         img,
                         lang=self.language,
                         psm=tesserocr.PSM.SINGLE_BLOCK,
-                        path="data/tessdata",
+                        path=self.tessdata,
                     )
                     with open(sub, "a") as sub_io:
                         sub_io.write(
